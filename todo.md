@@ -21,6 +21,6 @@
 - [x] Adaptar a execução Docker para não depender das portas fixas 3000 ou 3001
 - [x] Adicionar comando/script para selecionar automaticamente uma porta externa livre
 - [ ] Atualizar documentação e validar o fluxo com múltiplos containers no servidor Linux
-- [ ] Publicar a versão com scripts/start-docker.sh no repositório remoto
-- [ ] Documentar a atualização correta da cópia em /var/www/Findash-LVO antes do build
-- [ ] Fornecer e validar comando alternativo de execução quando o script ainda não existir
+- [x] Publicar a versão com scripts/start-docker.sh no repositório remoto
+- [x] Documentar a atualização correta da cópia em /var/www/Findash-LVO antes do build
+- [x] Fornecer e validar comando alternativo de execução quando o script ainda não existir

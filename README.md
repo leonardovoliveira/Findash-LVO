@@ -6,6 +6,32 @@ Sistema web de controle financeiro pessoal com autenticação OAuth, dashboard v
 
 Código publicado em [github.com/leonardovoliveira/Findash-LVO](https://github.com/leonardovoliveira/Findash-LVO). O GitHub normaliza o nome técnico do repositório para `Findash-LVO`, pois espaços não fazem parte do identificador de URL; o nome exibido pela aplicação permanece **Findash LVO**.
 
+## Atualizar uma instalação existente
+
+Antes de executar o build no servidor, sincronize a cópia local com o repositório GitHub que contém o script de porta dinâmica:
+
+```bash
+cd /var/www/Findash-LVO
+git remote -v
+git fetch github main 2>/dev/null || git fetch origin main
+git checkout main
+git pull --ff-only github main 2>/dev/null || git pull --ff-only origin main
+ls -l scripts/start-docker.sh docker-compose.yml
+```
+
+Se a pasta não for um clone Git ou estiver inconsistente, faça uma cópia do `.env` e recrie o diretório:
+
+```bash
+cd /var/www
+cp Findash-LVO/.env /tmp/findash-lvo.env
+mv Findash-LVO Findash-LVO.backup
+git clone https://github.com/leonardovoliveira/Findash-LVO.git Findash-LVO
+cp /tmp/findash-lvo.env Findash-LVO/.env
+cd Findash-LVO
+```
+
+A presença de `scripts/start-docker.sh` confirma que a versão correta foi sincronizada. Só então execute o build e a inicialização abaixo.
+
 ## Execução com Docker
 
 O projeto usa Node.js 22, pnpm e um banco MySQL/TiDB compatível com Drizzle. Crie um arquivo `.env` no servidor com `DATABASE_URL`, `JWT_SECRET`, `VITE_APP_ID`, `OAUTH_SERVER_URL`, `VITE_OAUTH_PORTAL_URL` e as demais variáveis fornecidas pelo ambiente de autenticação. Não versionar esse arquivo.
