@@ -59,7 +59,7 @@ Para construir e iniciar usando a porta externa fixa `3002`, defina no `.env`:
 APP_PORT=3002
 ```
 
-A porta `3002` do servidor é encaminhada para a porta interna `3000` do Node. O build da imagem não muda a porta publicada; apenas o comando de execução a utiliza. Se `3002` estiver ocupada, altere `APP_PORT` para outra porta fixa livre e mantenha o mesmo valor no acesso e no callback OAuth.
+A porta `3002` do servidor é encaminhada para a porta interna `3000` do Node. O script `start-docker.sh` lê `APP_PORT` diretamente do `.env`, portanto o build da imagem não muda a porta publicada e a mesma porta é preservada entre reinicializações. Se `3002` estiver ocupada, altere `APP_PORT` para outra porta fixa livre e mantenha o mesmo valor no acesso e no callback OAuth.
 
 Para construir e iniciar usando a porta fixa:
 

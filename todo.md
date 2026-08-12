@@ -30,6 +30,6 @@
 - [x] Corrigir OAUTH_SERVER_URL ausente no ambiente runtime do container
 - [x] Remover o placeholder literal de analytics quando as variáveis não forem configuradas
 - [ ] Rebuildar o container e validar o fluxo OAuth após a correção
-- [ ] Fixar a porta externa do container por meio de APP_PORT no .env
-- [ ] Atualizar scripts e Compose para nunca escolher porta aleatória por padrão
-- [ ] Documentar rebuild, acesso e callback OAuth usando a porta fixa
+- [x] Fixar a porta externa do container por meio de APP_PORT no .env
+- [x] Atualizar scripts e Compose para nunca escolher porta aleatória por padrão
+- [x] Documentar rebuild, acesso e callback OAuth usando a porta fixa

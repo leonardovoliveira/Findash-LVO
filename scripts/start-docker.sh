@@ -4,7 +4,6 @@ set -Eeuo pipefail
 IMAGE_NAME="${IMAGE_NAME:-findash-lvo}"
 CONTAINER_NAME="${CONTAINER_NAME:-findash-lvo}"
 # A porta externa padrão é estável; use APP_PORT=0 apenas para seleção automática.
-REQUESTED_PORT="${APP_PORT:-3002}"
 
 if ! command -v docker >/dev/null 2>&1; then
   echo "Erro: Docker não está instalado ou não está disponível no PATH." >&2
@@ -15,6 +14,15 @@ if [[ ! -f .env ]]; then
   echo "Erro: arquivo .env não encontrado no diretório atual." >&2
   exit 1
 fi
+
+# Carrega APP_PORT do .env sem substituir uma variável APP_PORT já exportada.
+if [[ -z "${APP_PORT:-}" ]]; then
+  ENV_APP_PORT="$(sed -nE 's/^APP_PORT[[:space:]]*=[[:space:]]*([^#[:space:]]+).*$/\1/p' .env | tail -n 1)"
+  if [[ -n "$ENV_APP_PORT" ]]; then
+    APP_PORT="$ENV_APP_PORT"
+  fi
+fi
+REQUESTED_PORT="${APP_PORT:-3002}"
 
 is_free() {
   local port="$1"
