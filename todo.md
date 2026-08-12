@@ -36,3 +36,5 @@
 - [ ] Corrigir/explicar o diagnóstico do callback aberto manualmente sem code e state
 - [ ] Validar que o botão gera uma URL OAuth com appId, redirectUri e state
 - [ ] Confirmar no portal OAuth o callback exato da porta 3002 e testar o retorno do provedor
+- [x] Corrigir incompatibilidade de crypto.randomUUID no navegador HTTP local
+- [ ] Validar geração de nonce, state e redirecionamento OAuth após o clique
