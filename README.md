@@ -105,7 +105,9 @@ O endereço usado pelo navegador deve ser HTTPS em produção e precisa estar au
 
 O analytics Umami é opcional no ambiente self-hosted e foi removido do HTML quando as variáveis de analytics não são configuradas, evitando o erro `Failed to decode param /%VITE_ANALYTICS_ENDPOINT%/umami`.
 
-Cadastre o callback exatamente como `https://SEU_DOMINIO/api/oauth/callback`; em acesso por IP, o callback deve usar o mesmo protocolo e host acessados pelo navegador. O `redirectUri` é montado com `window.location.origin`, portanto não use um domínio diferente no cadastro do provedor.
+Cadastre o callback exatamente como `https://SEU_DOMINIO/api/oauth/callback`; em acesso por IP local, use `http://192.168.1.27:3002/api/oauth/callback` somente para testes. Em HTTP local, o frontend usa o cookie `oauth_state` com `SameSite=Lax`; em produção HTTPS, usa o cookie seguro `__Host-oauth_state`. O `redirectUri` é montado com `window.location.origin`, portanto não use um domínio diferente no cadastro do provedor.
+
+Se o navegador mostrar `Servidor não encontrado` para `auth.manus.im`, verifique a conectividade do servidor/cliente com `curl -I https://auth.manus.im`. O portal OAuth precisa estar acessível pela rede; o container não consegue corrigir DNS, firewall, proxy ou bloqueio de saída HTTPS.
 
 O servidor respeita `PORT` e deve ser colocado atrás de HTTPS em produção. O login usa o portal OAuth configurado no ambiente, que pode federar a conta Google; o backend identifica o método como Google quando informado pelo provedor e persiste `avatarUrl` ou `picture` em `users.avatarUrl`. Se o provedor não enviar a foto, a interface usa as iniciais do nome como fallback. Para validar a federação Google em produção, o administrador deve habilitar Google no portal OAuth e configurar os redirect URIs do domínio self-hosted.
 

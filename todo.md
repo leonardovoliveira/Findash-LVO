@@ -38,3 +38,6 @@
 - [ ] Confirmar no portal OAuth o callback exato da porta 3002 e testar o retorno do provedor
 - [x] Corrigir incompatibilidade de crypto.randomUUID no navegador HTTP local
 - [ ] Validar geração de nonce, state e redirecionamento OAuth após o clique
+- [ ] Tratar cookie __Host-oauth_state em ambiente local HTTP sem comprometer produção HTTPS
+- [ ] Diagnosticar configuração/rede que impede acesso a auth.manus.im
+- [ ] Documentar que o callback Google em produção exige HTTPS e domínio acessível
