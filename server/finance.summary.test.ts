@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { summarize } from "./finance";
+import { summarize } from "../shared/finance";
 
 describe("finance summary", () => {
   it("calculates income, expense and balance", () => {

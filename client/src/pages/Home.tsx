@@ -13,7 +13,7 @@ import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxi
 
 type FormState = { id?: number; type: "income" | "expense"; description: string; amount: string; category: string; occurredAt: string };
 const monthNames = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
-const yearOptions = Array.from({ length: 11 }, (_, index) => new Date().getFullYear() - index);
+const defaultYears = Array.from({ length: 11 }, (_, index) => new Date().getFullYear() - index);
 const money = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
 
 function initialForm(type: "income" | "expense" = "income"): FormState { return { type, description: "", amount: "", category: "", occurredAt: new Date().toISOString().slice(0, 10) }; }
@@ -33,6 +33,7 @@ export default function Home() {
   const remove = trpc.finance.remove.useMutation({ onSuccess: () => { utils.finance.list.invalidate(); toast.success("Lançamento excluído"); } });
   const transactions = query.data ?? [];
   const summary = useMemo(() => transactions.reduce((acc, item) => { const value = Number(item.amount); item.type === "income" ? acc.income += value : acc.expense += value; return acc; }, { income: 0, expense: 0 }), [transactions]);
+  const yearOptions = useMemo(() => Array.from(new Set([...defaultYears, ...transactions.map(item => new Date(item.occurredAt).getFullYear())])).sort((a, b) => b - a), [transactions]);
   const chartData = useMemo(() => { const buckets = new Map<number, { month: string; income: number; expense: number }>(); for (const item of transactions) { const m = new Date(item.occurredAt).getMonth(); const current = buckets.get(m) ?? { month: monthNames[m], income: 0, expense: 0 }; current[item.type] += Number(item.amount); buckets.set(m, current); } return Array.from(buckets.values()).sort((a, b) => monthNames.indexOf(a.month) - monthNames.indexOf(b.month)); }, [transactions]);
 
   if (loading) return <div className="min-h-screen grid place-items-center"><div className="animate-pulse text-muted-foreground">Carregando seu espaço financeiro...</div></div>;
