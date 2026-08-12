@@ -15,4 +15,6 @@ RUN npm install -g corepack@latest \
   && corepack pnpm run build
 
 ENV NODE_ENV=production
+# Pode ser sobrescrito pelo --env-file .env no docker run.
+ENV OAUTH_SERVER_URL=https://api.manus.im
 CMD ["node", "dist/index.js"]

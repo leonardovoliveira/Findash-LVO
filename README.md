@@ -34,7 +34,7 @@ A presença de `scripts/start-docker.sh` confirma que a versão correta foi sinc
 
 ## Execução com Docker
 
-O projeto usa Node.js 22, pnpm e um banco MySQL/TiDB compatível com Drizzle. Crie um arquivo `.env` no servidor com `DATABASE_URL`, `JWT_SECRET`, `VITE_APP_ID`, `OAUTH_SERVER_URL`, `VITE_OAUTH_PORTAL_URL` e as demais variáveis fornecidas pelo ambiente de autenticação. Não versionar esse arquivo.
+O projeto usa Node.js 22, pnpm e um banco MySQL/TiDB compatível com Drizzle. Crie um arquivo `.env` no servidor com `DATABASE_URL`, `JWT_SECRET`, `VITE_APP_ID`, `OAUTH_SERVER_URL`, `VITE_OAUTH_PORTAL_URL` e as demais variáveis fornecidas pelo ambiente de autenticação. Para o fluxo padrão, use `OAUTH_SERVER_URL=https://api.manus.im`. Não versionar esse arquivo.
 
 ### Build com autenticação OAuth
 
@@ -89,7 +89,11 @@ docker rm -f findash-lvo
 
 Se a porta pertencer a outro serviço, mantenha-o ativo e use o script automático ou uma porta específica livre. A configuração `docker-compose.yml` usa `${APP_PORT:-0}:3000`; com `APP_PORT=0`, o Docker reserva uma porta externa livre automaticamente. Consulte a porta escolhida com `docker compose port findash-lvo 3000`.
 
-O endereço usado pelo navegador deve ser HTTPS em produção e precisa estar autorizado no portal OAuth. Cadastre o callback exatamente como `https://SEU_DOMINIO/api/oauth/callback`; em acesso por IP, o callback deve usar o mesmo protocolo e host acessados pelo navegador. O `redirectUri` é montado com `window.location.origin`, portanto não use um domínio diferente no cadastro do provedor.
+O endereço usado pelo navegador deve ser HTTPS em produção e precisa estar autorizado no portal OAuth. O erro `OAUTH_SERVER_URL is not configured` significa que essa variável não estava presente no ambiente do container; a imagem agora possui o padrão `https://api.manus.im`, mas é recomendado declarar explicitamente o valor no `.env`.
+
+O analytics Umami é opcional no ambiente self-hosted e foi removido do HTML quando as variáveis de analytics não são configuradas, evitando o erro `Failed to decode param /%VITE_ANALYTICS_ENDPOINT%/umami`.
+
+Cadastre o callback exatamente como `https://SEU_DOMINIO/api/oauth/callback`; em acesso por IP, o callback deve usar o mesmo protocolo e host acessados pelo navegador. O `redirectUri` é montado com `window.location.origin`, portanto não use um domínio diferente no cadastro do provedor.
 
 O servidor respeita `PORT` e deve ser colocado atrás de HTTPS em produção. O login usa o portal OAuth configurado no ambiente, que pode federar a conta Google; o backend identifica o método como Google quando informado pelo provedor e persiste `avatarUrl` ou `picture` em `users.avatarUrl`. Se o provedor não enviar a foto, a interface usa as iniciais do nome como fallback. Para validar a federação Google em produção, o administrador deve habilitar Google no portal OAuth e configurar os redirect URIs do domínio self-hosted.
 

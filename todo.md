@@ -27,3 +27,6 @@
 - [ ] Diagnosticar por que o botão Entrar com Google não inicia ou conclui o OAuth no servidor próprio
 - [ ] Corrigir callback, origem, variáveis e instruções de configuração OAuth para o domínio self-hosted
 - [ ] Validar login e documentar os redirect URIs necessários
+- [x] Corrigir OAUTH_SERVER_URL ausente no ambiente runtime do container
+- [x] Remover o placeholder literal de analytics quando as variáveis não forem configuradas
+- [ ] Rebuildar o container e validar o fluxo OAuth após a correção
