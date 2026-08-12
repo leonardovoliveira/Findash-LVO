@@ -24,3 +24,6 @@
 - [x] Publicar a versão com scripts/start-docker.sh no repositório remoto
 - [x] Documentar a atualização correta da cópia em /var/www/Findash-LVO antes do build
 - [x] Fornecer e validar comando alternativo de execução quando o script ainda não existir
+- [ ] Diagnosticar por que o botão Entrar com Google não inicia ou conclui o OAuth no servidor próprio
+- [ ] Corrigir callback, origem, variáveis e instruções de configuração OAuth para o domínio self-hosted
+- [ ] Validar login e documentar os redirect URIs necessários

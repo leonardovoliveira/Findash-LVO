@@ -36,10 +36,27 @@ A presença de `scripts/start-docker.sh` confirma que a versão correta foi sinc
 
 O projeto usa Node.js 22, pnpm e um banco MySQL/TiDB compatível com Drizzle. Crie um arquivo `.env` no servidor com `DATABASE_URL`, `JWT_SECRET`, `VITE_APP_ID`, `OAUTH_SERVER_URL`, `VITE_OAUTH_PORTAL_URL` e as demais variáveis fornecidas pelo ambiente de autenticação. Não versionar esse arquivo.
 
+### Build com autenticação OAuth
+
+As variáveis `VITE_APP_ID` e `VITE_OAUTH_PORTAL_URL` são usadas pelo Vite no navegador e precisam estar disponíveis durante `docker build`. Passar apenas `--env-file .env` no `docker run` não corrige um bundle frontend que já foi gerado sem essas variáveis. Use o script de build, que lê o `.env` e repassa os valores como argumentos:
+
+```bash
+chmod +x scripts/build-docker.sh
+./scripts/build-docker.sh
+```
+
+Depois inicie o container com porta automática:
+
+```bash
+./scripts/start-docker.sh
+```
+
+### Build e início sem porta fixa
+
 Para construir e iniciar sem depender de uma porta fixa, use o script que procura uma porta livre entre `3000` e `3999`:
 
 ```bash
-docker build -t findash-lvo .
+./scripts/build-docker.sh
 chmod +x scripts/start-docker.sh
 ./scripts/start-docker.sh
 ```
@@ -71,6 +88,8 @@ docker rm -f findash-lvo
 ```
 
 Se a porta pertencer a outro serviço, mantenha-o ativo e use o script automático ou uma porta específica livre. A configuração `docker-compose.yml` usa `${APP_PORT:-0}:3000`; com `APP_PORT=0`, o Docker reserva uma porta externa livre automaticamente. Consulte a porta escolhida com `docker compose port findash-lvo 3000`.
+
+O endereço usado pelo navegador deve ser HTTPS em produção e precisa estar autorizado no portal OAuth. Cadastre o callback exatamente como `https://SEU_DOMINIO/api/oauth/callback`; em acesso por IP, o callback deve usar o mesmo protocolo e host acessados pelo navegador. O `redirectUri` é montado com `window.location.origin`, portanto não use um domínio diferente no cadastro do provedor.
 
 O servidor respeita `PORT` e deve ser colocado atrás de HTTPS em produção. O login usa o portal OAuth configurado no ambiente, que pode federar a conta Google; o backend identifica o método como Google quando informado pelo provedor e persiste `avatarUrl` ou `picture` em `users.avatarUrl`. Se o provedor não enviar a foto, a interface usa as iniciais do nome como fallback. Para validar a federação Google em produção, o administrador deve habilitar Google no portal OAuth e configurar os redirect URIs do domínio self-hosted.
 
