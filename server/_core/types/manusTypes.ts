@@ -43,6 +43,8 @@ export interface GetUserInfoResponse {
   email?: string | null;
   platform?: string | null;
   loginMethod?: string | null;
+  avatarUrl?: string | null;
+  picture?: string | null;
 }
 
 export interface CanAccessRequest {
