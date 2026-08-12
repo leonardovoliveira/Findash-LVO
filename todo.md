@@ -33,3 +33,6 @@
 - [x] Fixar a porta externa do container por meio de APP_PORT no .env
 - [x] Atualizar scripts e Compose para nunca escolher porta aleatória por padrão
 - [x] Documentar rebuild, acesso e callback OAuth usando a porta fixa
+- [ ] Corrigir/explicar o diagnóstico do callback aberto manualmente sem code e state
+- [ ] Validar que o botão gera uma URL OAuth com appId, redirectUri e state
+- [ ] Confirmar no portal OAuth o callback exato da porta 3002 e testar o retorno do provedor

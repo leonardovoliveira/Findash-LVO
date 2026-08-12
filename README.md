@@ -34,7 +34,7 @@ A presença de `scripts/start-docker.sh` confirma que a versão correta foi sinc
 
 ## Execução com Docker
 
-O projeto usa Node.js 22, pnpm e um banco MySQL/TiDB compatível com Drizzle. Crie um arquivo `.env` no servidor com `DATABASE_URL`, `JWT_SECRET`, `VITE_APP_ID`, `OAUTH_SERVER_URL`, `VITE_OAUTH_PORTAL_URL` e as demais variáveis fornecidas pelo ambiente de autenticação. Para o fluxo padrão, use `OAUTH_SERVER_URL=https://api.manus.im`. Não versionar esse arquivo.
+O projeto usa Node.js 22, pnpm e um banco MySQL/TiDB compatível com Drizzle. Crie um arquivo `.env` no servidor com `DATABASE_URL`, `JWT_SECRET`, `VITE_APP_ID`, `OAUTH_SERVER_URL`, `VITE_OAUTH_PORTAL_URL` e as demais variáveis fornecidas pelo ambiente de autenticação. No fluxo padrão, a API usa `OAUTH_SERVER_URL=https://api.manus.im` e a tela de login usa `VITE_OAUTH_PORTAL_URL=https://auth.manus.im`; são URLs diferentes. Não versionar esse arquivo.
 
 ### Build com autenticação OAuth
 
@@ -101,7 +101,7 @@ docker rm -f findash-lvo
 
 Se a porta pertencer a outro serviço, mantenha-o ativo e altere `APP_PORT` para outra porta fixa livre. A configuração `docker-compose.yml` usa `${APP_PORT:-3002}:3000`, portanto a porta permanece estável entre rebuilds. Consulte o mapeamento com `docker compose port findash-lvo 3000`.
 
-O endereço usado pelo navegador deve ser HTTPS em produção e precisa estar autorizado no portal OAuth. O erro `OAUTH_SERVER_URL is not configured` significa que essa variável não estava presente no ambiente do container; a imagem agora possui o padrão `https://api.manus.im`, mas é recomendado declarar explicitamente o valor no `.env`.
+O endereço usado pelo navegador deve ser HTTPS em produção e precisa estar autorizado no portal OAuth. O erro `OAUTH_SERVER_URL is not configured` significa que essa variável não estava presente no ambiente do container; a imagem agora possui o padrão `https://api.manus.im`, mas é recomendado declarar explicitamente o valor no `.env`. Não use `https://api.manus.im` como `VITE_OAUTH_PORTAL_URL`: o botão deve abrir o portal `https://auth.manus.im/app-auth`.
 
 O analytics Umami é opcional no ambiente self-hosted e foi removido do HTML quando as variáveis de analytics não são configuradas, evitando o erro `Failed to decode param /%VITE_ANALYTICS_ENDPOINT%/umami`.
 
