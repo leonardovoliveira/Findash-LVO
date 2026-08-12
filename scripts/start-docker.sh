@@ -3,7 +3,8 @@ set -Eeuo pipefail
 
 IMAGE_NAME="${IMAGE_NAME:-findash-lvo}"
 CONTAINER_NAME="${CONTAINER_NAME:-findash-lvo}"
-REQUESTED_PORT="${APP_PORT:-}"
+# A porta externa padrão é estável; use APP_PORT=0 apenas para seleção automática.
+REQUESTED_PORT="${APP_PORT:-3002}"
 
 if ! command -v docker >/dev/null 2>&1; then
   echo "Erro: Docker não está instalado ou não está disponível no PATH." >&2

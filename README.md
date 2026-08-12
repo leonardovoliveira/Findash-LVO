@@ -51,9 +51,17 @@ Depois inicie o container com porta automática:
 ./scripts/start-docker.sh
 ```
 
-### Build e início sem porta fixa
+### Build e início com porta fixa
 
-Para construir e iniciar sem depender de uma porta fixa, use o script que procura uma porta livre entre `3000` e `3999`:
+Para construir e iniciar usando a porta externa fixa `3002`, defina no `.env`:
+
+```env
+APP_PORT=3002
+```
+
+A porta `3002` do servidor é encaminhada para a porta interna `3000` do Node. O build da imagem não muda a porta publicada; apenas o comando de execução a utiliza. Se `3002` estiver ocupada, altere `APP_PORT` para outra porta fixa livre e mantenha o mesmo valor no acesso e no callback OAuth.
+
+Para construir e iniciar usando a porta fixa:
 
 ```bash
 ./scripts/build-docker.sh
@@ -61,18 +69,22 @@ chmod +x scripts/start-docker.sh
 ./scripts/start-docker.sh
 ```
 
-O script remove apenas o container anterior chamado `findash-lvo`, escolhe uma porta externa livre e mantém a porta interna `3000`. Para solicitar uma porta específica, use `APP_PORT`; se ela estiver ocupada, o script falhará sem interromper os demais containers:
+O endereço esperado será `http://192.168.1.27:3002/`. O callback OAuth correspondente deve ser cadastrado exatamente como `http://192.168.1.27:3002/api/oauth/callback` enquanto o acesso for feito por esse endereço. Em produção, prefira um domínio HTTPS e cadastre o callback com esse domínio.
+
+O script remove apenas o container anterior chamado `findash-lvo`, usa a porta fixa definida em `APP_PORT` e mantém a porta interna `3000`. Se a porta estiver ocupada, o script falhará sem interromper os demais containers. Para outro ambiente, altere explicitamente `APP_PORT`:
 
 ```bash
 APP_PORT=8085 ./scripts/start-docker.sh
 ```
 
-Para deixar a escolha totalmente a cargo do Docker usando Compose:
+Para usar Docker Compose mantendo a mesma porta fixa:
 
 ```bash
-APP_PORT=0 docker compose up -d --build
+APP_PORT=3002 docker compose up -d --build
 docker compose port findash-lvo 3000
 ```
+
+O script e o Compose só escolhem uma porta aleatória se você definir explicitamente `APP_PORT=0`; esse modo não é recomendado quando o callback OAuth precisa permanecer estável.
 
 Quando o comando manual `-p PORTA_EXTERNA:3000` for usado, o primeiro número é a porta do servidor Linux; o segundo `3000` é a porta interna do Node e não deve ser alterado. Se precisar investigar uma porta ocupada, descubra o processo responsável:
 
@@ -87,7 +99,7 @@ Se for um container antigo do Findash, remova-o e suba novamente:
 docker rm -f findash-lvo
 ```
 
-Se a porta pertencer a outro serviço, mantenha-o ativo e use o script automático ou uma porta específica livre. A configuração `docker-compose.yml` usa `${APP_PORT:-0}:3000`; com `APP_PORT=0`, o Docker reserva uma porta externa livre automaticamente. Consulte a porta escolhida com `docker compose port findash-lvo 3000`.
+Se a porta pertencer a outro serviço, mantenha-o ativo e altere `APP_PORT` para outra porta fixa livre. A configuração `docker-compose.yml` usa `${APP_PORT:-3002}:3000`, portanto a porta permanece estável entre rebuilds. Consulte o mapeamento com `docker compose port findash-lvo 3000`.
 
 O endereço usado pelo navegador deve ser HTTPS em produção e precisa estar autorizado no portal OAuth. O erro `OAUTH_SERVER_URL is not configured` significa que essa variável não estava presente no ambiente do container; a imagem agora possui o padrão `https://api.manus.im`, mas é recomendado declarar explicitamente o valor no `.env`.
 
