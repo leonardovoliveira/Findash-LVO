@@ -15,3 +15,9 @@
 - [x] Permitir selecionar qualquer ano disponível nos filtros desktop e mobile
 - [x] Ampliar testes para filtros e operações financeiras
 - [x] Criar e publicar o repositório GitHub Findash LVO e registrar sua URL
+- [ ] Diagnosticar processo ou container que ocupa a porta 3000 no servidor Linux
+- [x] Atualizar instruções Docker para permitir publicação em uma porta externa livre
+- [ ] Validar a execução do container e documentar o comando correto
+- [x] Adaptar a execução Docker para não depender das portas fixas 3000 ou 3001
+- [x] Adicionar comando/script para selecionar automaticamente uma porta externa livre
+- [ ] Atualizar documentação e validar o fluxo com múltiplos containers no servidor Linux

@@ -10,12 +10,41 @@ Código publicado em [github.com/leonardovoliveira/Findash-LVO](https://github.c
 
 O projeto usa Node.js 22, pnpm e um banco MySQL/TiDB compatível com Drizzle. Crie um arquivo `.env` no servidor com `DATABASE_URL`, `JWT_SECRET`, `VITE_APP_ID`, `OAUTH_SERVER_URL`, `VITE_OAUTH_PORTAL_URL` e as demais variáveis fornecidas pelo ambiente de autenticação. Não versionar esse arquivo.
 
-Para construir e iniciar:
+Para construir e iniciar sem depender de uma porta fixa, use o script que procura uma porta livre entre `3000` e `3999`:
 
 ```bash
 docker build -t findash-lvo .
-docker run --rm -p 3000:3000 --env-file .env findash-lvo
+chmod +x scripts/start-docker.sh
+./scripts/start-docker.sh
 ```
+
+O script remove apenas o container anterior chamado `findash-lvo`, escolhe uma porta externa livre e mantém a porta interna `3000`. Para solicitar uma porta específica, use `APP_PORT`; se ela estiver ocupada, o script falhará sem interromper os demais containers:
+
+```bash
+APP_PORT=8085 ./scripts/start-docker.sh
+```
+
+Para deixar a escolha totalmente a cargo do Docker usando Compose:
+
+```bash
+APP_PORT=0 docker compose up -d --build
+docker compose port findash-lvo 3000
+```
+
+Quando o comando manual `-p PORTA_EXTERNA:3000` for usado, o primeiro número é a porta do servidor Linux; o segundo `3000` é a porta interna do Node e não deve ser alterado. Se precisar investigar uma porta ocupada, descubra o processo responsável:
+
+```bash
+sudo ss -ltnp | grep ':3000'
+docker ps --format 'table {{.ID}}\\t{{.Names}}\\t{{.Ports}}'
+```
+
+Se for um container antigo do Findash, remova-o e suba novamente:
+
+```bash
+docker rm -f findash-lvo
+```
+
+Se a porta pertencer a outro serviço, mantenha-o ativo e use o script automático ou uma porta específica livre. A configuração `docker-compose.yml` usa `${APP_PORT:-0}:3000`; com `APP_PORT=0`, o Docker reserva uma porta externa livre automaticamente. Consulte a porta escolhida com `docker compose port findash-lvo 3000`.
 
 O servidor respeita `PORT` e deve ser colocado atrás de HTTPS em produção. O login usa o portal OAuth configurado no ambiente, que pode federar a conta Google; o backend identifica o método como Google quando informado pelo provedor e persiste `avatarUrl` ou `picture` em `users.avatarUrl`. Se o provedor não enviar a foto, a interface usa as iniciais do nome como fallback. Para validar a federação Google em produção, o administrador deve habilitar Google no portal OAuth e configurar os redirect URIs do domínio self-hosted.
 
