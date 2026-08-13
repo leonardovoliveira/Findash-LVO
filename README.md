@@ -34,7 +34,7 @@ A presença de `scripts/start-docker.sh` confirma que a versão correta foi sinc
 
 ## Execução com Docker
 
-O projeto usa Node.js 22, pnpm e um banco MySQL/TiDB compatível com Drizzle. Crie um arquivo `.env` no servidor com `DATABASE_URL`, `JWT_SECRET`, `VITE_APP_ID`, `OAUTH_SERVER_URL`, `VITE_OAUTH_PORTAL_URL` e as demais variáveis fornecidas pelo ambiente de autenticação. No fluxo padrão, a API usa `OAUTH_SERVER_URL=https://api.manus.im` e a tela de login usa `VITE_OAUTH_PORTAL_URL=https://auth.manus.im`; são URLs diferentes. Não versionar esse arquivo.
+O projeto usa Node.js 22, pnpm e um banco MySQL/TiDB compatível com Drizzle. Crie um arquivo `.env` no servidor com `DATABASE_URL`, `JWT_SECRET`, `VITE_APP_ID`, `OAUTH_SERVER_URL`, `VITE_OAUTH_PORTAL_URL` e as demais variáveis fornecidas pelo ambiente de autenticação. No ambiente atual, use `OAUTH_SERVER_URL=https://api.manus.im` e `VITE_OAUTH_PORTAL_URL=https://api.manus.im`. O host `auth.manus.im` não resolve por DNS na rede do servidor, enquanto `api.manus.im` foi confirmado como acessível. Não versionar esse arquivo.
 
 ### Build com autenticação OAuth
 
@@ -101,13 +101,13 @@ docker rm -f findash-lvo
 
 Se a porta pertencer a outro serviço, mantenha-o ativo e altere `APP_PORT` para outra porta fixa livre. A configuração `docker-compose.yml` usa `${APP_PORT:-3002}:3000`, portanto a porta permanece estável entre rebuilds. Consulte o mapeamento com `docker compose port findash-lvo 3000`.
 
-O endereço usado pelo navegador deve ser HTTPS em produção e precisa estar autorizado no portal OAuth. O erro `OAUTH_SERVER_URL is not configured` significa que essa variável não estava presente no ambiente do container; a imagem agora possui o padrão `https://api.manus.im`, mas é recomendado declarar explicitamente o valor no `.env`. Não use `https://api.manus.im` como `VITE_OAUTH_PORTAL_URL`: o botão deve abrir o portal `https://auth.manus.im/app-auth`.
+O endereço usado pelo navegador deve ser HTTPS em produção e precisa estar autorizado no portal OAuth. O erro `OAUTH_SERVER_URL is not configured` significa que essa variável não estava presente no ambiente do container; a imagem agora possui o padrão `https://api.manus.im`, mas é recomendado declarar explicitamente o valor no `.env`. O botão deve abrir `https://api.manus.im/app-auth` neste ambiente. Se no futuro `auth.manus.im` estiver disponível por DNS, ele poderá ser usado como portal separado.
 
 O analytics Umami é opcional no ambiente self-hosted e foi removido do HTML quando as variáveis de analytics não são configuradas, evitando o erro `Failed to decode param /%VITE_ANALYTICS_ENDPOINT%/umami`.
 
 Cadastre o callback exatamente como `https://SEU_DOMINIO/api/oauth/callback`; em acesso por IP local, use `http://192.168.1.27:3002/api/oauth/callback` somente para testes. Em HTTP local, o frontend usa o cookie `oauth_state` com `SameSite=Lax`; em produção HTTPS, usa o cookie seguro `__Host-oauth_state`. O `redirectUri` é montado com `window.location.origin`, portanto não use um domínio diferente no cadastro do provedor.
 
-Se o navegador mostrar `Servidor não encontrado` para `auth.manus.im`, verifique a conectividade do servidor/cliente com `curl -I https://auth.manus.im`. O portal OAuth precisa estar acessível pela rede; o container não consegue corrigir DNS, firewall, proxy ou bloqueio de saída HTTPS.
+Se o navegador mostrar `Servidor não encontrado` para o portal OAuth, verifique a conectividade com `curl -I https://api.manus.im/app-auth`. O portal OAuth precisa estar acessível pela rede; o container não consegue corrigir DNS, firewall, proxy ou bloqueio de saída HTTPS.
 
 O servidor respeita `PORT` e deve ser colocado atrás de HTTPS em produção. O login usa o portal OAuth configurado no ambiente, que pode federar a conta Google; o backend identifica o método como Google quando informado pelo provedor e persiste `avatarUrl` ou `picture` em `users.avatarUrl`. Se o provedor não enviar a foto, a interface usa as iniciais do nome como fallback. Para validar a federação Google em produção, o administrador deve habilitar Google no portal OAuth e configurar os redirect URIs do domínio self-hosted.
 
