@@ -6,7 +6,7 @@ No mesmo ambiente, `getent hosts api.manus.im` retornou múltiplos endereços IP
 
 Evidência fornecida pelo usuário: o navegador gerou uma URL em `https://auth.manus.im/app-auth?...`, mas exibiu `Servidor não encontrado` e `NS_ERROR_UNKNOWN_HOST`. O console confirmou falha de resolução do host. A URL local do callback era `http://192.168.1.27:3002/api/oauth/callback`.
 
-Decisão técnica atual: usar `VITE_OAUTH_PORTAL_URL=https://api.manus.im` no ambiente do servidor porque esse host é resolvível, manter `OAUTH_SERVER_URL=https://api.manus.im`, e validar o fluxo `/app-auth` após rebuild. Em produção, usar domínio HTTPS e callback correspondente.
+Decisão técnica atual: usar `VITE_OAUTH_PORTAL_URL=https://manus.im` no ambiente do servidor porque `https://manus.im/app-auth` respondeu HTTP 200. Manter `OAUTH_SERVER_URL=https://api.manus.im`, que é a API; `https://api.manus.im/app-auth` respondeu HTTP 404. Em produção, usar domínio HTTPS e callback correspondente.
 
 Fontes consultadas:
 - https://open.manus.ai/docs/v2/authentication
