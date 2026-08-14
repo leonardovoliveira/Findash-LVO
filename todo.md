@@ -48,3 +48,4 @@
 - [x] Adicionar modo temporário de desenvolvimento sem exigir autenticação Google
 - [x] Preservar OAuth e documentar como reativá-lo depois do desenvolvimento
 - [x] Validar dashboard e lançamentos acessíveis no modo temporário
+- [ ] Criar commit e enviar ao GitHub as alterações atuais do modo de desenvolvimento sem autenticação
