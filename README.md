@@ -111,6 +111,12 @@ Se o navegador mostrar `Servidor não encontrado` para o portal OAuth, verifique
 
 O servidor respeita `PORT` e deve ser colocado atrás de HTTPS em produção. O login usa o portal OAuth configurado no ambiente, que pode federar a conta Google; o backend identifica o método como Google quando informado pelo provedor e persiste `avatarUrl` ou `picture` em `users.avatarUrl`. Se o provedor não enviar a foto, a interface usa as iniciais do nome como fallback. Para validar a federação Google em produção, o administrador deve habilitar Google no portal OAuth e configurar os redirect URIs do domínio self-hosted.
 
+## Desenvolvimento sem autenticação
+
+Para continuar o desenvolvimento na plataforma sem depender do OAuth Google, o servidor usa automaticamente um usuário temporário quando `NODE_ENV` não é `production`. Esse usuário não representa uma conta real; quando o banco está disponível, ele é criado/atualizado apenas para o ambiente de desenvolvimento, garantindo que o CRUD de lançamentos tenha um `userId` válido. Para desligar o bypass durante um teste local, defina `DEV_AUTH_BYPASS=false`.
+
+Esse modo nunca deve ser habilitado em produção. O container self-hosted executado com `NODE_ENV=production` exige a sessão OAuth real; a autenticação Google permanece preservada no código e pode ser reativada após a configuração do appId e dos redirect URIs.
+
 ## Desenvolvimento
 
 ```bash

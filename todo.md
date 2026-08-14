@@ -41,3 +41,10 @@
 - [ ] Tratar cookie __Host-oauth_state em ambiente local HTTP sem comprometer produção HTTPS
 - [ ] Diagnosticar configuração/rede que impede acesso a auth.manus.im
 - [ ] Documentar que o callback Google em produção exige HTTPS e domínio acessível
+- [ ] Substituir VITE_APP_ID=seu_app_id pelo identificador real do projeto OAuth
+- [ ] Rebuildar o frontend Docker com o appId real e validar o retorno do login
+- [ ] Identificar nas capturas do painel Manus o campo correspondente ao VITE_APP_ID
+- [ ] Orientar a cópia segura do appId real para o .env do servidor
+- [x] Adicionar modo temporário de desenvolvimento sem exigir autenticação Google
+- [x] Preservar OAuth e documentar como reativá-lo depois do desenvolvimento
+- [x] Validar dashboard e lançamentos acessíveis no modo temporário

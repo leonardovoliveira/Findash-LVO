@@ -1,6 +1,29 @@
 import type { CreateExpressContextOptions } from "@trpc/server/adapters/express";
 import type { User } from "../../drizzle/schema";
+import { getUserByOpenId, upsertUser } from "../db";
 import { sdk } from "./sdk";
+
+const DEV_USER = {
+  id: 1,
+  openId: "findash-development-user",
+  name: "Usuário de desenvolvimento",
+  email: "dev@findash.local",
+  avatarUrl: null,
+  loginMethod: "development",
+  role: "admin" as const,
+  createdAt: new Date(0),
+  updatedAt: new Date(0),
+  lastSignedIn: new Date(),
+};
+
+async function getDevelopmentUser(): Promise<User | null> {
+  if (process.env.NODE_ENV === "production" || process.env.DEV_AUTH_BYPASS === "false") {
+    return null;
+  }
+
+  await upsertUser(DEV_USER);
+  return (await getUserByOpenId(DEV_USER.openId)) ?? DEV_USER;
+}
 
 export type TrpcContext = {
   req: CreateExpressContextOptions["req"];
@@ -11,7 +34,16 @@ export type TrpcContext = {
 export async function createContext(
   opts: CreateExpressContextOptions
 ): Promise<TrpcContext> {
-  let user: User | null = null;
+  const developmentUser = await getDevelopmentUser();
+  let user: User | null = developmentUser;
+
+  if (user) {
+    return {
+      req: opts.req,
+      res: opts.res,
+      user,
+    };
+  }
 
   try {
     user = await sdk.authenticateRequest(opts.req);
