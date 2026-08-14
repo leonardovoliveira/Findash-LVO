@@ -111,6 +111,14 @@ Se o navegador mostrar `Servidor não encontrado` para o portal OAuth, verifique
 
 O servidor respeita `PORT` e deve ser colocado atrás de HTTPS em produção. O login usa o portal OAuth configurado no ambiente, que pode federar a conta Google; o backend identifica o método como Google quando informado pelo provedor e persiste `avatarUrl` ou `picture` em `users.avatarUrl`. Se o provedor não enviar a foto, a interface usa as iniciais do nome como fallback. Para validar a federação Google em produção, o administrador deve habilitar Google no portal OAuth e configurar os redirect URIs do domínio self-hosted.
 
+## Deploy na Vercel
+
+O projeto também pode ser publicado na Vercel como uma aplicação Node/Express serverless. A raiz contém `server.ts` para a detecção automática da função Node, e `vercel.json` define `pnpm build` para gerar `dist/public` antes da execução. No painel da Vercel, mantenha **Root Directory** como a raiz do repositório e não defina `server/`, `client/` ou `dist/public` como diretório raiz. O **Build Command** deve ser `pnpm build`; não use o conteúdo do diretório `server` como saída estática.
+
+Configure na Vercel as variáveis de ambiente do backend e do frontend, incluindo `DATABASE_URL`, `JWT_SECRET`, `OAUTH_SERVER_URL`, `VITE_APP_ID` e `VITE_OAUTH_PORTAL_URL`. Para o modo sem login usado apenas no preview de desenvolvimento, `DEV_AUTH_BYPASS` pode permanecer habilitado; em produção, use `DEV_AUTH_BYPASS=false` ou deixe a variável ausente, pois a aplicação exige OAuth real.
+
+Para o servidor Linux próprio, continue usando o `Dockerfile` e o `docker-compose.yml`; essa configuração mantém o processo Express persistente, enquanto a Vercel executa a entrada Node como função serverless.
+
 ## Desenvolvimento sem autenticação
 
 Para continuar o desenvolvimento na plataforma sem depender do OAuth Google, o servidor usa automaticamente um usuário temporário quando `NODE_ENV` não é `production`. Esse usuário não representa uma conta real; quando o banco está disponível, ele é criado/atualizado apenas para o ambiente de desenvolvimento, garantindo que o CRUD de lançamentos tenha um `userId` válido. Para desligar o bypass durante um teste local, defina `DEV_AUTH_BYPASS=false`.

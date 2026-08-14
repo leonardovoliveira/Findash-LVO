@@ -49,3 +49,6 @@
 - [x] Preservar OAuth e documentar como reativá-lo depois do desenvolvimento
 - [x] Validar dashboard e lançamentos acessíveis no modo temporário
 - [x] Criar commit e enviar ao GitHub as alterações atuais do modo de desenvolvimento sem autenticação
+- [x] Diagnosticar por que a Vercel está servindo código TypeScript como HTML
+- [x] Corrigir build/output ou documentar o hosting adequado para o full-stack
+- [ ] Validar a URL da Vercel após a correção
