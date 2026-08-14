@@ -113,7 +113,7 @@ O servidor respeita `PORT` e deve ser colocado atrás de HTTPS em produção. O 
 
 ## Deploy na Vercel
 
-O projeto também pode ser publicado na Vercel como uma aplicação Node/Express serverless. A raiz contém `server.ts` para a detecção automática da função Node, e `vercel.json` define `pnpm build` para gerar `dist/public` antes da execução. No painel da Vercel, mantenha **Root Directory** como a raiz do repositório e não defina `server/`, `client/` ou `dist/public` como diretório raiz. O **Build Command** deve ser `pnpm build`; não use o conteúdo do diretório `server` como saída estática.
+O projeto também pode ser publicado na Vercel como uma aplicação Node/Express serverless. A função `api/index.ts` expõe o Express/tRPC, enquanto `server.ts` mantém a entrada Node para ambientes que detectam servidores na raiz. O `vercel.json` define `pnpm build`, gera `dist/public` e encaminha `/api/*` para a função backend. No painel da Vercel, mantenha **Root Directory** como a raiz do repositório e não defina `server/`, `client/` ou `dist/public` como diretório raiz. O **Build Command** deve ser `pnpm build`; não use o conteúdo do diretório `server` como saída estática.
 
 Configure na Vercel as variáveis de ambiente do backend e do frontend, incluindo `DATABASE_URL`, `JWT_SECRET`, `OAUTH_SERVER_URL`, `VITE_APP_ID` e `VITE_OAUTH_PORTAL_URL`. Para o modo sem login usado apenas no preview de desenvolvimento, `DEV_AUTH_BYPASS` pode permanecer habilitado; em produção, use `DEV_AUTH_BYPASS=false` ou deixe a variável ausente, pois a aplicação exige OAuth real.
 

@@ -52,3 +52,6 @@
 - [x] Diagnosticar por que a Vercel está servindo código TypeScript como HTML
 - [x] Corrigir build/output ou documentar o hosting adequado para o full-stack
 - [x] Validar a URL da Vercel após a correção
+- [ ] Corrigir o 404 da rota /api/trpc/auth.me na Vercel
+- [ ] Expor o Express/tRPC por uma função Vercel compatível
+- [ ] Validar frontend e backend funcionando no domínio Vercel
