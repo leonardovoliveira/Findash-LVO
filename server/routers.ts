@@ -1,9 +1,9 @@
 import { z } from "zod";
-import { COOKIE_NAME } from "@shared/const";
-import { getSessionCookieOptions } from "./_core/cookies";
-import { systemRouter } from "./_core/systemRouter";
-import { protectedProcedure, publicProcedure, router } from "./_core/trpc";
-import { createTransaction, deleteTransaction, listTransactions, updateTransaction } from "./db";
+import { COOKIE_NAME } from "../shared/const.js";
+import { getSessionCookieOptions } from "./_core/cookies.js";
+import { systemRouter } from "./_core/systemRouter.js";
+import { protectedProcedure, publicProcedure, router } from "./_core/trpc.js";
+import { createTransaction, deleteTransaction, listTransactions, updateTransaction } from "./db.js";
 
 const monthInput = z.object({
   month: z.number().int().min(1).max(12).optional(),

@@ -1,7 +1,7 @@
 import type { CreateExpressContextOptions } from "@trpc/server/adapters/express";
-import type { User } from "../../drizzle/schema";
-import { getUserByOpenId, upsertUser } from "../db";
-import { sdk } from "./sdk";
+import type { User } from "../../drizzle/schema.js";
+import { getUserByOpenId, upsertUser } from "../db.js";
+import { sdk } from "./sdk.js";
 
 const DEV_USER = {
   id: 1,

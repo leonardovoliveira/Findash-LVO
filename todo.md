@@ -55,3 +55,9 @@
 - [ ] Corrigir o 404 da rota /api/trpc/auth.me na Vercel
 - [ ] Expor o Express/tRPC por uma função Vercel compatível
 - [ ] Validar frontend e backend funcionando no domínio Vercel
+
+- [x] Corrigir imports relativos do backend para extensão .js no runtime ESM da Vercel
+- [x] Substituir alias @shared no router por caminho relativo compatível
+- [x] Validar pnpm build após as correções de backend Vercel
+- [ ] Validar rota /api/trpc/auth.me no novo deployment Vercel
+- [ ] Confirmar frontend e backend funcionando no domínio Vercel
