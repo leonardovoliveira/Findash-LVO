@@ -52,12 +52,15 @@
 - [x] Diagnosticar por que a Vercel está servindo código TypeScript como HTML
 - [x] Corrigir build/output ou documentar o hosting adequado para o full-stack
 - [x] Validar a URL da Vercel após a correção
-- [ ] Corrigir o 404 da rota /api/trpc/auth.me na Vercel
-- [ ] Expor o Express/tRPC por uma função Vercel compatível
-- [ ] Validar frontend e backend funcionando no domínio Vercel
+- [x] Corrigir o 404 da rota /api/trpc/auth.me na Vercel
+- [x] Expor o Express/tRPC por uma função Vercel compatível
+- [x] Validar frontend e backend funcionando no domínio Vercel
 
 - [x] Corrigir imports relativos do backend para extensão .js no runtime ESM da Vercel
 - [x] Substituir alias @shared no router por caminho relativo compatível
 - [x] Validar pnpm build após as correções de backend Vercel
-- [ ] Validar rota /api/trpc/auth.me no novo deployment Vercel
-- [ ] Confirmar frontend e backend funcionando no domínio Vercel
+- [x] Validar rota /api/trpc/auth.me no novo deployment Vercel
+- [x] Confirmar frontend e backend funcionando no domínio Vercel
+
+- [x] Validar a URL raiz https://findash-lvo.vercel.app/ após o novo deployment e confirmar o HTML do frontend
+- [x] Verificar no domínio Vercel a integração entre frontend e /api/trpc/auth.me
