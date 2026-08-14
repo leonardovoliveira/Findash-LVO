@@ -69,6 +69,9 @@
 - [x] Atualizar a documentação para deixar claro que a produção está sem proteção temporariamente
 - [x] Validar o acesso ao dashboard e à API sem sessão após o novo deployment
 
-- [ ] Confirmar documentação operacional do bypass temporário em DEPLOYMENT.md
-- [ ] Publicar a versão com bypass ativo em produção no GitHub e na Vercel
-- [ ] Validar em produção o dashboard e auth.me sem sessão após o novo deployment
+- [x] Confirmar documentação operacional do bypass temporário em DEPLOYMENT.md
+- [x] Publicar a versão com bypass ativo em produção no GitHub e na Vercel
+- [x] Validar em produção o dashboard e auth.me sem sessão após o novo deployment
+
+- [x] Validar no navegador em produção que o dashboard abre sem login após o deployment com bypass ativo
+- [x] Verificar em produção a integração fim a fim do frontend com /api/trpc/auth.me e a exibição do usuário temporário
