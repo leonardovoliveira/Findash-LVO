@@ -17,7 +17,11 @@ const DEV_USER = {
 };
 
 async function getDevelopmentUser(): Promise<User | null> {
-  if (process.env.NODE_ENV === "production" || process.env.DEV_AUTH_BYPASS === "false") {
+  // Temporary access mode: authentication remains disabled until explicitly restored
+  // with DEV_AUTH_BYPASS=false in the deployment environment.
+  const bypassEnabled = process.env.DEV_AUTH_BYPASS !== "false";
+
+  if (!bypassEnabled) {
     return null;
   }
 

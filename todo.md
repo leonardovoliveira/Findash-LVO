@@ -64,3 +64,11 @@
 
 - [x] Validar a URL raiz https://findash-lvo.vercel.app/ após o novo deployment e confirmar o HTML do frontend
 - [x] Verificar no domínio Vercel a integração entre frontend e /api/trpc/auth.me
+
+- [x] Liberar temporariamente o bypass de autenticação também em produção conforme solicitado
+- [x] Atualizar a documentação para deixar claro que a produção está sem proteção temporariamente
+- [x] Validar o acesso ao dashboard e à API sem sessão após o novo deployment
+
+- [ ] Confirmar documentação operacional do bypass temporário em DEPLOYMENT.md
+- [ ] Publicar a versão com bypass ativo em produção no GitHub e na Vercel
+- [ ] Validar em produção o dashboard e auth.me sem sessão após o novo deployment

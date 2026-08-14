@@ -28,7 +28,21 @@ describe("development authentication bypass", () => {
     expect(context.user?.email).toBe("dev@findash.local");
   });
 
-  it("does not bypass authentication in production", async () => {
+  it("allows the temporary bypass in production when explicitly enabled", async () => {
+    process.env.NODE_ENV = "production";
+    process.env.DEV_AUTH_BYPASS = "true";
+
+    const context = await createContext({
+      req: {} as never,
+      res: {} as never,
+      info: {} as never,
+    });
+
+    expect(context.user?.loginMethod).toBe("development");
+    expect(context.user?.email).toBe("dev@findash.local");
+  });
+
+  it("enables the temporary bypass in production by default", async () => {
     process.env.NODE_ENV = "production";
     delete process.env.DEV_AUTH_BYPASS;
 
@@ -38,7 +52,8 @@ describe("development authentication bypass", () => {
       info: {} as never,
     });
 
-    expect(context.user).toBeNull();
+    expect(context.user?.loginMethod).toBe("development");
+    expect(context.user?.email).toBe("dev@findash.local");
   });
 
   it("can be explicitly disabled during development", async () => {
