@@ -3,5 +3,6 @@
   "buildCommand": "pnpm build",
   "installCommand": "pnpm install --frozen-lockfile",
   "devCommand": "pnpm dev",
+  "outputDirectory": "dist/public",
   "framework": null
 }
