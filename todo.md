@@ -197,3 +197,11 @@
 
 - [x] Validar em viewport mobile os botões Exportar, Importar, PDF e Excel, o toggle de tema e o layout após o recolhimento do menu
 
+- [x] Exibir toast visual de sucesso ou erro após finalizar a atualização das cotações
+- [x] Unificar os botões em Importar e Exportar com subopções JSON, Excel e PDF
+- [x] Validar os fluxos de cotação e menus unificados em desktop e mobile
+- [ ] Criar commit e fazer push das alterações para o GitHub
+
+- [x] Validar no browser mobile o submenu Exportar com JSON, Excel e PDF sem overflow
+- [x] Criar uma posição com ticker no preview e confirmar spinner e toast após Atualizar cotações; posição temporária removida ao final
+
