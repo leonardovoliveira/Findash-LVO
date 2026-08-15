@@ -4,6 +4,7 @@ export type LocalTransaction = Omit<Transaction, "occurredAt" | "createdAt" | "u
   occurredAt: string;
   createdAt: string;
   updatedAt: string;
+  icon?: string;
 };
 
 const STORAGE_PREFIX = "findash-lvo:transactions:";
@@ -61,6 +62,7 @@ export function isLocalTransaction(value: unknown): value is LocalTransaction {
     Number(item.amount) > 0 &&
     typeof item.category === "string" &&
     item.category.trim().length > 0 &&
+    (item.icon === undefined || typeof item.icon === "string") &&
     typeof item.occurredAt === "string" &&
     !Number.isNaN(Date.parse(item.occurredAt))
   );

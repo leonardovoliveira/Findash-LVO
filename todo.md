@@ -116,3 +116,16 @@
 
 - [x] Validar no domínio público em viewport mobile a nova estrutura do dashboard
 - [x] Validar em produção o calendário após trocar período e clicar em um dia
+
+- [x] Criar modelo local de posições de investimento por usuário
+- [x] Adicionar botão e modal de cadastro manual de investimentos
+- [x] Criar aba lateral exclusiva para carteira de investimentos
+- [x] Implementar categorias de investimento: renda fixa, renda variável, fundos, Tesouro Direto, dólar e criptomoedas
+- [x] Permitir editar e excluir posições da carteira local
+- [x] Adicionar filtros semanal, mensal e anual ao gráfico de performance
+- [x] Reorganizar o dashboard para calendário compacto junto ao card de saldo
+- [x] Adicionar categorias personalizáveis de lançamentos com ícones no modal
+- [x] Validar testes, responsividade e publicação das novas funcionalidades
+
+- [x] Persistir o ícone da categoria no modelo local e nos fluxos de criação e edição
+- [ ] Publicar as novas funcionalidades e validar o fluxo em produção
