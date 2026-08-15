@@ -97,3 +97,19 @@
 - [x] Validar em produção o dashboard e modal glassmorphism
 - [x] Testar criar, editar e excluir lançamento no layout reformulado
 - [x] Testar exportar e importar JSON no layout reformulado
+
+- [x] Reorganizar o dashboard em uma grade estrutural inspirada na referência
+- [x] Criar card de saldo consolidado
+- [x] Criar card de maiores gastos calculado pelos lançamentos locais
+- [x] Criar card de maiores entradas calculado pelos lançamentos locais
+- [x] Criar card visual de carteira de investimentos sem inventar posições
+- [x] Criar calendário interativo com marcações e detalhe por data
+- [x] Criar card inferior maior com gráfico de performance financeira
+- [x] Validar responsividade e publicar a nova estrutura do dashboard
+
+- [x] Sincronizar a data selecionada ao trocar mês ou ano no calendário
+- [x] Validar seleção de dia e atualização do card de lançamentos da data
+
+- [ ] Publicar no GitHub e na Vercel a nova estrutura do dashboard
+- [ ] Validar em produção os cards, calendário e gráfico em desktop/mobile
+- [ ] Validar em produção a troca de período e seleção de data do calendário
