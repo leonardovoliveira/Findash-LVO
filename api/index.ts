@@ -11,9 +11,10 @@ const app = express();
 app.use((req: Request, _res: Response, next: NextFunction) => {
   // Depending on the Vercel routing shape, /api may already be stripped
   // before the Express function receives the request. Normalize both forms.
+  const request = req as Request & { url?: string };
   for (const prefix of ["/trpc", "/oauth", "/storage"]) {
-    if (req.url?.startsWith(prefix)) {
-      req.url = `/api${req.url}`;
+    if (request.url?.startsWith(prefix)) {
+      request.url = `/api${request.url}`;
       break;
     }
   }
