@@ -175,3 +175,76 @@
     }
   }
 }
+
+@layer components {
+  .app-shell {
+    position: relative;
+    isolation: isolate;
+    background:
+      radial-gradient(circle at 78% 8%, rgba(184, 104, 255, 0.16), transparent 28rem),
+      radial-gradient(circle at 16% 84%, rgba(78, 98, 255, 0.12), transparent 26rem),
+      #090a0f;
+  }
+
+  .app-shell::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background: linear-gradient(120deg, rgba(255,255,255,.025), transparent 40%, rgba(201,134,255,.04));
+  }
+
+  .glass-sidebar {
+    background: rgba(12, 13, 19, .78) !important;
+    border-color: rgba(255,255,255,.09) !important;
+    box-shadow: 18px 0 70px rgba(0,0,0,.2), inset -1px 0 rgba(255,255,255,.025);
+    backdrop-filter: blur(24px);
+  }
+
+  .glass-header {
+    background: rgba(9, 10, 15, .68) !important;
+    border-color: rgba(255,255,255,.08) !important;
+    backdrop-filter: blur(22px);
+  }
+
+  .glass-panel {
+    background: linear-gradient(145deg, rgba(27, 25, 35, .82), rgba(15, 16, 23, .7)) !important;
+    border-color: rgba(255,255,255,.105) !important;
+    box-shadow: 0 22px 70px rgba(0,0,0,.18), inset 0 1px rgba(255,255,255,.045);
+    backdrop-filter: blur(20px);
+  }
+
+  .glass-panel:hover {
+    border-color: rgba(211, 156, 255, .22) !important;
+  }
+
+  .glass-modal {
+    background: linear-gradient(145deg, rgba(38, 31, 48, .92), rgba(16, 17, 25, .9)) !important;
+    border-color: rgba(255,255,255,.18) !important;
+    box-shadow: 0 28px 100px rgba(0,0,0,.58), 0 0 80px rgba(190, 106, 255, .14), inset 0 1px rgba(255,255,255,.1);
+    backdrop-filter: blur(30px) saturate(135%);
+  }
+
+  .glass-modal input {
+    background: rgba(255,255,255,.055) !important;
+    border-color: rgba(255,255,255,.12) !important;
+    box-shadow: inset 0 1px rgba(255,255,255,.035);
+  }
+
+  .glass-modal input:focus {
+    border-color: rgba(213, 151, 255, .75) !important;
+    box-shadow: 0 0 0 3px rgba(190, 106, 255, .14), 0 0 24px rgba(190, 106, 255, .12);
+  }
+
+  .app-shell .bg-primary {
+    background: linear-gradient(135deg, #8e6cff, #d07cff) !important;
+    box-shadow: 0 10px 28px rgba(153, 102, 255, .25);
+  }
+
+  .app-shell .text-primary { color: #c89bff !important; }
+
+  @media (max-width: 1023px) {
+    .glass-sidebar { display: none; }
+  }
+}

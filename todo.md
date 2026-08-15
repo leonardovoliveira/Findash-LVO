@@ -86,3 +86,14 @@
 - [x] Implementar importação e validação de arquivo JSON
 - [x] Atualizar testes para persistência local e backup/restauração
 - [x] Publicar e validar a nova versão sem dependência do banco
+
+- [x] Redesenhar o dashboard com layout moderno inspirado em glassmorphism
+- [x] Aplicar superfícies translúcidas, gradientes roxo/rosa e hierarquia visual renovada
+- [x] Transformar o modal de lançamentos em box flutuante glassmorphism
+- [x] Validar responsividade desktop/mobile e preservar os fluxos existentes
+- [x] Publicar a reformulação visual
+
+- [ ] Publicar a reformulação glassmorphism no GitHub e na Vercel
+- [ ] Validar em produção o dashboard e modal glassmorphism
+- [ ] Testar criar, editar e excluir lançamento no layout reformulado
+- [ ] Testar exportar e importar JSON no layout reformulado
