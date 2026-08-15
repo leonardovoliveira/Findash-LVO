@@ -128,6 +128,14 @@
 - [x] Validar testes, responsividade e publicação das novas funcionalidades
 
 - [x] Persistir o ícone da categoria no modelo local e nos fluxos de criação e edição
-- [ ] Publicar as novas funcionalidades e validar o fluxo em produção
+- [x] Publicar as novas funcionalidades e validar o fluxo em produção
 
 - [x] Configurar rewrite SPA na Vercel para rotas client-side /investimentos e /lancamentos
+
+- [ ] Validar em produção cadastro, edição, exclusão e recarga de posição de investimento
+- [ ] Validar em produção filtros semanal, mensal e anual do gráfico
+- [ ] Validar em produção persistência de categoria e ícone após recarregar lançamento
+- [x] Corrigir o cálculo e a exibição do valor patrimonial no card da carteira de investimentos
+- [x] Exibir a aba Investimentos no menu lateral em telas móveis
+- [x] Validar carteira e navegação em viewport mobile e desktop
+- [x] Publicar checkpoint com as correções da carteira e do menu mobile

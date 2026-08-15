@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createLocalInvestment, investmentCategories, isLocalInvestment, type LocalInvestment } from "../client/src/lib/localInvestments";
+import { createLocalInvestment, investmentCategories, investmentValue, isLocalInvestment, type LocalInvestment } from "../client/src/lib/localInvestments";
 
 const base: LocalInvestment = {
   id: 1,
@@ -27,6 +27,12 @@ describe("local investments", () => {
   it("accepts every requested investment category", () => {
     expect(investmentCategories.map(category => category.value)).toEqual(["fixed-income", "equities", "funds", "treasury", "dollar", "crypto"]);
     expect(investmentCategories).toHaveLength(6);
+  });
+
+  it("calculates portfolio value without replacing an explicit zero", () => {
+    expect(investmentValue({ currentValue: "", quantity: "10", averagePrice: "100" })).toBe(1000);
+    expect(investmentValue({ currentValue: "0", quantity: "10", averagePrice: "100" })).toBe(0);
+    expect(investmentValue({ currentValue: "1050", quantity: "10", averagePrice: "100" })).toBe(1050);
   });
 
   it("rejects invalid positions", () => {

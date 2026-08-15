@@ -41,6 +41,14 @@ export function loadLocalInvestments(userId: number | string): LocalInvestment[]
   }
 }
 
+export function investmentValue(item: Pick<LocalInvestment, "currentValue" | "quantity" | "averagePrice">) {
+  const currentValue = Number(item.currentValue);
+  if (item.currentValue.trim() !== "" && Number.isFinite(currentValue)) return currentValue;
+  const quantity = Number(item.quantity);
+  const averagePrice = Number(item.averagePrice);
+  return Number.isFinite(quantity) && Number.isFinite(averagePrice) ? quantity * averagePrice : 0;
+}
+
 export function saveLocalInvestments(userId: number | string, investments: LocalInvestment[]) {
   window.localStorage.setItem(investmentStorageKey(userId), JSON.stringify(investments));
 }
