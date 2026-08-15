@@ -242,3 +242,6 @@
 
 - [x] Validar interativamente em produção/Vercel os novos cards analíticos, widgets USD/BTC e avatar LO em desktop e mobile
 
+- [x] Criar painel de configurações para escolher widgets visíveis no dashboard
+- [x] Persistir preferências dos widgets no localStorage e restaurá-las ao recarregar
+- [x] Validar filtros de widgets em desktop/mobile, testes e build
