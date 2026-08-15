@@ -143,3 +143,16 @@
 - [x] Republicar no Vercel a versão com a correção de patrimônio e navegação móvel
 - [x] Validar em produção a edição de uma posição de investimento existente
 - [x] Validar em produção a persistência da carteira após recarregar a página com uma posição salva
+- [ ] Definir fonte externa de cotações e estratégia de atualização automática
+- [ ] Calcular custo total da posição por quantidade × preço médio
+- [ ] Integrar atualização do valor atual por cotação externa com fallback local
+- [ ] Adicionar controles de atualização e status da última cotação
+- [ ] Testar e publicar a atualização automatizada da carteira
+- [x] Integrar brapi.dev para cotações de mercado com fonte, horário e fallback
+- [x] Criar função tipada para buscar B3SA3 na brapi com BRAPI_TOKEN server-side
+- [x] Tratar respostas não-2xx e retornar results[0].data sem expor a chave
+- [x] Validar integração B3SA3 com testes de sucesso e erro
+- [ ] Validar em produção a integração fim a fim da carteira com cotação B3 via brapi (pendente de BRAPI_TOKEN autorizado; validação local mockada aprovada)
+- [x] Cobrir o fluxo da carteira que atualiza horário, fonte e fallback da cotação
+- [ ] Reorganizar Maiores gastos e Maiores entradas em coluna vertical compacta
+- [ ] Validar o novo layout em desktop e mobile

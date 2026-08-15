@@ -18,7 +18,13 @@ export type LocalInvestment = {
   institution: string;
   quantity: string;
   averagePrice: string;
+  /** Valor total de mercado da posição, calculado por quantidade × cotação. */
   currentValue: string;
+  /** Cotação unitária retornada pela fonte externa. */
+  marketPrice?: string;
+  quoteFetchedAt?: string;
+  quoteSource?: string;
+  quoteError?: string;
   notes: string;
   createdAt: string;
   updatedAt: string;
@@ -41,12 +47,48 @@ export function loadLocalInvestments(userId: number | string): LocalInvestment[]
   }
 }
 
-export function investmentValue(item: Pick<LocalInvestment, "currentValue" | "quantity" | "averagePrice">) {
-  const currentValue = Number(item.currentValue);
-  if (item.currentValue.trim() !== "" && Number.isFinite(currentValue)) return currentValue;
+export function investmentCost(item: Pick<LocalInvestment, "quantity" | "averagePrice">) {
   const quantity = Number(item.quantity);
   const averagePrice = Number(item.averagePrice);
   return Number.isFinite(quantity) && Number.isFinite(averagePrice) ? quantity * averagePrice : 0;
+}
+
+export function investmentValue(item: Pick<LocalInvestment, "currentValue" | "quantity" | "averagePrice">) {
+  const currentValue = Number(item.currentValue);
+  if (item.currentValue.trim() !== "" && Number.isFinite(currentValue)) return currentValue;
+  return investmentCost(item);
+}
+
+export type InvestmentQuote = {
+  ok: boolean;
+  price?: number;
+  source: string;
+  fetchedAt: string;
+  error?: string;
+};
+
+export function applyInvestmentQuote(item: LocalInvestment, quote: InvestmentQuote): LocalInvestment {
+  if (!quote.ok || !Number.isFinite(quote.price)) {
+    return { ...item, quoteFetchedAt: quote.fetchedAt, quoteSource: quote.source, quoteError: quote.error ?? "Cotação indisponível" };
+  }
+  const price = quote.price ?? 0;
+  return {
+    ...item,
+    marketPrice: String(price),
+    currentValue: String(Number(item.quantity || 0) * price),
+    quoteFetchedAt: quote.fetchedAt,
+    quoteSource: quote.source,
+    quoteError: "",
+  };
+}
+
+export function investmentMarketValue(item: Pick<LocalInvestment, "currentValue" | "quantity" | "averagePrice" | "marketPrice">) {
+  const marketPrice = Number(item.marketPrice);
+  if (item.marketPrice?.trim() && Number.isFinite(marketPrice)) {
+    const quantity = Number(item.quantity);
+    return Number.isFinite(quantity) ? quantity * marketPrice : 0;
+  }
+  return investmentValue(item);
 }
 
 export function saveLocalInvestments(userId: number | string, investments: LocalInvestment[]) {
@@ -65,5 +107,5 @@ export function createLocalInvestment(
 export function isLocalInvestment(value: unknown): value is LocalInvestment {
   if (!value || typeof value !== "object") return false;
   const item = value as Record<string, unknown>;
-  return Number.isInteger(item.id) && typeof item.userId === "number" && typeof item.name === "string" && item.name.trim().length > 0 && typeof item.ticker === "string" && typeof item.category === "string" && investmentCategories.some(category => category.value === item.category) && typeof item.institution === "string" && typeof item.quantity === "string" && Number(item.quantity) >= 0 && typeof item.averagePrice === "string" && Number(item.averagePrice) >= 0 && typeof item.currentValue === "string" && Number(item.currentValue) >= 0 && typeof item.notes === "string";
+  return Number.isInteger(item.id) && typeof item.userId === "number" && typeof item.name === "string" && item.name.trim().length > 0 && typeof item.ticker === "string" && typeof item.category === "string" && investmentCategories.some(category => category.value === item.category) && typeof item.institution === "string" && typeof item.quantity === "string" && Number(item.quantity) >= 0 && typeof item.averagePrice === "string" && Number(item.averagePrice) >= 0 && typeof item.currentValue === "string" && Number(item.currentValue) >= 0 && (item.marketPrice === undefined || (typeof item.marketPrice === "string" && Number(item.marketPrice) >= 0)) && (item.quoteFetchedAt === undefined || typeof item.quoteFetchedAt === "string") && (item.quoteSource === undefined || typeof item.quoteSource === "string") && (item.quoteError === undefined || typeof item.quoteError === "string") && typeof item.notes === "string";
 }

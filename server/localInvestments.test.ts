@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createLocalInvestment, investmentCategories, investmentValue, isLocalInvestment, type LocalInvestment } from "../client/src/lib/localInvestments";
+import { applyInvestmentQuote, createLocalInvestment, investmentCategories, investmentCost, investmentMarketValue, investmentValue, isLocalInvestment, type LocalInvestment } from "../client/src/lib/localInvestments";
 
 const base: LocalInvestment = {
   id: 1,
@@ -27,6 +27,31 @@ describe("local investments", () => {
   it("accepts every requested investment category", () => {
     expect(investmentCategories.map(category => category.value)).toEqual(["fixed-income", "equities", "funds", "treasury", "dollar", "crypto"]);
     expect(investmentCategories).toHaveLength(6);
+  });
+
+  it("calculates cost from quantity times average price", () => {
+    expect(investmentCost({ quantity: "10", averagePrice: "100" })).toBe(1000);
+  });
+
+  it("applies a successful quote to the position and records source metadata", () => {
+    const updated = applyInvestmentQuote(base, { ok: true, price: 120, source: "brapi.dev", fetchedAt: "2026-08-15T12:00:00.000Z" });
+    expect(updated.marketPrice).toBe("120");
+    expect(updated.currentValue).toBe("1200");
+    expect(updated.quoteSource).toBe("brapi.dev");
+    expect(updated.quoteFetchedAt).toBe("2026-08-15T12:00:00.000Z");
+    expect(updated.quoteError).toBe("");
+  });
+
+  it("keeps the prior value and records a quote fallback error", () => {
+    const updated = applyInvestmentQuote(base, { ok: false, source: "brapi.dev", fetchedAt: "2026-08-15T12:01:00.000Z", error: "HTTP 403" });
+    expect(updated.currentValue).toBe(base.currentValue);
+    expect(updated.quoteError).toBe("HTTP 403");
+    expect(updated.quoteSource).toBe("brapi.dev");
+  });
+
+  it("uses market price for current market value and falls back to cost", () => {
+    expect(investmentMarketValue({ currentValue: "1000", quantity: "10", averagePrice: "100", marketPrice: "120" })).toBe(1200);
+    expect(investmentMarketValue({ currentValue: "1000", quantity: "10", averagePrice: "100" })).toBe(1000);
   });
 
   it("calculates portfolio value without replacing an explicit zero", () => {
