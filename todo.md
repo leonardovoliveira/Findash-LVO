@@ -179,3 +179,6 @@
 - [x] Cobrir o fluxo da carteira que atualiza horário, fonte e fallback da cotação
 - [x] Reorganizar Maiores gastos e Maiores entradas em coluna vertical compacta
 - [x] Validar o novo layout em desktop e mobile
+- [x] Diagnosticar falha de atualização de cotação em produção e orientar a configuração segura da BRAPI_TOKEN: endpoint público retornou HTTP 401 por token ausente ou inválido
+- [ ] Validar atualização de cotação no ambiente publicado após a correção
+

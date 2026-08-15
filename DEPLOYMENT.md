@@ -35,3 +35,19 @@ Depois, recrie o container com o procedimento documentado no projeto. Não compa
 A versão atual não depende de `DATABASE_URL` para registrar lançamentos. Os dados ficam no `localStorage` do navegador, separados pelo identificador do usuário temporário. Isso permite funcionamento sem banco, mas significa que os dados não são compartilhados entre navegadores ou dispositivos e podem ser perdidos se o armazenamento do navegador for apagado.
 
 Use **Exportar JSON** regularmente para baixar um backup. Para restaurar, use **Importar JSON** e selecione um arquivo gerado pelo Findash LVO. O arquivo contém os lançamentos, a versão do formato e a data de exportação. Recomenda-se manter cópias do backup fora do navegador.
+
+## Cotações da brapi.dev
+
+A atualização de cotações não exige um arquivo adicional no servidor. O backend lê a variável de ambiente `BRAPI_TOKEN` exclusivamente no runtime do servidor e envia o token no header `Authorization`; a chave não deve ser colocada no frontend, no `localStorage` ou no GitHub.
+
+No Vercel, abra **Settings → Environment Variables**, crie `BRAPI_TOKEN` com o token válido e marque pelo menos **Production**. Depois salve e faça um novo deployment, pois a função serverless precisa ser reiniciada para receber a variável.
+
+Em uma instalação Docker/Linux, crie ou edite o arquivo `.env` no diretório de implantação, fora do Git, com o seguinte formato:
+
+```env
+BRAPI_TOKEN=seu_token_real_da_brapi
+```
+
+O container deve receber esse arquivo por `--env-file .env` ou pelo mecanismo equivalente usado no `docker compose`. Após alterar o valor, recrie o container; reiniciar apenas o navegador não atualiza variáveis do backend. Nunca publique o `.env` e confirme que ele está incluído no `.gitignore`.
+
+Se a API responder HTTP 401, o problema é a ausência, expiração ou configuração incorreta do token no ambiente de produção; não é necessário criar uma rota ou arquivo de código adicional.
