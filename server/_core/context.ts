@@ -17,9 +17,9 @@ const DEV_USER = {
 };
 
 async function getDevelopmentUser(): Promise<User | null> {
-  // Keep the convenience user only for local development. Production must always
-  // authenticate through the OAuth session cookie, regardless of missing env vars.
-  const bypassEnabled = process.env.NODE_ENV !== "production" && process.env.DEV_AUTH_BYPASS !== "false";
+  // Temporary access mode: authentication remains disabled until explicitly restored
+  // with DEV_AUTH_BYPASS=false in the deployment environment.
+  const bypassEnabled = process.env.DEV_AUTH_BYPASS !== "false";
 
   if (!bypassEnabled) {
     return null;
