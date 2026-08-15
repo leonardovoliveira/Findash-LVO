@@ -136,7 +136,7 @@
 - [ ] Validar em produção filtros semanal, mensal e anual do gráfico
 - [x] Validar no app publicado uma posição B3SA3 com atualização visual de valor, fonte e horário
 - [ ] Validar no app publicado o fallback visual quando a brapi retornar erro não-2xx
-- [ ] Criar commit final com todas as alterações atuais e enviar ao GitHub
+- [x] Criar commit final com todas as alterações atuais e enviar ao GitHub
 - [x] Adicionar histórico de desempenho dos ativos usando dados históricos da brapi
 - [x] Adicionar seletor para alternar o histórico entre os ativos da carteira
 - [x] Documentar e validar o teste de cotação em tempo real na interface
@@ -236,5 +236,9 @@
 - [x] Adicionar widgets de cotação USD/BRL e BTC/BRL
 - [x] Substituir logo ao lado do usuário pelo avatar textual LO
 - [x] Validar responsividade, testes e build dos novos cards
-- [ ] Fazer commit e push das alterações no GitHub
+- [x] Fazer commit e push das alterações no GitHub
+
+- [x] Adicionar ícone público do ticker nos cards de ativos
+
+- [x] Validar interativamente em produção/Vercel os novos cards analíticos, widgets USD/BTC e avatar LO em desktop e mobile
 

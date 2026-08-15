@@ -39,3 +39,11 @@ No preview, uma posição temporária B3SA3 foi cadastrada para validar o toolti
 A seta real de variação no preview foi localizada com `aria-label="Ver fechamento anterior"` e recebeu foco corretamente via teclado/DOM. A simulação programática de mouse/foco não abriu o portal visual do Radix Tooltip, portanto a confirmação visual será feita com movimento real do cursor após posicionar o elemento no viewport.
 
 O DOM do preview confirmou o indicador `-0.88% no dia` com `aria-label="Ver fechamento anterior"`; o trigger é acessível por foco. A posição calculada ficou abaixo do viewport atual, e a simulação de eventos não abriu o portal Radix, mas a implementação inclui trigger focável e conteúdo “Fechamento anterior: …”.
+
+## Validação pública final — 15/08/2026
+
+No domínio `https://findash-lvo.vercel.app/`, a home abriu sem autenticação e exibiu o avatar textual `LO`, os cards de investimentos por tipo e instituição, a performance anual e os widgets USD/BRL e BTC/BRL. Os widgets retornaram `Indisponível` na sessão validada, sem quebrar o layout, enquanto a cotação B3 usada na carteira foi carregada pela brapi.
+
+Foi cadastrada temporariamente uma posição de compra `B3SA3`, instituição `XP`, quantidade 1 e preço de operação R$ 100,00. A produção exibiu valor de mercado R$ 14,67, custo R$ 100,00, histórico de 1 mês, gráfico por tipo com `Renda variável`, gráfico por instituição com `XP`, performance anual, ícone público `https://assets.parqet.com/logos/stocks/B3SA3.png`, variação diária `-0,88%` e trigger de tooltip de fechamento anterior disponível por foco/hover. A posição temporária foi excluída ao final e a carteira voltou a zero posições.
+
+A captura também confirmou a adaptação mobile/local registrada anteriormente; type-check, 37 testes e build de produção passaram após o ajuste do ícone público.
