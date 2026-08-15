@@ -1,4 +1,5 @@
 import express from "express";
+import type { NextFunction, Request, Response } from "express";
 import { createExpressMiddleware } from "@trpc/server/adapters/express";
 import { registerOAuthRoutes } from "../server/_core/oauth.js";
 import { registerStorageProxy } from "../server/_core/storageProxy.js";
@@ -7,7 +8,7 @@ import { appRouter } from "../server/routers.js";
 
 const app = express();
 
-app.use((req, _res, next) => {
+app.use((req: Request, _res: Response, next: NextFunction) => {
   // Depending on the Vercel routing shape, /api may already be stripped
   // before the Express function receives the request. Normalize both forms.
   for (const prefix of ["/trpc", "/oauth", "/storage"]) {

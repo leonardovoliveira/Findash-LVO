@@ -139,3 +139,5 @@
 - [x] Exibir a aba Investimentos no menu lateral em telas móveis
 - [x] Validar carteira e navegação em viewport mobile e desktop
 - [x] Publicar checkpoint com as correções da carteira e do menu mobile
+- [ ] Corrigir e validar o type-check específico do endpoint Vercel
+- [ ] Republicar no Vercel a versão com a correção de patrimônio e navegação móvel
