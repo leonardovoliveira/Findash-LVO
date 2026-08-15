@@ -93,7 +93,7 @@
 - [x] Validar responsividade desktop/mobile e preservar os fluxos existentes
 - [x] Publicar a reformulação visual
 
-- [ ] Publicar a reformulação glassmorphism no GitHub e na Vercel
-- [ ] Validar em produção o dashboard e modal glassmorphism
-- [ ] Testar criar, editar e excluir lançamento no layout reformulado
-- [ ] Testar exportar e importar JSON no layout reformulado
+- [x] Publicar a reformulação glassmorphism no GitHub e na Vercel
+- [x] Validar em produção o dashboard e modal glassmorphism
+- [x] Testar criar, editar e excluir lançamento no layout reformulado
+- [x] Testar exportar e importar JSON no layout reformulado
