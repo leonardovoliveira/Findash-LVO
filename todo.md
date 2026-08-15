@@ -148,10 +148,11 @@
 - [x] Testar responsividade e publicar os novos fluxos
 - [x] Validar em produção cadastro, próxima fatura, pagamento e limpeza de cartão
 - [ ] Validar em produção persistência de categoria e ícone após recarregar lançamento
+- [x] Confirmar via endpoint autenticado que brapi permite 1mo/3mo e rejeita 6mo/1y no plano atual
 - [x] Adicionar edição de cartões de crédito cadastrados
 - [x] Adicionar exclusão de cartões de crédito cadastrados
-- [x] Adicionar filtros de 1 mês, 6 meses e 1 ano ao gráfico histórico
-- [x] Testar, criar commit e fazer push das alterações de cartões e histórico
+- [ ] Adicionar filtros de 1 mês, 6 meses e 1 ano ao gráfico histórico (6mo/1y indisponíveis no plano brapi atual; UI exibe erro da fonte)
+- [x] Testar, criar commit e fazer push das alterações de cartões e histórico (commit 6070503 enviado para GitHub)
 - [x] Corrigir o cálculo e a exibição do valor patrimonial no card da carteira de investimentos
 - [x] Exibir a aba Investimentos no menu lateral em telas móveis
 - [x] Validar carteira e navegação em viewport mobile e desktop

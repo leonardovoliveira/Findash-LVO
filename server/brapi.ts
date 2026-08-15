@@ -32,7 +32,7 @@ export class BrapiHttpError extends Error {
 
 export type BrapiHistoricalPoint = { date: number; close: number; open?: number; high?: number; low?: number; volume?: number };
 
-export async function fetchBrapiStockHistory(symbol: string, range: "1d" | "5d" | "1mo" | "3mo" = "3mo", fetchImpl: typeof fetch = fetch): Promise<BrapiHistoricalPoint[]> {
+export async function fetchBrapiStockHistory(symbol: string, range: "1d" | "5d" | "1mo" | "3mo" | "6mo" | "1y" = "3mo", fetchImpl: typeof fetch = fetch): Promise<BrapiHistoricalPoint[]> {
   const normalizedSymbol = symbol.trim().toUpperCase();
   if (!/^[A-Z0-9._-]{1,24}$/.test(normalizedSymbol)) throw new Error("Símbolo de ação inválido");
   const headers: Record<string, string> = { Accept: "application/json" };
