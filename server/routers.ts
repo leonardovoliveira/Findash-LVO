@@ -28,6 +28,32 @@ const stockQuoteInput = z.object({
   symbol: z.string().trim().min(1).max(24).regex(/^[A-Za-z0-9._-]+$/),
 });
 
+type MarketQuoteResult = { ok: true; ticker: string; price: number; changePercent: number | null; previousClose: number | null; currency: string; source: string; fetchedAt: string } | { ok: false; ticker: string; source: string; fetchedAt: string; error: string };
+
+export async function fetchMarketFallback(category: "dollar" | "crypto", ticker: string, fetchedAt: string, signal: AbortSignal, fetchImpl: typeof fetch = fetch): Promise<MarketQuoteResult> {
+  if (category === "dollar") {
+    const response = await fetchImpl("https://economia.awesomeapi.com.br/json/last/USD-BRL", { headers: { Accept: "application/json" }, signal });
+    if (!response.ok) return { ok: false, ticker, source: "AwesomeAPI", fetchedAt, error: `A fonte de câmbio respondeu HTTP ${response.status}` };
+    const payload = await response.json() as { USDBRL?: { bid?: string; pctChange?: string; timestamp?: string } };
+    const quote = payload.USDBRL;
+    const price = Number(quote?.bid);
+    const changePercent = Number(quote?.pctChange);
+    if (!Number.isFinite(price)) return { ok: false, ticker, source: "AwesomeAPI", fetchedAt, error: "Câmbio sem cotação disponível" };
+    const quoteTime = quote?.timestamp ? new Date(Number(quote.timestamp) * 1000).toISOString() : fetchedAt;
+    const previousClose = Number.isFinite(changePercent) && changePercent !== -100 ? price / (1 + changePercent / 100) : null;
+    return { ok: true, ticker, price, changePercent: Number.isFinite(changePercent) ? changePercent : null, previousClose, currency: "BRL", source: "AwesomeAPI", fetchedAt: quoteTime };
+  }
+
+  const response = await fetchImpl("https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=brl&include_24hr_change=true", { headers: { Accept: "application/json" }, signal });
+  if (!response.ok) return { ok: false, ticker, source: "CoinGecko", fetchedAt, error: `A fonte de cripto respondeu HTTP ${response.status}` };
+  const payload = await response.json() as { bitcoin?: { brl?: number; brl_24h_change?: number } };
+  const price = Number(payload.bitcoin?.brl);
+  const changePercent = Number(payload.bitcoin?.brl_24h_change);
+  if (!Number.isFinite(price)) return { ok: false, ticker, source: "CoinGecko", fetchedAt, error: "Cripto sem cotação disponível" };
+  const previousClose = Number.isFinite(changePercent) && changePercent !== -100 ? price / (1 + changePercent / 100) : null;
+  return { ok: true, ticker, price, changePercent: Number.isFinite(changePercent) ? changePercent : null, previousClose, currency: "BRL", source: "CoinGecko", fetchedAt };
+}
+
 const transactionInput = z.object({
   type: z.enum(["income", "expense"]),
   description: z.string().trim().min(1).max(180),
@@ -57,11 +83,8 @@ export const appRouter = router({
         const controller = new AbortController();
         const timeout = setTimeout(() => controller.abort(), 8000);
         try {
-          const url = item.category === "dollar"
-            ? `https://brapi.dev/api/v2/currency?currency=${encodeURIComponent(ticker.includes("-") ? ticker : "USD-BRL")}`
-            : item.category === "crypto"
-              ? `https://brapi.dev/api/v2/crypto?coin=${encodeURIComponent(ticker)}&currency=BRL`
-              : `https://brapi.dev/api/v2/stocks/quote?symbols=${encodeURIComponent(ticker)}`;
+          if (item.category === "dollar" || item.category === "crypto") return await fetchMarketFallback(item.category, ticker, fetchedAt, controller.signal);
+          const url = `https://brapi.dev/api/v2/stocks/quote?symbols=${encodeURIComponent(ticker)}`;
           const response = await fetch(url, { headers, signal: controller.signal });
           if (!response.ok) return { ok: false as const, ticker, source: "brapi.dev", fetchedAt, error: `A fonte respondeu HTTP ${response.status}` };
           const payload = await response.json() as any;

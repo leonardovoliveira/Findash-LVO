@@ -248,3 +248,8 @@
 - [x] Adicionar arrastar e soltar para reorganizar os widgets do dashboard
 - [x] Persistir e restaurar a ordem dos widgets no localStorage
 - [x] Validar drag-and-drop, acessibilidade, responsividade, testes e build
+- [x] Diagnosticar e corrigir cotações indisponíveis no dashboard publicado (fallback server-side para AwesomeAPI e CoinGecko quando câmbio/cripto estão bloqueados no plano gratuito da brapi)
+- [x] Adicionar tipo de cartão individual ou compartilhado
+- [x] Adicionar comprador aos lançamentos de compras de cartões compartilhados
+- [x] Persistir, exibir e validar compradores por lançamento
+- [x] Executar testes, build, commit e push das alterações
