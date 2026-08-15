@@ -187,3 +187,13 @@
 - [x] Integrar logo e favicon no frontend e no metadata do site (logo na tela de entrada e símbolo no dashboard)
 - [x] Validar visualmente e publicar a identidade visual atualizada (testes, build e assets verificados)
 
+- [x] Remover a palavra JSON dos botões de importação e exportação e aplicar contorno visual
+- [x] Implementar recolhimento e expansão do menu lateral
+- [x] Implementar toggle persistente de dark mode e light mode
+- [x] Adicionar feedback visual durante a atualização das cotações
+- [x] Exportar relatório financeiro em PDF com resumo e gráficos
+- [x] Exportar dados financeiros para Excel
+- [x] Validar os novos controles, exportações e responsividade (desktop, tablet e mobile)
+
+- [x] Validar em viewport mobile os botões Exportar, Importar, PDF e Excel, o toggle de tema e o layout após o recolhimento do menu
+

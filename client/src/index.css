@@ -181,9 +181,10 @@
     position: relative;
     isolation: isolate;
     background:
-      radial-gradient(circle at 78% 8%, rgba(184, 104, 255, 0.16), transparent 28rem),
-      radial-gradient(circle at 16% 84%, rgba(78, 98, 255, 0.12), transparent 26rem),
-      #090a0f;
+      radial-gradient(circle at 78% 8%, color-mix(in srgb, var(--primary) 16%, transparent), transparent 28rem),
+      radial-gradient(circle at 16% 84%, color-mix(in srgb, var(--chart-2) 12%, transparent), transparent 26rem),
+      var(--background);
+    transition: background-color 180ms ease, color 180ms ease;
   }
 
   .app-shell::before {
@@ -196,22 +197,22 @@
   }
 
   .glass-sidebar {
-    background: rgba(12, 13, 19, .78) !important;
-    border-color: rgba(255,255,255,.09) !important;
-    box-shadow: 18px 0 70px rgba(0,0,0,.2), inset -1px 0 rgba(255,255,255,.025);
+    background: color-mix(in srgb, var(--background) 82%, transparent) !important;
+    border-color: color-mix(in srgb, var(--foreground) 10%, transparent) !important;
+    box-shadow: 18px 0 70px color-mix(in srgb, var(--foreground) 12%, transparent), inset -1px 0 color-mix(in srgb, var(--foreground) 4%, transparent);
     backdrop-filter: blur(24px);
   }
 
   .glass-header {
-    background: rgba(9, 10, 15, .68) !important;
-    border-color: rgba(255,255,255,.08) !important;
+    background: color-mix(in srgb, var(--background) 74%, transparent) !important;
+    border-color: color-mix(in srgb, var(--foreground) 9%, transparent) !important;
     backdrop-filter: blur(22px);
   }
 
   .glass-panel {
-    background: linear-gradient(145deg, rgba(27, 25, 35, .82), rgba(15, 16, 23, .7)) !important;
-    border-color: rgba(255,255,255,.105) !important;
-    box-shadow: 0 22px 70px rgba(0,0,0,.18), inset 0 1px rgba(255,255,255,.045);
+    background: linear-gradient(145deg, color-mix(in srgb, var(--card) 88%, transparent), color-mix(in srgb, var(--background) 78%, transparent)) !important;
+    border-color: color-mix(in srgb, var(--foreground) 11%, transparent) !important;
+    box-shadow: 0 22px 70px color-mix(in srgb, var(--foreground) 12%, transparent), inset 0 1px color-mix(in srgb, var(--foreground) 5%, transparent);
     backdrop-filter: blur(20px);
   }
 
@@ -220,9 +221,9 @@
   }
 
   .glass-modal {
-    background: linear-gradient(145deg, rgba(38, 31, 48, .92), rgba(16, 17, 25, .9)) !important;
-    border-color: rgba(255,255,255,.18) !important;
-    box-shadow: 0 28px 100px rgba(0,0,0,.58), 0 0 80px rgba(190, 106, 255, .14), inset 0 1px rgba(255,255,255,.1);
+    background: linear-gradient(145deg, color-mix(in srgb, var(--card) 94%, transparent), color-mix(in srgb, var(--background) 91%, transparent)) !important;
+    border-color: color-mix(in srgb, var(--foreground) 18%, transparent) !important;
+    box-shadow: 0 28px 100px color-mix(in srgb, var(--foreground) 28%, transparent), 0 0 80px color-mix(in srgb, var(--primary) 14%, transparent), inset 0 1px color-mix(in srgb, var(--foreground) 10%, transparent);
     backdrop-filter: blur(30px) saturate(135%);
   }
 
