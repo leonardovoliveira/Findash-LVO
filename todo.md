@@ -146,8 +146,9 @@
 - [x] Criar card de próxima fatura abaixo dos rankings no dashboard
 - [x] Permitir marcar a fatura como paga com atualização visual e persistência
 - [x] Testar responsividade e publicar os novos fluxos
-- [x] Validar em produção cadastro, próxima fatura, pagamento e limpeza de cartão
+- [x] Validar em produção cadastro, próxima fatura, pagamento, edição, exclusão e limpeza de cartão
 - [ ] Validar em produção persistência de categoria e ícone após recarregar lançamento
+- [x] Validar em produção edição e exclusão de cartão temporário e remover o registro ao final
 - [x] Confirmar via endpoint autenticado que brapi permite 1mo/3mo e rejeita 6mo/1y no plano atual
 - [x] Adicionar edição de cartões de crédito cadastrados
 - [x] Adicionar exclusão de cartões de crédito cadastrados
