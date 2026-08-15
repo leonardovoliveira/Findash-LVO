@@ -2,6 +2,11 @@ import { LOCAL_OAUTH_STATE_COOKIE, OAUTH_STATE_COOKIE, encodeOAuthState } from "
 
 export { COOKIE_NAME, ONE_YEAR_MS } from "@shared/const";
 
+// Public identifier of this Manus OAuth application. Vite replaces VITE_APP_ID
+// at build time when available; the fallback keeps external deployments from
+// generating an invalid `appId=undefined` authorization URL.
+const FALLBACK_OAUTH_APP_ID = "Sttsv86xmWRbQtbimz6ks6";
+
 function createOAuthNonce(): string {
   const cryptoApi = globalThis.crypto;
   if (typeof cryptoApi?.randomUUID === "function") return cryptoApi.randomUUID();
@@ -28,7 +33,7 @@ function createOAuthNonce(): string {
 // stash across renders.
 export const startLogin = () => {
   const oauthPortalUrl = import.meta.env.VITE_OAUTH_PORTAL_URL || "https://manus.im";
-  const appId = import.meta.env.VITE_APP_ID;
+  const appId = import.meta.env.VITE_APP_ID || FALLBACK_OAUTH_APP_ID;
   const redirectUri = `${window.location.origin}/api/oauth/callback`;
 
   const nonce = createOAuthNonce();

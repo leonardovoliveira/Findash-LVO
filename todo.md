@@ -260,3 +260,5 @@
 - [x] Auditar e reativar o fluxo de login Google com sessão protegida
 - [x] Configurar e documentar as variáveis, origens e callback OAuth
 - [ ] Validar login, sessão, logout e comportamento sem autenticação
+- [x] Configurar VITE_APP_ID no Vercel e validar o redirecionamento OAuth sem appId indefinido (fallback público do App ID incluído no frontend e backend)
+- [ ] Diagnosticar portal OAuth travado e confirmar appId válido no URL de autenticação

@@ -1,5 +1,8 @@
 export const ENV = {
-  appId: process.env.VITE_APP_ID ?? "",
+  // VITE_APP_ID is public and required by the OAuth code exchange. The
+  // fallback mirrors the client-side identifier for Vercel builds where the
+  // platform variable was not configured.
+  appId: process.env.VITE_APP_ID || "Sttsv86xmWRbQtbimz6ks6",
   cookieSecret: process.env.JWT_SECRET ?? "",
   databaseUrl: process.env.DATABASE_URL ?? "",
   oAuthServerUrl: process.env.OAUTH_SERVER_URL ?? "",
