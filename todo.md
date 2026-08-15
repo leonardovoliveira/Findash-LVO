@@ -211,8 +211,8 @@
 - [x] Remover o campo Nome do ativo do modal de investimentos
 - [x] Adicionar operação compra/venda e data ao cadastro de ativo
 - [x] Consolidar automaticamente quantidade, preço médio, posição e rentabilidade
-- [x] Testar, validar e publicar as alterações de investimentos
+- [ ] Testar, validar e publicar as alterações de investimentos
 
-- [ ] Publicar checkpoint contendo operações compra/venda, PM, rentabilidade e variação percentual
-- [ ] Validar no ambiente publicado o novo modal e a variação percentual após recarregar
+- [ ] Publicar checkpoint contendo operações compra/venda, PM, rentabilidade e variação percentual (novo checkpoint necessário após sincronização do código)
+- [ ] Validar no ambiente publicado o novo modal e a variação percentual após recarregar (deployment público anterior ainda exibia o modal legado)
 
