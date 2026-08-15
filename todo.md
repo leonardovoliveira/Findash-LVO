@@ -216,3 +216,6 @@
 - [ ] Publicar checkpoint contendo operações compra/venda, PM, rentabilidade e variação percentual (novo checkpoint necessário após sincronização do código)
 - [ ] Validar no ambiente publicado o novo modal e a variação percentual após recarregar (deployment público anterior ainda exibia o modal legado)
 
+- [ ] Acionar deployment de produção Vercel após o vínculo do projeto com a branch main
+- [ ] Validar o fluxo de investimentos no domínio Vercel público sem autenticação
+

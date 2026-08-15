@@ -23,3 +23,5 @@ No preview, foi registrada uma compra temporária de B3SA3 com 10 unidades a R$ 
 Após a atualização, o preview exibiu B3SA3 a R$ 146,70, PM de R$ 10,00, rentabilidade de +46,70% e variação diária de -0,88% com indicador vermelho. A posição temporária foi excluída e a carteira voltou a ficar vazia.
 
 No domínio público do checkpoint f3505e8a, a rota /investimentos carregou o novo layout. Foi encontrado um ativo inválido legado (ZZZZ99), que foi removido para deixar a carteira pública limpa. A página voltou a exibir zero posições e o modal atualizado está disponível pelo botão Nova posição.
+
+A validação pós-republicação mostrou que tanto `findashlvo-sttsv86x.manus.space` quanto `findash-lvo.vercel.app` ainda exibem o modal legado com “Nome do ativo”, apesar do checkpoint 13f19446 conter o código novo. O preview local está atualizado; é necessário aguardar ou sincronizar o deployment externo antes de marcar a validação pública como concluída.
