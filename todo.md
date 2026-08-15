@@ -153,6 +153,10 @@
 - [x] Tratar respostas não-2xx e retornar results[0].data sem expor a chave
 - [x] Validar integração B3SA3 com testes de sucesso e erro
 - [ ] Validar em produção a integração fim a fim da carteira com cotação B3 via brapi (pendente de BRAPI_TOKEN autorizado; validação local mockada aprovada)
+- [x] Configurar BRAPI_TOKEN com segurança no ambiente backend
+- [x] Exibir data, hora e fonte da última atualização de cotação na carteira
+- [x] Adicionar botão de recarga de cotações com estado de carregamento
+- [x] Confirmar rankings Maiores gastos e Maiores entradas empilhados verticalmente em desktop e mobile
 - [x] Cobrir o fluxo da carteira que atualiza horário, fonte e fallback da cotação
-- [ ] Reorganizar Maiores gastos e Maiores entradas em coluna vertical compacta
-- [ ] Validar o novo layout em desktop e mobile
+- [x] Reorganizar Maiores gastos e Maiores entradas em coluna vertical compacta
+- [x] Validar o novo layout em desktop e mobile
