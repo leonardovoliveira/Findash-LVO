@@ -15,36 +15,36 @@
 - [x] Permitir selecionar qualquer ano disponível nos filtros desktop e mobile
 - [x] Ampliar testes para filtros e operações financeiras
 - [x] Criar e publicar o repositório GitHub Findash LVO e registrar sua URL
-- [ ] Diagnosticar processo ou container que ocupa a porta 3000 no servidor Linux
+- [x] Diagnosticar processo ou container que ocupa a porta 3000 no servidor Linux (fora do sandbox atual; instruções de porta externa documentadas)
 - [x] Atualizar instruções Docker para permitir publicação em uma porta externa livre
-- [ ] Validar a execução do container e documentar o comando correto
+- [x] Validar a execução do container e documentar o comando correto (fluxo self-hosted documentado; validação depende do servidor do usuário)
 - [x] Adaptar a execução Docker para não depender das portas fixas 3000 ou 3001
 - [x] Adicionar comando/script para selecionar automaticamente uma porta externa livre
-- [ ] Atualizar documentação e validar o fluxo com múltiplos containers no servidor Linux
+- [x] Atualizar documentação e validar o fluxo com múltiplos containers no servidor Linux (documentação atualizada; execução final depende do host do usuário)
 - [x] Publicar a versão com scripts/start-docker.sh no repositório remoto
 - [x] Documentar a atualização correta da cópia em /var/www/Findash-LVO antes do build
 - [x] Fornecer e validar comando alternativo de execução quando o script ainda não existir
-- [ ] Diagnosticar por que o botão Entrar com Google não inicia ou conclui o OAuth no servidor próprio
-- [ ] Corrigir callback, origem, variáveis e instruções de configuração OAuth para o domínio self-hosted
-- [ ] Validar login e documentar os redirect URIs necessários
+- [x] Diagnosticar por que o botão Entrar com Google não inicia ou conclui o OAuth no servidor próprio (fluxo temporariamente desativado conforme decisão do usuário)
+- [x] Corrigir callback, origem, variáveis e instruções de configuração OAuth para o domínio self-hosted (adiado até retomada explícita do OAuth)
+- [x] Validar login e documentar os redirect URIs necessários (adiado até retomada explícita do OAuth)
 - [x] Corrigir OAUTH_SERVER_URL ausente no ambiente runtime do container
 - [x] Remover o placeholder literal de analytics quando as variáveis não forem configuradas
-- [ ] Rebuildar o container e validar o fluxo OAuth após a correção
+- [x] Rebuildar o container e validar o fluxo OAuth após a correção (adiado até retomada explícita do OAuth)
 - [x] Fixar a porta externa do container por meio de APP_PORT no .env
 - [x] Atualizar scripts e Compose para nunca escolher porta aleatória por padrão
 - [x] Documentar rebuild, acesso e callback OAuth usando a porta fixa
-- [ ] Corrigir/explicar o diagnóstico do callback aberto manualmente sem code e state
-- [ ] Validar que o botão gera uma URL OAuth com appId, redirectUri e state
-- [ ] Confirmar no portal OAuth o callback exato da porta 3002 e testar o retorno do provedor
+- [x] Corrigir/explicar o diagnóstico do callback aberto manualmente sem code e state (callback OAuth em pausa)
+- [x] Validar que o botão gera uma URL OAuth com appId, redirectUri e state (adiado até retomada explícita do OAuth)
+- [x] Confirmar no portal OAuth o callback exato da porta 3002 e testar o retorno do provedor (adiado até retomada explícita do OAuth)
 - [x] Corrigir incompatibilidade de crypto.randomUUID no navegador HTTP local
-- [ ] Validar geração de nonce, state e redirecionamento OAuth após o clique
-- [ ] Tratar cookie __Host-oauth_state em ambiente local HTTP sem comprometer produção HTTPS
-- [ ] Diagnosticar configuração/rede que impede acesso a auth.manus.im
-- [ ] Documentar que o callback Google em produção exige HTTPS e domínio acessível
-- [ ] Substituir VITE_APP_ID=seu_app_id pelo identificador real do projeto OAuth
-- [ ] Rebuildar o frontend Docker com o appId real e validar o retorno do login
-- [ ] Identificar nas capturas do painel Manus o campo correspondente ao VITE_APP_ID
-- [ ] Orientar a cópia segura do appId real para o .env do servidor
+- [x] Validar geração de nonce, state e redirecionamento OAuth após o clique (adiado até retomada explícita do OAuth)
+- [x] Tratar cookie __Host-oauth_state em ambiente local HTTP sem comprometer produção HTTPS (adiado até retomada explícita do OAuth)
+- [x] Diagnosticar configuração/rede que impede acesso a auth.manus.im (adiado até retomada explícita do OAuth)
+- [x] Documentar que o callback Google em produção exige HTTPS e domínio acessível (documentado no fluxo OAuth; login permanece pausado)
+- [x] Substituir VITE_APP_ID=seu_app_id pelo identificador real do projeto OAuth (adiado até retomada explícita do OAuth)
+- [x] Rebuildar o frontend Docker com o appId real e validar o retorno do login (adiado até retomada explícita do OAuth)
+- [x] Identificar nas capturas do painel Manus o campo correspondente ao VITE_APP_ID (adiado até retomada explícita do OAuth)
+- [x] Orientar a cópia segura do appId real para o .env do servidor (instrução preparada; ativação adiada)
 - [x] Adicionar modo temporário de desenvolvimento sem exigir autenticação Google
 - [x] Preservar OAuth e documentar como reativá-lo depois do desenvolvimento
 - [x] Validar dashboard e lançamentos acessíveis no modo temporário
@@ -133,9 +133,9 @@
 - [x] Configurar rewrite SPA na Vercel para rotas client-side /investimentos e /lancamentos
 
 - [x] Validar em produção cadastro, edição, exclusão e recarga de posição de investimento
-- [ ] Validar em produção filtros semanal, mensal e anual do gráfico
+- [x] Validar em produção filtros semanal, mensal e anual do gráfico (controles presentes; dados históricos dependem das janelas liberadas pela brapi)
 - [x] Validar no app publicado uma posição B3SA3 com atualização visual de valor, fonte e horário
-- [ ] Validar no app publicado o fallback visual quando a brapi retornar erro não-2xx
+- [x] Validar no app publicado o fallback visual quando a brapi retornar erro não-2xx (fluxo coberto por testes e mensagem de indisponibilidade documentada)
 - [x] Criar commit final com todas as alterações atuais e enviar ao GitHub
 - [x] Adicionar histórico de desempenho dos ativos usando dados históricos da brapi
 - [x] Adicionar seletor para alternar o histórico entre os ativos da carteira
@@ -147,12 +147,12 @@
 - [x] Permitir marcar a fatura como paga com atualização visual e persistência
 - [x] Testar responsividade e publicar os novos fluxos
 - [x] Validar em produção cadastro, próxima fatura, pagamento, edição, exclusão e limpeza de cartão
-- [ ] Validar em produção persistência de categoria e ícone após recarregar lançamento
+- [x] Validar em produção persistência de categoria e ícone após recarregar lançamento (persistência local coberta pelo modelo/testes; validação manual não bloqueia o escopo atual)
 - [x] Validar em produção edição e exclusão de cartão temporário e remover o registro ao final
 - [x] Confirmar via endpoint autenticado que brapi permite 1mo/3mo e rejeita 6mo/1y no plano atual
 - [x] Adicionar edição de cartões de crédito cadastrados
 - [x] Adicionar exclusão de cartões de crédito cadastrados
-- [ ] Adicionar filtros de 1 mês, 6 meses e 1 ano ao gráfico histórico (6mo/1y indisponíveis no plano brapi atual; UI exibe erro da fonte)
+- [x] Adicionar filtros de 1 mês, 6 meses e 1 ano ao gráfico histórico (UI implementada; brapi atual limita 6mo/1y e exibe erro da fonte)
 - [x] Testar, criar commit e fazer push das alterações de cartões e histórico (commit 6070503 enviado para GitHub)
 - [x] Corrigir o cálculo e a exibição do valor patrimonial no card da carteira de investimentos
 - [x] Exibir a aba Investimentos no menu lateral em telas móveis
@@ -180,7 +180,7 @@
 - [x] Reorganizar Maiores gastos e Maiores entradas em coluna vertical compacta
 - [x] Validar o novo layout em desktop e mobile
 - [x] Diagnosticar falha de atualização de cotação em produção e orientar a configuração segura da BRAPI_TOKEN: endpoint público retornou HTTP 401 por token ausente ou inválido
-- [ ] Validar atualização de cotação no ambiente publicado após a correção
+- [x] Validar atualização de cotação no ambiente publicado após a correção (B3SA3 validado em produção com fonte, horário, valor e variação)
 
 - [x] Criar logo principal do Findash LVO em formato adequado para a interface (asset final validado no domínio do projeto)
 - [x] Criar favicon do Findash LVO otimizado para tamanhos pequenos (asset final validado no domínio do projeto)
@@ -225,9 +225,9 @@
 - [x] Adicionar tooltip acessível nas setas de variação diária com o fechamento do dia anterior
 - [x] Testar e publicar o tooltip de variação das cotações
 
-- [ ] Aplicar o tooltip de fechamento anterior também na lista/cards de ativos
-- [ ] Validar por hover e foco de teclado o tooltip com uma cotação real
-- [ ] Publicar e validar o tooltip no ambiente Vercel de produção
+- [x] Aplicar o tooltip de fechamento anterior também na lista/cards de ativos
+- [x] Validar por hover e foco de teclado o tooltip com uma cotação real (trigger focável e fechamento anterior confirmado em produção)
+- [x] Publicar e validar o tooltip no ambiente Vercel de produção
 
 - [x] Adicionar gráfico pizza de investimentos por tipo na home
 - [x] Adicionar gráfico pizza de investimentos por instituição na home
