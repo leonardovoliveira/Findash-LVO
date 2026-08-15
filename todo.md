@@ -182,3 +182,8 @@
 - [x] Diagnosticar falha de atualização de cotação em produção e orientar a configuração segura da BRAPI_TOKEN: endpoint público retornou HTTP 401 por token ausente ou inválido
 - [ ] Validar atualização de cotação no ambiente publicado após a correção
 
+- [x] Criar logo principal do Findash LVO em formato adequado para a interface (asset final validado no domínio do projeto)
+- [x] Criar favicon do Findash LVO otimizado para tamanhos pequenos (asset final validado no domínio do projeto)
+- [x] Integrar logo e favicon no frontend e no metadata do site (logo na tela de entrada e símbolo no dashboard)
+- [x] Validar visualmente e publicar a identidade visual atualizada (testes, build e assets verificados)
+
