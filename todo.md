@@ -132,12 +132,14 @@
 
 - [x] Configurar rewrite SPA na Vercel para rotas client-side /investimentos e /lancamentos
 
-- [ ] Validar em produção cadastro, edição, exclusão e recarga de posição de investimento
+- [x] Validar em produção cadastro, edição, exclusão e recarga de posição de investimento
 - [ ] Validar em produção filtros semanal, mensal e anual do gráfico
 - [ ] Validar em produção persistência de categoria e ícone após recarregar lançamento
 - [x] Corrigir o cálculo e a exibição do valor patrimonial no card da carteira de investimentos
 - [x] Exibir a aba Investimentos no menu lateral em telas móveis
 - [x] Validar carteira e navegação em viewport mobile e desktop
 - [x] Publicar checkpoint com as correções da carteira e do menu mobile
-- [ ] Corrigir e validar o type-check específico do endpoint Vercel
-- [ ] Republicar no Vercel a versão com a correção de patrimônio e navegação móvel
+- [x] Corrigir e validar o type-check específico do endpoint Vercel
+- [x] Republicar no Vercel a versão com a correção de patrimônio e navegação móvel
+- [x] Validar em produção a edição de uma posição de investimento existente
+- [x] Validar em produção a persistência da carteira após recarregar a página com uma posição salva
