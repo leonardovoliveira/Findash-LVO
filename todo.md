@@ -253,3 +253,5 @@
 - [x] Adicionar comprador aos lançamentos de compras de cartões compartilhados
 - [x] Persistir, exibir e validar compradores por lançamento
 - [x] Executar testes, build, commit e push das alterações
+- [x] Diagnosticar divergência entre commits do projeto e o repositório GitHub oficial
+- [x] Sincronizar a branch main com leonardovoliveira/Findash-LVO e confirmar o commit remoto
