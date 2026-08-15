@@ -110,6 +110,9 @@
 - [x] Sincronizar a data selecionada ao trocar mês ou ano no calendário
 - [x] Validar seleção de dia e atualização do card de lançamentos da data
 
-- [ ] Publicar no GitHub e na Vercel a nova estrutura do dashboard
-- [ ] Validar em produção os cards, calendário e gráfico em desktop/mobile
-- [ ] Validar em produção a troca de período e seleção de data do calendário
+- [x] Publicar no GitHub e na Vercel a nova estrutura do dashboard
+- [x] Validar em produção os cards, calendário e gráfico em desktop/mobile
+- [x] Validar em produção a troca de período e seleção de data do calendário
+
+- [x] Validar no domínio público em viewport mobile a nova estrutura do dashboard
+- [x] Validar em produção o calendário após trocar período e clicar em um dia
