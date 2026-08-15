@@ -69,7 +69,7 @@ export type InvestmentQuote = {
 
 export function applyInvestmentQuote(item: LocalInvestment, quote: InvestmentQuote): LocalInvestment {
   if (!quote.ok || !Number.isFinite(quote.price)) {
-    return { ...item, quoteFetchedAt: quote.fetchedAt, quoteSource: quote.source, quoteError: quote.error ?? "Cotação indisponível" };
+    return { ...item, quoteFetchedAt: quote.fetchedAt, quoteSource: item.quoteSource, quoteError: quote.error ?? "Cotação indisponível" };
   }
   const price = quote.price ?? 0;
   return {

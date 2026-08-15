@@ -46,7 +46,7 @@ describe("local investments", () => {
     const updated = applyInvestmentQuote(base, { ok: false, source: "brapi.dev", fetchedAt: "2026-08-15T12:01:00.000Z", error: "HTTP 403" });
     expect(updated.currentValue).toBe(base.currentValue);
     expect(updated.quoteError).toBe("HTTP 403");
-    expect(updated.quoteSource).toBe("brapi.dev");
+    expect(updated.quoteSource).toBeUndefined();
   });
 
   it("uses market price for current market value and falls back to cost", () => {
