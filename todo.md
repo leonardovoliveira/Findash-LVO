@@ -134,6 +134,9 @@
 
 - [x] Validar em produção cadastro, edição, exclusão e recarga de posição de investimento
 - [ ] Validar em produção filtros semanal, mensal e anual do gráfico
+- [ ] Validar no app publicado uma posição B3SA3 com atualização visual de valor, fonte e horário
+- [ ] Validar no app publicado o fallback visual quando a brapi retornar erro não-2xx
+- [x] Criar commit final com todas as alterações atuais e enviar ao GitHub
 - [ ] Validar em produção persistência de categoria e ícone após recarregar lançamento
 - [x] Corrigir o cálculo e a exibição do valor patrimonial no card da carteira de investimentos
 - [x] Exibir a aba Investimentos no menu lateral em telas móveis
@@ -143,16 +146,16 @@
 - [x] Republicar no Vercel a versão com a correção de patrimônio e navegação móvel
 - [x] Validar em produção a edição de uma posição de investimento existente
 - [x] Validar em produção a persistência da carteira após recarregar a página com uma posição salva
-- [ ] Definir fonte externa de cotações e estratégia de atualização automática
-- [ ] Calcular custo total da posição por quantidade × preço médio
-- [ ] Integrar atualização do valor atual por cotação externa com fallback local
-- [ ] Adicionar controles de atualização e status da última cotação
+- [x] Definir fonte externa de cotações e estratégia de atualização automática
+- [x] Calcular custo total da posição por quantidade × preço médio
+- [x] Integrar atualização do valor atual por cotação externa com fallback local
+- [x] Adicionar controles de atualização e status da última cotação
 - [ ] Testar e publicar a atualização automatizada da carteira
 - [x] Integrar brapi.dev para cotações de mercado com fonte, horário e fallback
 - [x] Criar função tipada para buscar B3SA3 na brapi com BRAPI_TOKEN server-side
 - [x] Tratar respostas não-2xx e retornar results[0].data sem expor a chave
 - [x] Validar integração B3SA3 com testes de sucesso e erro
-- [ ] Validar em produção a integração fim a fim da carteira com cotação B3 via brapi (pendente de BRAPI_TOKEN autorizado; validação local mockada aprovada)
+- [ ] Validar em produção a integração fim a fim da carteira com cotação B3 via brapi
 - [x] Configurar BRAPI_TOKEN com segurança no ambiente backend
 - [x] Exibir data, hora e fonte da última atualização de cotação na carteira
 - [x] Adicionar botão de recarga de cotações com estado de carregamento
