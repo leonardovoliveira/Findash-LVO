@@ -261,4 +261,7 @@
 - [x] Configurar e documentar as variáveis, origens e callback OAuth
 - [ ] Validar login, sessão, logout e comportamento sem autenticação
 - [x] Configurar VITE_APP_ID no Vercel e validar o redirecionamento OAuth sem appId indefinido (fallback público do App ID incluído no frontend e backend)
-- [ ] Diagnosticar portal OAuth travado e confirmar appId válido no URL de autenticação
+- [x] Diagnosticar portal OAuth travado e confirmar appId válido no URL de autenticação (portal exibiu a tela Findash LVO e provedores, incluindo Google)
+- [x] Diagnosticar falha WebSocket do portal Manus e definir alternativa estável de autenticação Google
+- [x] Implementar login Google OAuth direto sem dependência do portal Manus
+- [ ] Configurar credenciais Google OAuth, callback, sessão e logout no Vercel

@@ -1,47 +1,37 @@
-# Configuração do login Google
+# Autenticação Google direta
 
-O Findash LVO usa o fluxo OAuth do Manus, com a identidade do usuário obtida pelo provedor configurado no portal OAuth. A aplicação não armazena client secret no frontend nem no repositório.
+O Findash LVO usa Google OAuth 2.0 direto no servidor. O navegador inicia o fluxo em `/api/auth/google`; somente o backend recebe o `Client Secret`, troca o código por tokens, valida o ID token do Google e cria a sessão com cookie HTTP-only.
 
-## Variáveis necessárias
+## Variáveis de ambiente
 
-As variáveis abaixo devem existir no ambiente de produção:
+| Variável | Ambiente | Função |
+|---|---|---|
+| `GOOGLE_CLIENT_ID` | Servidor | Identifica o cliente OAuth Web ao Google. |
+| `GOOGLE_CLIENT_SECRET` | Servidor | Troca o código OAuth por um ID token; nunca deve ir ao frontend. |
+| `JWT_SECRET` | Servidor | Assina o cookie de sessão do Findash. |
+| `DATABASE_URL` | Servidor | Persiste o perfil do usuário Google. |
+| `DEV_AUTH_BYPASS=false` | Produção | Impede o usuário temporário de desenvolvimento. |
 
-| Variável | Uso |
-|---|---|
-| `VITE_APP_ID` | Identificador público do aplicativo OAuth usado pelo frontend. |
-| `VITE_OAUTH_PORTAL_URL` | URL do portal que inicia o login OAuth. |
-| `OAUTH_SERVER_URL` | Endpoint server-side usado para trocar o código pela sessão. |
-| `JWT_SECRET` | Assinatura/segurança da sessão do aplicativo. |
-| `DATABASE_URL` | Persistência do perfil criado no callback OAuth. |
+No Vercel, adicione `GOOGLE_CLIENT_ID` e `GOOGLE_CLIENT_SECRET` em **Project Settings → Environment Variables** para **Production** e **Preview**. Depois de criar ou alterar uma variável, execute um novo redeploy.
 
-## Redirect URI
+## Callback autorizado no Google Cloud
 
-O frontend monta o callback a partir de `window.location.origin`, sem domínio hardcoded:
-
-```text
-https://SEU_DOMINIO/api/oauth/callback
-```
-
-Para o domínio público atual, o callback correspondente é:
+Cadastre exatamente este URI no cliente OAuth Web:
 
 ```text
-https://findash-lvo.vercel.app/api/oauth/callback
+https://findash-lvo.vercel.app/api/auth/google/callback
 ```
 
-Se o domínio Manus for usado, cadastre também:
+O protocolo, domínio e caminho precisam coincidir exatamente com o valor cadastrado no Google Cloud. Não inclua uma barra no final.
 
-```text
-https://findashlvo-sttsv86x.manus.space/api/oauth/callback
-```
+## Fluxo de validação
 
-Durante desenvolvimento local, use:
+1. Abra `https://findash-lvo.vercel.app/` sem uma sessão existente.
+2. Clique em **Entrar com Google**.
+3. Escolha uma conta autorizada na tela de consentimento Google.
+4. Verifique o retorno ao dashboard com nome e e-mail do perfil.
+5. Clique em **Sair** e confirme que a tela de entrada reaparece.
 
-```text
-http://localhost:3000/api/oauth/callback
-```
+## Segurança
 
-## Segurança e comportamento
-
-O callback valida o `state` e o nonce armazenado em cookie antes de trocar o código OAuth. Em produção, o usuário temporário de desenvolvimento fica desativado automaticamente; a sessão precisa vir do cookie OAuth. Em desenvolvimento local, o bypass permanece disponível para não bloquear o trabalho quando o provedor ainda não estiver configurado.
-
-Após cadastrar os callbacks, publique uma nova versão e teste: abrir a tela inicial sem sessão, clicar em **Entrar com Google**, concluir o consentimento, retornar ao callback, verificar o nome/e-mail no perfil e executar **Sair**.
+O fluxo usa `state` aleatório armazenado em cookie HTTP-only para reduzir risco de CSRF. O callback valida assinatura, emissor, audiência e e-mail verificado no ID token emitido pelo Google. Tokens Google não são armazenados no navegador nem no banco de dados.
