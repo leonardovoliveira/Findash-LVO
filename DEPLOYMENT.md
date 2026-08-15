@@ -29,3 +29,9 @@ DEV_AUTH_BYPASS=false
 ```
 
 Depois, recrie o container com o procedimento documentado no projeto. Não compartilhe o arquivo `.env`, pois ele pode conter credenciais de banco e OAuth.
+
+## Armazenamento local e backups
+
+A versão atual não depende de `DATABASE_URL` para registrar lançamentos. Os dados ficam no `localStorage` do navegador, separados pelo identificador do usuário temporário. Isso permite funcionamento sem banco, mas significa que os dados não são compartilhados entre navegadores ou dispositivos e podem ser perdidos se o armazenamento do navegador for apagado.
+
+Use **Exportar JSON** regularmente para baixar um backup. Para restaurar, use **Importar JSON** e selecione um arquivo gerado pelo Findash LVO. O arquivo contém os lançamentos, a versão do formato e a data de exportação. Recomenda-se manter cópias do backup fora do navegador.

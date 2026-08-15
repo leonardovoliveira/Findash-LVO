@@ -75,3 +75,14 @@
 
 - [x] Validar no navegador em produção que o dashboard abre sem login após o deployment com bypass ativo
 - [x] Verificar em produção a integração fim a fim do frontend com /api/trpc/auth.me e a exibição do usuário temporário
+
+- [x] Reproduzir e diagnosticar lançamentos que não são registrados após salvar
+- [x] Corrigir a persistência do lançamento no frontend/API/banco
+- [x] Adicionar ou atualizar testes para criação e leitura de lançamentos
+- [ ] Publicar e validar em produção a criação de um lançamento
+
+- [x] Substituir a persistência de lançamentos por localStorage no navegador
+- [x] Implementar exportação dos lançamentos em arquivo JSON
+- [x] Implementar importação e validação de arquivo JSON
+- [x] Atualizar testes para persistência local e backup/restauração
+- [ ] Publicar e validar a nova versão sem dependência do banco

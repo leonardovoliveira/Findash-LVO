@@ -1,13 +1,21 @@
 import { useAuth } from "@/_core/hooks/useAuth";
 import { startLogin } from "@/const";
-import { trpc } from "@/lib/trpc";
+import {
+  exportJson,
+  createLocalTransaction,
+  filterLocalTransactions,
+  loadLocalTransactions,
+  parseBackupJson,
+  saveLocalTransactions,
+  type LocalTransaction,
+} from "@/lib/localTransactions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "sonner";
 import { BarChart3, CalendarDays, ChevronDown, CircleArrowDown, CircleArrowUp, LayoutDashboard, LogOut, Plus, ReceiptText, Sparkles, Trash2, Wallet, X } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation } from "wouter";
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
@@ -26,21 +34,91 @@ export default function Home() {
   const [year, setYear] = useState(now.getFullYear());
   const [form, setForm] = useState<FormState | null>(null);
   const isTransactions = location === "/lancamentos";
-  const query = trpc.finance.list.useQuery({ month, year }, { enabled: Boolean(user) });
-  const utils = trpc.useUtils();
-  const create = trpc.finance.create.useMutation({ onSuccess: () => { utils.finance.list.invalidate(); setForm(null); toast.success("Lançamento adicionado"); } });
-  const update = trpc.finance.update.useMutation({ onSuccess: () => { utils.finance.list.invalidate(); setForm(null); toast.success("Lançamento atualizado"); } });
-  const remove = trpc.finance.remove.useMutation({ onSuccess: () => { utils.finance.list.invalidate(); toast.success("Lançamento excluído"); } });
-  const transactions = query.data ?? [];
-  const summary = useMemo(() => transactions.reduce((acc, item) => { const value = Number(item.amount); item.type === "income" ? acc.income += value : acc.expense += value; return acc; }, { income: 0, expense: 0 }), [transactions]);
+  const [transactions, setTransactions] = useState<LocalTransaction[]>([]);
+  const [hydratedStorageId, setHydratedStorageId] = useState<number | string | null>(null);
+  const importInputRef = useRef<HTMLInputElement>(null);
+  const userStorageId = user?.id ?? "default";
+
+  useEffect(() => {
+    if (user) {
+      setTransactions(loadLocalTransactions(userStorageId));
+      setHydratedStorageId(userStorageId);
+    }
+  }, [user, userStorageId]);
+
+  useEffect(() => {
+    if (user && hydratedStorageId === userStorageId) saveLocalTransactions(userStorageId, transactions);
+  }, [transactions, user, userStorageId, hydratedStorageId]);
+
+  const saving = false;
+  const visibleTransactions = useMemo(() => filterLocalTransactions(transactions, month, year), [transactions, month, year]);
+  const summary = useMemo(() => visibleTransactions.reduce((acc, item) => { const value = Number(item.amount); item.type === "income" ? acc.income += value : acc.expense += value; return acc; }, { income: 0, expense: 0 }), [visibleTransactions]);
   const yearOptions = useMemo(() => Array.from(new Set([...defaultYears, ...transactions.map(item => new Date(item.occurredAt).getFullYear())])).sort((a, b) => b - a), [transactions]);
-  const chartData = useMemo(() => { const buckets = new Map<number, { month: string; income: number; expense: number }>(); for (const item of transactions) { const m = new Date(item.occurredAt).getMonth(); const current = buckets.get(m) ?? { month: monthNames[m], income: 0, expense: 0 }; current[item.type] += Number(item.amount); buckets.set(m, current); } return Array.from(buckets.values()).sort((a, b) => monthNames.indexOf(a.month) - monthNames.indexOf(b.month)); }, [transactions]);
+  const chartData = useMemo(() => { const buckets = new Map<number, { month: string; income: number; expense: number }>(); for (const item of visibleTransactions) { const m = new Date(item.occurredAt).getMonth(); const current = buckets.get(m) ?? { month: monthNames[m], income: 0, expense: 0 }; current[item.type] += Number(item.amount); buckets.set(m, current); } return Array.from(buckets.values()).sort((a, b) => monthNames.indexOf(a.month) - monthNames.indexOf(b.month)); }, [visibleTransactions]);
 
   if (loading) return <div className="min-h-screen grid place-items-center"><div className="animate-pulse text-muted-foreground">Carregando seu espaço financeiro...</div></div>;
   if (!user) return <Landing onLogin={startLogin} />;
 
-  const submit = (event: React.FormEvent) => { event.preventDefault(); if (!form) return; const payload = { ...form, amount: Number(form.amount), occurredAt: new Date(`${form.occurredAt}T12:00:00`) }; if (!payload.description || !payload.category || !payload.amount) { toast.error("Preencha todos os campos"); return; } if (form.id) update.mutate({ ...payload, id: form.id }); else create.mutate(payload); };
-  const grouped = { income: transactions.filter(t => t.type === "income"), expense: transactions.filter(t => t.type === "expense") };
+  const submit = (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!form || !user) return;
+    const amount = Number(form.amount);
+    if (!form.description.trim() || !form.category.trim() || !Number.isFinite(amount) || amount <= 0) {
+      toast.error("Preencha descrição, valor e categoria");
+      return;
+    }
+    const nowIso = new Date().toISOString();
+    if (form.id) {
+      setTransactions(current => current.map(item => item.id === form.id ? {
+        ...item,
+        type: form.type,
+        description: form.description.trim(),
+        amount: amount.toFixed(2),
+        category: form.category.trim(),
+        occurredAt: new Date(`${form.occurredAt}T12:00:00`).toISOString(),
+        updatedAt: nowIso,
+      } : item));
+      toast.success("Lançamento atualizado");
+    } else {
+      setTransactions(current => createLocalTransaction(current, {
+        userId: Number(user.id),
+        type: form.type,
+        description: form.description.trim(),
+        amount: amount.toFixed(2),
+        category: form.category.trim(),
+        occurredAt: new Date(`${form.occurredAt}T12:00:00`).toISOString(),
+      }));
+      toast.success("Lançamento adicionado");
+    }
+    setForm(null);
+  };
+  const remove = (id: number) => {
+    setTransactions(current => current.filter(item => item.id !== id));
+    toast.success("Lançamento excluído");
+  };
+  const downloadBackup = () => {
+    const blob = new Blob([exportJson(transactions)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = `findash-lvo-backup-${new Date().toISOString().slice(0, 10)}.json`;
+    anchor.click();
+    URL.revokeObjectURL(url);
+    toast.success("Backup exportado");
+  };
+  const importBackup = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+    try {
+      const imported = parseBackupJson(await file.text());
+      setTransactions(imported.map((item, index) => ({ ...item, id: index + 1, userId: Number(user?.id ?? 1) })));
+      toast.success(`${imported.length} lançamento(s) importado(s)`);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Não foi possível importar o backup");
+    }
+  };
+  const grouped = { income: visibleTransactions.filter(t => t.type === "income"), expense: visibleTransactions.filter(t => t.type === "expense") };
 
   return <div className="min-h-screen bg-[#0b0d12] text-foreground">
     <aside className="fixed inset-y-0 left-0 hidden w-64 border-r border-white/8 bg-[#10131b] px-5 py-6 lg:flex lg:flex-col">
@@ -48,10 +126,10 @@ export default function Home() {
       <nav className="mt-12 space-y-2"><NavItem icon={LayoutDashboard} label="Visão geral" active={!isTransactions} onClick={() => setLocation("/")} /><NavItem icon={ReceiptText} label="Lançamentos" active={isTransactions} onClick={() => setLocation("/lancamentos")} /></nav>
       <div className="mt-auto rounded-2xl border border-white/8 bg-white/[0.03] p-3"><div className="flex items-center gap-3"><Avatar className="h-9 w-9"><AvatarImage src={(user as any).avatarUrl ?? undefined} /><AvatarFallback>{user.name?.slice(0, 1).toUpperCase() ?? "U"}</AvatarFallback></Avatar><div className="min-w-0"><p className="truncate text-sm font-medium">{user.name ?? "Usuário"}</p><p className="truncate text-xs text-muted-foreground">{user.email}</p></div></div><Button variant="ghost" size="sm" className="mt-3 w-full justify-start text-muted-foreground" onClick={logout}><LogOut className="mr-2 h-4 w-4" /> Sair</Button></div>
     </aside>
-    <main className="lg:pl-64"><header className="sticky top-0 z-20 border-b border-white/8 bg-[#0b0d12]/85 px-4 py-4 backdrop-blur-xl sm:px-8"><div className="mx-auto flex max-w-7xl items-center justify-between"><div><p className="text-xs font-medium uppercase tracking-[0.2em] text-primary">{isTransactions ? "Controle" : "Resumo financeiro"}</p><h1 className="mt-1 text-xl font-semibold tracking-tight sm:text-2xl">{isTransactions ? "Seus lançamentos" : `Olá, ${user.name?.split(" ")[0] ?? "bem-vindo"}.`}</h1></div><div className="flex items-center gap-2"><div className="hidden items-center gap-2 rounded-xl border border-white/8 bg-white/[0.03] px-3 py-2 sm:flex"><CalendarDays className="h-4 w-4 text-muted-foreground" /><select className="bg-transparent text-sm outline-none" value={month} onChange={e => setMonth(Number(e.target.value))}>{monthNames.map((m, i) => <option className="bg-[#10131b]" key={m} value={i + 1}>{m}</option>)}</select><select className="bg-transparent text-sm outline-none" value={year} onChange={e => setYear(Number(e.target.value))}>{yearOptions.map(option => <option className="bg-[#10131b]" key={option} value={option}>{option}</option>)}</select></div><Button size="icon" className="rounded-xl" onClick={() => setForm(initialForm())}><Plus className="h-5 w-5" /></Button></div></div></header>
-      <div className="mx-auto max-w-7xl space-y-6 p-4 sm:p-8"><div className="flex gap-2 overflow-x-auto pb-1 sm:hidden"><Button variant={!isTransactions ? "secondary" : "ghost"} onClick={() => setLocation("/")}><LayoutDashboard className="mr-2 h-4 w-4" />Resumo</Button><Button variant={isTransactions ? "secondary" : "ghost"} onClick={() => setLocation("/lancamentos")}><ReceiptText className="mr-2 h-4 w-4" />Lançamentos</Button></div><div className="flex items-center gap-2 rounded-2xl border border-white/8 bg-white/[0.03] p-3 sm:hidden"><CalendarDays className="h-4 w-4 text-muted-foreground" /><select className="flex-1 bg-transparent text-sm outline-none" value={month} onChange={e => setMonth(Number(e.target.value))}>{monthNames.map((m, i) => <option className="bg-[#10131b]" key={m} value={i + 1}>{m}</option>)}</select><span className="text-muted-foreground">/</span><select className="bg-transparent text-sm outline-none" value={year} onChange={e => setYear(Number(e.target.value))}>{yearOptions.map(option => <option className="bg-[#10131b]" key={option} value={option}>{option}</option>)}</select></div>{isTransactions ? <TransactionsPage grouped={grouped} onEdit={(item: any) => setForm({ id: item.id, type: item.type, description: item.description, amount: String(item.amount), category: item.category, occurredAt: new Date(item.occurredAt).toISOString().slice(0, 10) })} onDelete={(id: number) => remove.mutate({ id })} /> : <Dashboard summary={summary} chartData={chartData} transactions={transactions} onAdd={() => setForm(initialForm())} />}</div>
+    <main className="lg:pl-64"><header className="sticky top-0 z-20 border-b border-white/8 bg-[#0b0d12]/85 px-4 py-4 backdrop-blur-xl sm:px-8"><div className="mx-auto flex max-w-7xl items-center justify-between"><div><p className="text-xs font-medium uppercase tracking-[0.2em] text-primary">{isTransactions ? "Controle" : "Resumo financeiro"}</p><h1 className="mt-1 text-xl font-semibold tracking-tight sm:text-2xl">{isTransactions ? "Seus lançamentos" : `Olá, ${user.name?.split(" ")[0] ?? "bem-vindo"}.`}</h1></div><div className="flex items-center gap-2"><div className="hidden items-center gap-2 rounded-xl border border-white/8 bg-white/[0.03] px-3 py-2 sm:flex"><CalendarDays className="h-4 w-4 text-muted-foreground" /><select className="bg-transparent text-sm outline-none" value={month} onChange={e => setMonth(Number(e.target.value))}>{monthNames.map((m, i) => <option className="bg-[#10131b]" key={m} value={i + 1}>{m}</option>)}</select><select className="bg-transparent text-sm outline-none" value={year} onChange={e => setYear(Number(e.target.value))}>{yearOptions.map(option => <option className="bg-[#10131b]" key={option} value={option}>{option}</option>)}</select></div><div className="hidden items-center gap-1 md:flex"><Button variant="ghost" size="sm" onClick={downloadBackup}>Exportar JSON</Button><Button variant="ghost" size="sm" onClick={() => importInputRef.current?.click()}>Importar JSON</Button></div><input ref={importInputRef} type="file" accept="application/json,.json" className="hidden" onChange={importBackup} /><Button size="icon" className="rounded-xl" onClick={() => setForm(initialForm())}><Plus className="h-5 w-5" /></Button></div></div></header>
+      <div className="mx-auto max-w-7xl space-y-6 p-4 sm:p-8"><div className="flex gap-2 overflow-x-auto pb-1 sm:hidden"><Button variant={!isTransactions ? "secondary" : "ghost"} onClick={() => setLocation("/")}><LayoutDashboard className="mr-2 h-4 w-4" />Resumo</Button><Button variant={isTransactions ? "secondary" : "ghost"} onClick={() => setLocation("/lancamentos")}><ReceiptText className="mr-2 h-4 w-4" />Lançamentos</Button></div><div className="flex items-center gap-2 rounded-2xl border border-white/8 bg-white/[0.03] p-3 sm:hidden"><CalendarDays className="h-4 w-4 text-muted-foreground" /><select className="flex-1 bg-transparent text-sm outline-none" value={month} onChange={e => setMonth(Number(e.target.value))}>{monthNames.map((m, i) => <option className="bg-[#10131b]" key={m} value={i + 1}>{m}</option>)}</select><span className="text-muted-foreground">/</span><select className="bg-transparent text-sm outline-none" value={year} onChange={e => setYear(Number(e.target.value))}>{yearOptions.map(option => <option className="bg-[#10131b]" key={option} value={option}>{option}</option>)}</select></div><div className="flex gap-2 md:hidden"><Button variant="secondary" size="sm" onClick={downloadBackup}>Exportar JSON</Button><Button variant="secondary" size="sm" onClick={() => importInputRef.current?.click()}>Importar JSON</Button></div>{isTransactions ? <TransactionsPage grouped={grouped} onEdit={(item: any) => setForm({ id: item.id, type: item.type, description: item.description, amount: String(item.amount), category: item.category, occurredAt: new Date(item.occurredAt).toISOString().slice(0, 10) })} onDelete={remove} /> : <Dashboard summary={summary} chartData={chartData} transactions={visibleTransactions} onAdd={() => setForm(initialForm())} />}</div>
     </main>
-    {form && <TransactionModal form={form} setForm={setForm} onSubmit={submit} saving={create.isPending || update.isPending} onClose={() => setForm(null)} />}
+    {form && <TransactionModal form={form} setForm={setForm} onSubmit={submit} saving={saving} onClose={() => setForm(null)} />}
   </div>;
 }
 
