@@ -29,6 +29,15 @@ export function saveLocalCreditCards(userId: number | string, cards: CreditCard[
   window.localStorage.setItem(creditCardStorageKey(userId), JSON.stringify(cards));
 }
 
+export function updateLocalCreditCard(cards: CreditCard[], id: number, patch: Partial<Omit<CreditCard, "id" | "userId" | "createdAt">>, now = new Date()) {
+  const updatedAt = now.toISOString();
+  return cards.map(card => card.id === id ? { ...card, ...patch, updatedAt } : card);
+}
+
+export function deleteLocalCreditCard(cards: CreditCard[], id: number) {
+  return cards.filter(card => card.id !== id);
+}
+
 export function createLocalCreditCard(cards: CreditCard[], input: Omit<CreditCard, "id" | "createdAt" | "updatedAt">, now = new Date()) {
   const iso = now.toISOString();
   return [...cards, { ...input, id: cards.reduce((max, card) => Math.max(max, card.id), 0) + 1, createdAt: iso, updatedAt: iso }];

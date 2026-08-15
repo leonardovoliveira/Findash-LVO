@@ -148,6 +148,10 @@
 - [x] Testar responsividade e publicar os novos fluxos
 - [x] Validar em produção cadastro, próxima fatura, pagamento e limpeza de cartão
 - [ ] Validar em produção persistência de categoria e ícone após recarregar lançamento
+- [x] Adicionar edição de cartões de crédito cadastrados
+- [x] Adicionar exclusão de cartões de crédito cadastrados
+- [x] Adicionar filtros de 1 mês, 6 meses e 1 ano ao gráfico histórico
+- [x] Testar, criar commit e fazer push das alterações de cartões e histórico
 - [x] Corrigir o cálculo e a exibição do valor patrimonial no card da carteira de investimentos
 - [x] Exibir a aba Investimentos no menu lateral em telas móveis
 - [x] Validar carteira e navegação em viewport mobile e desktop

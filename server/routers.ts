@@ -80,7 +80,7 @@ export const appRouter = router({
       }));
     }),
     brapi: protectedProcedure.input(stockQuoteInput).query(({ input }) => fetchBrapiStockQuote(input.symbol)),
-    historical: protectedProcedure.input(stockQuoteInput.extend({ range: z.enum(["1d", "5d", "1mo", "3mo"]).default("3mo") })).query(({ input }) => fetchBrapiStockHistory(input.symbol, input.range)),
+    historical: protectedProcedure.input(stockQuoteInput.extend({ range: z.enum(["1d", "5d", "1mo", "3mo", "6mo", "1y"]).default("3mo") })).query(({ input }) => fetchBrapiStockHistory(input.symbol, input.range)),
   }),
   finance: router({
     list: protectedProcedure.input(monthInput).query(async ({ ctx, input }) => {
