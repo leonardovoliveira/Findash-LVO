@@ -15,3 +15,9 @@ Na validação do preview atualizado, a toolbar passou a exibir apenas “Import
 Na viewport mobile de 390×844, a toolbar exibe apenas “Importar” e “Exportar”, ambos com contorno e sem overflow horizontal; o botão de tema permanece visível ao lado. O submenu Exportar usa o mesmo componente e pode ser aberto a partir do botão compacto.
 
 Foi criada uma posição temporária B3SA3 com quantidade 1 e preço médio R$ 10,00. O preview exibiu “Atualizando…” com spinner durante a consulta; após a conclusão, a carteira mostrou cotação brapi.dev de R$ 14,67 e, ao acionar novamente “Atualizar cotações”, apareceu o toast “Cotações atualizadas com sucesso”. O registro temporário deve ser removido antes da publicação final.
+
+O modal de investimentos no preview foi validado: o campo “Nome do ativo” foi removido; o formulário apresenta “Compra” e “Venda”, “Ticker ou código”, quantidade, preço da operação, data da operação e observações. A interface explica que o ticker identifica o ativo e que PM, quantidade e rentabilidade são consolidados a partir das operações.
+
+No preview, foi registrada uma compra temporária de B3SA3 com 10 unidades a R$ 10,00 em 15/08/2026. O sistema exibiu o toast “Operação registrada; buscando cotação automaticamente”, consolidou quantidade 10, PM de R$ 10,00 e custo de R$ 100,00, além de mostrar o estado “Atualizando…”.
+
+Após a atualização, o preview exibiu B3SA3 a R$ 146,70, PM de R$ 10,00, rentabilidade de +46,70% e variação diária de -0,88% com indicador vermelho. A posição temporária foi excluída e a carteira voltou a ficar vazia.

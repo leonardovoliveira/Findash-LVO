@@ -205,3 +205,14 @@
 - [x] Validar no browser mobile o submenu Exportar com JSON, Excel e PDF sem overflow (captura responsiva mobile; submenu interativo validado no preview)
 - [x] Criar uma posição com ticker no preview e confirmar spinner e toast após Atualizar cotações; posição temporária removida ao final
 
+- [x] Persistir preferência dark/light no localStorage e restaurar ao recarregar
+- [x] Persistir estado recolhido/expandido do menu lateral no localStorage
+- [x] Exibir seta e variação percentual diária ao lado das cotações
+- [x] Remover o campo Nome do ativo do modal de investimentos
+- [x] Adicionar operação compra/venda e data ao cadastro de ativo
+- [x] Consolidar automaticamente quantidade, preço médio, posição e rentabilidade
+- [x] Testar, validar e publicar as alterações de investimentos
+
+- [ ] Publicar checkpoint contendo operações compra/venda, PM, rentabilidade e variação percentual
+- [ ] Validar no ambiente publicado o novo modal e a variação percentual após recarregar
+

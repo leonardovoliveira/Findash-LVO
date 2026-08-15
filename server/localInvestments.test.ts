@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { applyInvestmentQuote, createLocalInvestment, investmentCategories, investmentCost, investmentMarketValue, investmentValue, isLocalInvestment, type LocalInvestment } from "../client/src/lib/localInvestments";
+import { appendInvestmentOperation, applyInvestmentQuote, consolidateInvestmentOperations, createLocalInvestment, investmentCategories, investmentCost, investmentMarketValue, investmentProfitability, investmentValue, isLocalInvestment, type LocalInvestment } from "../client/src/lib/localInvestments";
 
 const base: LocalInvestment = {
   id: 1,
@@ -34,12 +34,13 @@ describe("local investments", () => {
   });
 
   it("applies a successful quote to the position and records source metadata", () => {
-    const updated = applyInvestmentQuote(base, { ok: true, price: 120, source: "brapi.dev", fetchedAt: "2026-08-15T12:00:00.000Z" });
+    const updated = applyInvestmentQuote(base, { ok: true, price: 120, changePercent: 2.5, source: "brapi.dev", fetchedAt: "2026-08-15T12:00:00.000Z" });
     expect(updated.marketPrice).toBe("120");
     expect(updated.currentValue).toBe("1200");
     expect(updated.quoteSource).toBe("brapi.dev");
     expect(updated.quoteFetchedAt).toBe("2026-08-15T12:00:00.000Z");
     expect(updated.quoteError).toBe("");
+    expect(updated.quoteChangePercent).toBe("2.5");
   });
 
   it("keeps the prior value and records a quote fallback error", () => {
@@ -58,6 +59,26 @@ describe("local investments", () => {
     expect(investmentValue({ currentValue: "", quantity: "10", averagePrice: "100" })).toBe(1000);
     expect(investmentValue({ currentValue: "0", quantity: "10", averagePrice: "100" })).toBe(0);
     expect(investmentValue({ currentValue: "1050", quantity: "10", averagePrice: "100" })).toBe(1050);
+  });
+
+  it("consolidates buys and sells into quantity, average price and realized profit", () => {
+    const operations = [
+      { id: 1, type: "buy" as const, quantity: "10", price: "100", date: "2026-01-01" },
+      { id: 2, type: "buy" as const, quantity: "10", price: "120", date: "2026-02-01" },
+      { id: 3, type: "sell" as const, quantity: "5", price: "150", date: "2026-03-01" },
+    ];
+    const consolidated = consolidateInvestmentOperations(operations);
+    expect(consolidated.quantity).toBe(15);
+    expect(consolidated.averagePrice).toBe(110);
+    expect(consolidated.realizedProfit).toBe(200);
+  });
+
+  it("appends an operation and calculates profitability from market value", () => {
+    const updated = appendInvestmentOperation({ ...base, quantity: "0", averagePrice: "0", currentValue: "0", marketPrice: "120", operations: [] }, { id: 1, type: "buy", quantity: "10", price: "100", date: "2026-03-01" }, new Date("2026-03-02T00:00:00.000Z"));
+    expect(updated.quantity).toBe("10");
+    expect(updated.averagePrice).toBe("100");
+    expect(updated.currentValue).toBe("1200");
+    expect(investmentProfitability(updated).percent).toBe(20);
   });
 
   it("rejects invalid positions", () => {
