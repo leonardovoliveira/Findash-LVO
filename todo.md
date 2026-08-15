@@ -257,3 +257,6 @@
 - [x] Sincronizar a branch main com leonardovoliveira/Findash-LVO e confirmar o commit remoto
 - [x] Corrigir USD/BRL indisponível mantendo BTC/BRL funcionando
 - [x] Validar o fallback de câmbio, produção e sincronização no GitHub
+- [x] Auditar e reativar o fluxo de login Google com sessão protegida
+- [x] Configurar e documentar as variáveis, origens e callback OAuth
+- [ ] Validar login, sessão, logout e comportamento sem autenticação
