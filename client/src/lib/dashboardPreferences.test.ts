@@ -14,22 +14,22 @@ beforeEach(() => {
 });
 
 describe("dashboard widget preferences", () => {
-  it("returns both widgets enabled by default", () => {
+  it("returns both widgets enabled in the default order", () => {
     expect(loadDashboardWidgetPreferences()).toEqual(defaultDashboardWidgetPreferences);
   });
 
-  it("persists a disabled widget and restores it", () => {
-    saveDashboardWidgetPreferences({ market: false, currency: true });
-    expect(loadDashboardWidgetPreferences()).toEqual({ market: false, currency: true });
+  it("persists visibility and custom order", () => {
+    saveDashboardWidgetPreferences({ market: false, currency: true, order: ["currency", "market"] });
+    expect(loadDashboardWidgetPreferences()).toEqual({ market: false, currency: true, order: ["currency", "market"] });
   });
 
-  it("treats missing values as enabled for forward compatibility", () => {
-    localStorageMock.setItem("findash-lvo:dashboard-widgets", JSON.stringify({ market: false }));
-    expect(loadDashboardWidgetPreferences()).toEqual({ market: false, currency: true });
+  it("normalizes missing and unknown order entries", () => {
+    localStorageMock.setItem("findash-lvo:dashboard-widgets", JSON.stringify({ market: false, order: ["unknown", "currency", "currency"] }));
+    expect(loadDashboardWidgetPreferences()).toEqual({ market: false, currency: true, order: ["currency", "market"] });
   });
 
-  it("restores the default visibility", () => {
-    saveDashboardWidgetPreferences({ market: false, currency: false });
+  it("restores the default visibility and order", () => {
+    saveDashboardWidgetPreferences({ market: false, currency: false, order: ["currency", "market"] });
     expect(resetDashboardWidgetPreferences()).toEqual(defaultDashboardWidgetPreferences);
     expect(loadDashboardWidgetPreferences()).toEqual(defaultDashboardWidgetPreferences);
   });
