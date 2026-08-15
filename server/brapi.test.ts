@@ -1,5 +1,17 @@
 import { describe, expect, it, vi } from "vitest";
-import { BrapiHttpError, fetchBrapiStockQuote } from "./brapi";
+import { BrapiHttpError, fetchBrapiStockHistory, fetchBrapiStockQuote } from "./brapi";
+
+describe("fetchBrapiStockHistory", () => {
+  it("returns historicalDataPrice from results[0].data", async () => {
+    const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(new Response(JSON.stringify({ results: [{ data: { historicalDataPrice: [{ date: 1, close: 12.5 }] } }] }), { status: 200 }));
+    await expect(fetchBrapiStockHistory("B3SA3", "3mo", fetchMock)).resolves.toEqual([{ date: 1, close: 12.5 }]);
+  });
+
+  it("throws a typed error for non-2xx historical responses", async () => {
+    const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(new Response("forbidden", { status: 403 }));
+    await expect(fetchBrapiStockHistory("B3SA3", "3mo", fetchMock)).rejects.toMatchObject({ status: 403 });
+  });
+});
 
 describe("fetchBrapiStockQuote", () => {
   it("returns results[0].data for the requested symbol", async () => {

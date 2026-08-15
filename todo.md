@@ -136,7 +136,16 @@
 - [ ] Validar em produção filtros semanal, mensal e anual do gráfico
 - [ ] Validar no app publicado uma posição B3SA3 com atualização visual de valor, fonte e horário
 - [ ] Validar no app publicado o fallback visual quando a brapi retornar erro não-2xx
-- [x] Criar commit final com todas as alterações atuais e enviar ao GitHub
+- [ ] Criar commit final com todas as alterações atuais e enviar ao GitHub
+- [x] Adicionar histórico de desempenho dos ativos usando dados históricos da brapi
+- [x] Adicionar seletor para alternar o histórico entre os ativos da carteira
+- [x] Documentar e validar o teste de cotação em tempo real na interface
+- [x] Criar modelo local de cartões de crédito por usuário
+- [x] Adicionar aba lateral e página de cartões de crédito
+- [x] Implementar cadastro de vencimento, limite, fatura, bandeira e banco
+- [x] Criar card de próxima fatura abaixo dos rankings no dashboard
+- [x] Permitir marcar a fatura como paga com atualização visual e persistência
+- [x] Testar responsividade e publicar os novos fluxos
 - [ ] Validar em produção persistência de categoria e ícone após recarregar lançamento
 - [x] Corrigir o cálculo e a exibição do valor patrimonial no card da carteira de investimentos
 - [x] Exibir a aba Investimentos no menu lateral em telas móveis
