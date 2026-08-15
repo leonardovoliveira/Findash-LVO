@@ -25,3 +25,9 @@ Após a atualização, o preview exibiu B3SA3 a R$ 146,70, PM de R$ 10,00, renta
 No domínio público do checkpoint f3505e8a, a rota /investimentos carregou o novo layout. Foi encontrado um ativo inválido legado (ZZZZ99), que foi removido para deixar a carteira pública limpa. A página voltou a exibir zero posições e o modal atualizado está disponível pelo botão Nova posição.
 
 A validação pós-republicação mostrou que tanto `findashlvo-sttsv86x.manus.space` quanto `findash-lvo.vercel.app` ainda exibem o modal legado com “Nome do ativo”, apesar do checkpoint 13f19446 conter o código novo. O preview local está atualizado; é necessário aguardar ou sincronizar o deployment externo antes de marcar a validação pública como concluída.
+
+Após o deployment Vercel de produção `dpl_6cJzrrCf5ELCC93gRwHzcVrAZ8iX` atingir READY, o domínio `https://findash-lvo.vercel.app/investimentos` passou a exibir corretamente o modal novo: sem “Nome do ativo”, com Compra/Venda, Ticker ou código, Preço da operação e Data da operação. A produção estava inicialmente no código legado, mas foi corrigida ao vincular o repositório e acionar a branch main.
+
+No Vercel de produção, sem autenticação adicional, foi criada uma compra temporária de B3SA3 com 1 unidade a R$ 10,00. A aplicação mostrou o toast “Operação registrada; buscando cotação automaticamente”, buscou a cotação real e exibiu valor de mercado de R$ 14,67, PM de R$ 10,00, rentabilidade de +46,70% e variação diária de -0,88%.
+
+Após recarregar o domínio Vercel, B3SA3 permaneceu com valor de mercado R$ 14,67, custo R$ 10,00, PM R$ 10,00, rentabilidade +46,70% e variação -0,88% no dia. Isso confirmou a persistência em localStorage e a consolidação após reload. O ativo temporário foi removido ao final, retornando a carteira a zero posições.

@@ -211,11 +211,14 @@
 - [x] Remover o campo Nome do ativo do modal de investimentos
 - [x] Adicionar operação compra/venda e data ao cadastro de ativo
 - [x] Consolidar automaticamente quantidade, preço médio, posição e rentabilidade
-- [ ] Testar, validar e publicar as alterações de investimentos
+- [x] Testar, validar e publicar as alterações de investimentos
 
-- [ ] Publicar checkpoint contendo operações compra/venda, PM, rentabilidade e variação percentual (novo checkpoint necessário após sincronização do código)
-- [ ] Validar no ambiente publicado o novo modal e a variação percentual após recarregar (deployment público anterior ainda exibia o modal legado)
+- [x] Publicar checkpoint contendo operações compra/venda, PM, rentabilidade e variação percentual (checkpoint f3505e8a e republicação 13f19446)
+- [x] Validar no ambiente publicado o novo modal e a variação percentual após recarregar (Vercel production dpl_6cJzrrCf5ELCC93gRwHzcVrAZ8iX validado)
 
-- [ ] Acionar deployment de produção Vercel após o vínculo do projeto com a branch main
-- [ ] Validar o fluxo de investimentos no domínio Vercel público sem autenticação
+- [x] Acionar deployment de produção Vercel após o vínculo do projeto com a branch main
+- [x] Validar o fluxo de investimentos no domínio Vercel público sem autenticação
+
+- [x] Validar em produção Vercel sem autenticação criação de compra real, cotação, variação, reload, persistência e remoção do temporário
+- [x] Validar após recarregar a produção a variação percentual e os dados consolidados da posição
 
