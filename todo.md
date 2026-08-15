@@ -129,3 +129,5 @@
 
 - [x] Persistir o ícone da categoria no modelo local e nos fluxos de criação e edição
 - [ ] Publicar as novas funcionalidades e validar o fluxo em produção
+
+- [x] Configurar rewrite SPA na Vercel para rotas client-side /investimentos e /lancamentos
