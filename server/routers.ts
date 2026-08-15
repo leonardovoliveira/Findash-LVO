@@ -32,16 +32,30 @@ type MarketQuoteResult = { ok: true; ticker: string; price: number; changePercen
 
 export async function fetchMarketFallback(category: "dollar" | "crypto", ticker: string, fetchedAt: string, signal: AbortSignal, fetchImpl: typeof fetch = fetch): Promise<MarketQuoteResult> {
   if (category === "dollar") {
-    const response = await fetchImpl("https://economia.awesomeapi.com.br/json/last/USD-BRL", { headers: { Accept: "application/json" }, signal });
-    if (!response.ok) return { ok: false, ticker, source: "AwesomeAPI", fetchedAt, error: `A fonte de câmbio respondeu HTTP ${response.status}` };
-    const payload = await response.json() as { USDBRL?: { bid?: string; pctChange?: string; timestamp?: string } };
-    const quote = payload.USDBRL;
-    const price = Number(quote?.bid);
-    const changePercent = Number(quote?.pctChange);
-    if (!Number.isFinite(price)) return { ok: false, ticker, source: "AwesomeAPI", fetchedAt, error: "Câmbio sem cotação disponível" };
-    const quoteTime = quote?.timestamp ? new Date(Number(quote.timestamp) * 1000).toISOString() : fetchedAt;
-    const previousClose = Number.isFinite(changePercent) && changePercent !== -100 ? price / (1 + changePercent / 100) : null;
-    return { ok: true, ticker, price, changePercent: Number.isFinite(changePercent) ? changePercent : null, previousClose, currency: "BRL", source: "AwesomeAPI", fetchedAt: quoteTime };
+    try {
+      const response = await fetchImpl("https://open.er-api.com/v6/latest/USD", { headers: { Accept: "application/json" }, signal });
+      if (response.ok) {
+        const payload = await response.json() as { result?: string; rates?: { BRL?: number }; time_last_update_unix?: number };
+        const price = Number(payload.rates?.BRL);
+        if (payload.result === "success" && Number.isFinite(price)) {
+          const quoteTime = payload.time_last_update_unix ? new Date(payload.time_last_update_unix * 1000).toISOString() : fetchedAt;
+          return { ok: true, ticker, price, changePercent: null, previousClose: null, currency: "BRL", source: "ExchangeRate-API", fetchedAt: quoteTime };
+        }
+      }
+    } catch { /* tenta a fonte secundária abaixo */ }
+
+    try {
+      const response = await fetchImpl("https://economia.awesomeapi.com.br/json/last/USD-BRL", { headers: { Accept: "application/json" }, signal });
+      if (!response.ok) return { ok: false, ticker, source: "AwesomeAPI", fetchedAt, error: `As fontes de câmbio responderam HTTP ${response.status}` };
+      const payload = await response.json() as { USDBRL?: { bid?: string; pctChange?: string; timestamp?: string } };
+      const quote = payload.USDBRL;
+      const price = Number(quote?.bid);
+      const changePercent = Number(quote?.pctChange);
+      if (!Number.isFinite(price)) return { ok: false, ticker, source: "AwesomeAPI", fetchedAt, error: "Câmbio sem cotação disponível" };
+      const quoteTime = quote?.timestamp ? new Date(Number(quote.timestamp) * 1000).toISOString() : fetchedAt;
+      const previousClose = Number.isFinite(changePercent) && changePercent !== -100 ? price / (1 + changePercent / 100) : null;
+      return { ok: true, ticker, price, changePercent: Number.isFinite(changePercent) ? changePercent : null, previousClose, currency: "BRL", source: "AwesomeAPI", fetchedAt: quoteTime };
+    } catch { return { ok: false, ticker, source: "ExchangeRate-API", fetchedAt, error: "Não foi possível consultar o câmbio" }; }
   }
 
   const response = await fetchImpl("https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=brl&include_24hr_change=true", { headers: { Accept: "application/json" }, signal });

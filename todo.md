@@ -255,3 +255,5 @@
 - [x] Executar testes, build, commit e push das alterações
 - [x] Diagnosticar divergência entre commits do projeto e o repositório GitHub oficial
 - [x] Sincronizar a branch main com leonardovoliveira/Findash-LVO e confirmar o commit remoto
+- [x] Corrigir USD/BRL indisponível mantendo BTC/BRL funcionando
+- [x] Validar o fallback de câmbio, produção e sincronização no GitHub
