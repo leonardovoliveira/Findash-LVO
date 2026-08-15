@@ -9,6 +9,7 @@ export type BrapiStockQuoteData = {
   regularMarketPrice?: number;
   regularMarketChange?: number;
   regularMarketChangePercent?: number;
+  regularMarketPreviousClose?: number;
   regularMarketTime?: string;
   marketCap?: number;
   regularMarketVolume?: number;

@@ -34,6 +34,8 @@ export type LocalInvestment = {
   marketPrice?: string;
   /** Variação percentual diária retornada pela fonte externa. */
   quoteChangePercent?: string;
+  /** Preço de fechamento do pregão anterior retornado pela fonte externa. */
+  quotePreviousClose?: string;
   quoteFetchedAt?: string;
   quoteSource?: string;
   quoteError?: string;
@@ -78,6 +80,7 @@ export type InvestmentQuote = {
   ok: boolean;
   price?: number;
   changePercent?: number;
+  previousClose?: number;
   source: string;
   fetchedAt: string;
   error?: string;
@@ -92,6 +95,7 @@ export function applyInvestmentQuote(item: LocalInvestment, quote: InvestmentQuo
     ...item,
     marketPrice: String(price),
     quoteChangePercent: Number.isFinite(quote.changePercent) ? String(quote.changePercent) : item.quoteChangePercent,
+    quotePreviousClose: Number.isFinite(quote.previousClose) ? String(quote.previousClose) : item.quotePreviousClose,
     currentValue: String(Number(item.quantity || 0) * price),
     quoteFetchedAt: quote.fetchedAt,
     quoteSource: quote.source,
@@ -186,5 +190,5 @@ export function isLocalInvestment(value: unknown): value is LocalInvestment {
     const entry = operation as Record<string, unknown>;
     return Number.isInteger(entry.id) && (entry.type === "buy" || entry.type === "sell") && typeof entry.quantity === "string" && Number(entry.quantity) > 0 && typeof entry.price === "string" && Number(entry.price) >= 0 && typeof entry.date === "string";
   }));
-  return Number.isInteger(item.id) && typeof item.userId === "number" && (item.name === undefined || typeof item.name === "string") && typeof item.ticker === "string" && typeof item.category === "string" && investmentCategories.some(category => category.value === item.category) && typeof item.institution === "string" && typeof item.quantity === "string" && Number(item.quantity) >= 0 && typeof item.averagePrice === "string" && Number(item.averagePrice) >= 0 && typeof item.currentValue === "string" && Number(item.currentValue) >= 0 && (item.marketPrice === undefined || (typeof item.marketPrice === "string" && Number(item.marketPrice) >= 0)) && (item.quoteChangePercent === undefined || (typeof item.quoteChangePercent === "string" && Number.isFinite(Number(item.quoteChangePercent)))) && (item.quoteFetchedAt === undefined || typeof item.quoteFetchedAt === "string") && (item.quoteSource === undefined || typeof item.quoteSource === "string") && (item.quoteError === undefined || typeof item.quoteError === "string") && (item.realizedProfit === undefined || (typeof item.realizedProfit === "string" && Number.isFinite(Number(item.realizedProfit)))) && validOperations && typeof item.notes === "string";
+  return Number.isInteger(item.id) && typeof item.userId === "number" && (item.name === undefined || typeof item.name === "string") && typeof item.ticker === "string" && typeof item.category === "string" && investmentCategories.some(category => category.value === item.category) && typeof item.institution === "string" && typeof item.quantity === "string" && Number(item.quantity) >= 0 && typeof item.averagePrice === "string" && Number(item.averagePrice) >= 0 && typeof item.currentValue === "string" && Number(item.currentValue) >= 0 && (item.marketPrice === undefined || (typeof item.marketPrice === "string" && Number(item.marketPrice) >= 0)) && (item.quoteChangePercent === undefined || (typeof item.quoteChangePercent === "string" && Number.isFinite(Number(item.quoteChangePercent)))) && (item.quotePreviousClose === undefined || (typeof item.quotePreviousClose === "string" && Number.isFinite(Number(item.quotePreviousClose)))) && (item.quoteFetchedAt === undefined || typeof item.quoteFetchedAt === "string") && (item.quoteSource === undefined || typeof item.quoteSource === "string") && (item.quoteError === undefined || typeof item.quoteError === "string") && (item.realizedProfit === undefined || (typeof item.realizedProfit === "string" && Number.isFinite(Number(item.realizedProfit)))) && validOperations && typeof item.notes === "string";
 }

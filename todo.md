@@ -222,3 +222,19 @@
 - [x] Validar em produção Vercel sem autenticação criação de compra real, cotação, variação, reload, persistência e remoção do temporário
 - [x] Validar após recarregar a produção a variação percentual e os dados consolidados da posição
 
+- [x] Adicionar tooltip acessível nas setas de variação diária com o fechamento do dia anterior
+- [x] Testar e publicar o tooltip de variação das cotações
+
+- [ ] Aplicar o tooltip de fechamento anterior também na lista/cards de ativos
+- [ ] Validar por hover e foco de teclado o tooltip com uma cotação real
+- [ ] Publicar e validar o tooltip no ambiente Vercel de produção
+
+- [x] Adicionar gráfico pizza de investimentos por tipo na home
+- [x] Adicionar gráfico pizza de investimentos por instituição na home
+- [x] Adicionar gráfico de performance anual dos investimentos na home
+- [x] Adaptar a exibição monetária para USD em ativos da categoria dólar
+- [x] Adicionar widgets de cotação USD/BRL e BTC/BRL
+- [x] Substituir logo ao lado do usuário pelo avatar textual LO
+- [x] Validar responsividade, testes e build dos novos cards
+- [ ] Fazer commit e push das alterações no GitHub
+

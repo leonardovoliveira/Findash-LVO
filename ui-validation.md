@@ -31,3 +31,11 @@ Após o deployment Vercel de produção `dpl_6cJzrrCf5ELCC93gRwHzcVrAZ8iX` ating
 No Vercel de produção, sem autenticação adicional, foi criada uma compra temporária de B3SA3 com 1 unidade a R$ 10,00. A aplicação mostrou o toast “Operação registrada; buscando cotação automaticamente”, buscou a cotação real e exibiu valor de mercado de R$ 14,67, PM de R$ 10,00, rentabilidade de +46,70% e variação diária de -0,88%.
 
 Após recarregar o domínio Vercel, B3SA3 permaneceu com valor de mercado R$ 14,67, custo R$ 10,00, PM R$ 10,00, rentabilidade +46,70% e variação -0,88% no dia. Isso confirmou a persistência em localStorage e a consolidação após reload. O ativo temporário foi removido ao final, retornando a carteira a zero posições.
+
+O card de investimentos foi revisado no preview desktop após a integração do tooltip. A implementação preserva o indicador compacto com seta e percentual, adicionando foco visível para teclado e conteúdo contextual de fechamento anterior via Tooltip Radix quando a cotação possuir esse dado.
+
+No preview, uma posição temporária B3SA3 foi cadastrada para validar o tooltip. O toast “Operação registrada; buscando cotação automaticamente” e o estado “Atualizando…” apareceram corretamente; a consulta ainda estava em andamento no momento da captura.
+
+A seta real de variação no preview foi localizada com `aria-label="Ver fechamento anterior"` e recebeu foco corretamente via teclado/DOM. A simulação programática de mouse/foco não abriu o portal visual do Radix Tooltip, portanto a confirmação visual será feita com movimento real do cursor após posicionar o elemento no viewport.
+
+O DOM do preview confirmou o indicador `-0.88% no dia` com `aria-label="Ver fechamento anterior"`; o trigger é acessível por foco. A posição calculada ficou abaixo do viewport atual, e a simulação de eventos não abriu o portal Radix, mas a implementação inclui trigger focável e conteúdo “Fechamento anterior: …”.

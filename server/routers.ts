@@ -71,7 +71,7 @@ export const appRouter = router({
           const price = stock?.regularMarketPrice ?? Number(currency?.bid) ?? crypto?.regularMarketPrice;
           const quoteTime = stock?.regularMarketTime ?? (currency?.updatedAt ? new Date(currency.updatedAt).toISOString() : crypto?.regularMarketTime) ?? fetchedAt;
           if (!Number.isFinite(price)) return { ok: false as const, ticker, source: "brapi.dev", fetchedAt: quoteTime, error: "Ticker sem cotação disponível" };
-          return { ok: true as const, ticker, price, changePercent: stock?.regularMarketChangePercent ?? crypto?.regularMarketChange ?? null, currency: stock?.currency ?? currency?.toCurrency ?? crypto?.currency ?? "BRL", source: "brapi.dev", fetchedAt: quoteTime };
+          return { ok: true as const, ticker, price, changePercent: stock?.regularMarketChangePercent ?? crypto?.regularMarketChange ?? null, previousClose: stock?.regularMarketPreviousClose ?? null, currency: stock?.currency ?? currency?.toCurrency ?? crypto?.currency ?? "BRL", source: "brapi.dev", fetchedAt: quoteTime };
         } catch (error) {
           return { ok: false as const, ticker, source: "brapi.dev", fetchedAt, error: error instanceof Error && error.name === "AbortError" ? "Tempo limite da cotação excedido" : "Não foi possível consultar a cotação" };
         } finally {

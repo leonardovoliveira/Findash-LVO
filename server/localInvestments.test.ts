@@ -34,13 +34,14 @@ describe("local investments", () => {
   });
 
   it("applies a successful quote to the position and records source metadata", () => {
-    const updated = applyInvestmentQuote(base, { ok: true, price: 120, changePercent: 2.5, source: "brapi.dev", fetchedAt: "2026-08-15T12:00:00.000Z" });
+    const updated = applyInvestmentQuote(base, { ok: true, price: 120, changePercent: 2.5, previousClose: 115, source: "brapi.dev", fetchedAt: "2026-08-15T12:00:00.000Z" });
     expect(updated.marketPrice).toBe("120");
     expect(updated.currentValue).toBe("1200");
     expect(updated.quoteSource).toBe("brapi.dev");
     expect(updated.quoteFetchedAt).toBe("2026-08-15T12:00:00.000Z");
     expect(updated.quoteError).toBe("");
     expect(updated.quoteChangePercent).toBe("2.5");
+    expect(updated.quotePreviousClose).toBe("115");
   });
 
   it("keeps the prior value and records a quote fallback error", () => {
