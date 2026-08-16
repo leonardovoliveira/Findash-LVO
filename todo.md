@@ -275,3 +275,5 @@
 - [x] Persistir e controlar o pagamento de faturas por competência
 - [x] Adicionar filtro do dashboard por método de pagamento
 - [x] Criar testes, validar responsividade e publicar as novas funcionalidades
+- [x] Corrigir login Google no deployment público quando o appId chega como undefined
+- [ ] Validar a URL de autorização, callback, sessão e publicação da correção
