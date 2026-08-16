@@ -289,3 +289,6 @@
 - [x] Corrigir altura e rolagem interna do modal de configurações do dashboard
 - [x] Validar acesso a todos os widgets em desktop, tablet e mobile
 - [x] Publicar a correção e sincronizar com o GitHub
+- [x] Definir grade padrão e alinhamento consistente para os cards do dashboard
+- [x] Ajustar alturas, espaçamentos e ocupação das colunas sem quebrar a ordem personalizada
+- [x] Validar desktop, tablet e mobile, publicar e sincronizar com o GitHub
