@@ -286,3 +286,6 @@
 - [x] Registrar eventos de autenticação para diagnóstico
 - [x] Otimizar e validar logout em mobile e tablet
 - [x] Testar, publicar e enviar as alterações ao GitHub
+- [x] Corrigir altura e rolagem interna do modal de configurações do dashboard
+- [x] Validar acesso a todos os widgets em desktop, tablet e mobile
+- [x] Publicar a correção e sincronizar com o GitHub
