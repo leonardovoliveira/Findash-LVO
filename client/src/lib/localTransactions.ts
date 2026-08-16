@@ -5,7 +5,15 @@ export type LocalTransaction = Omit<Transaction, "occurredAt" | "createdAt" | "u
   createdAt: string;
   updatedAt: string;
   icon?: string;
+  paymentMethod?: PaymentMethod;
+  creditCardId?: number;
+  creditTotal?: string;
+  installmentIndex?: number;
+  installmentsTotal?: number;
+  purchaseId?: number;
 };
+
+export type PaymentMethod = "cash" | "pix" | "boleto" | "debit" | "credit";
 
 const STORAGE_PREFIX = "findash-lvo:transactions:";
 
@@ -64,7 +72,12 @@ export function isLocalTransaction(value: unknown): value is LocalTransaction {
     item.category.trim().length > 0 &&
     (item.icon === undefined || typeof item.icon === "string") &&
     typeof item.occurredAt === "string" &&
-    !Number.isNaN(Date.parse(item.occurredAt))
+    !Number.isNaN(Date.parse(item.occurredAt)) &&
+    (item.paymentMethod === undefined || ["cash", "pix", "boleto", "debit", "credit"].includes(String(item.paymentMethod))) &&
+    (item.creditCardId === undefined || Number.isInteger(item.creditCardId)) &&
+    (item.installmentIndex === undefined || Number.isInteger(item.installmentIndex)) &&
+    (item.installmentsTotal === undefined || (Number.isInteger(item.installmentsTotal) && Number(item.installmentsTotal) >= 1)) &&
+    (item.purchaseId === undefined || Number.isInteger(item.purchaseId))
   );
 }
 

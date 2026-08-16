@@ -49,6 +49,11 @@ describe("local transaction backups", () => {
     expect(filterLocalTransactions(created, 7, 2026)).toHaveLength(0);
   });
 
+  it("preserves credit purchase metadata in backups", () => {
+    const credit: LocalTransaction = { ...transaction, type: "expense", paymentMethod: "credit", creditCardId: 4, creditTotal: "300.00", amount: "100.00", installmentIndex: 1, installmentsTotal: 3, purchaseId: 99 };
+    expect(parseBackupJson(exportJson([credit]))).toEqual([credit]);
+  });
+
   it("saves and loads transactions per user", () => {
     const values = new Map<string, string>();
     Object.defineProperty(globalThis, "window", {

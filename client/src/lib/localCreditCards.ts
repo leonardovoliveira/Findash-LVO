@@ -6,6 +6,10 @@ export type CreditCardPurchase = {
   amount: string;
   purchasedAt: string;
   buyer: string;
+  purchaseId?: number;
+  installmentIndex?: number;
+  installmentsTotal?: number;
+  invoiceMonth?: string;
 };
 
 export type CreditCard = {
@@ -21,6 +25,7 @@ export type CreditCard = {
   isPaid: boolean;
   cardType?: CreditCardType;
   purchases?: CreditCardPurchase[];
+  invoices?: Record<string, string>;
   createdAt: string;
   updatedAt: string;
 };
@@ -34,6 +39,7 @@ export function normalizeCreditCard(card: CreditCard): CreditCard {
     ...card,
     cardType: card.cardType === "shared" ? "shared" : "individual",
     purchases: Array.isArray(card.purchases) ? card.purchases : [],
+    invoices: card.invoices && typeof card.invoices === "object" ? card.invoices : {},
   };
 }
 
@@ -73,7 +79,47 @@ export function isCreditCard(value: unknown): value is CreditCard {
     const item = purchase as Record<string, unknown>;
     return Number.isInteger(item.id) && typeof item.description === "string" && Number(item.amount) >= 0 && typeof item.purchasedAt === "string" && typeof item.buyer === "string";
   }));
-  return Number.isInteger(card.id) && typeof card.userId === "number" && typeof card.name === "string" && card.name.trim().length > 0 && typeof card.bank === "string" && typeof card.brand === "string" && Number.isInteger(dueDay) && dueDay >= 1 && dueDay <= 31 && typeof card.totalLimit === "string" && Number(card.totalLimit) >= 0 && typeof card.invoiceAmount === "string" && Number(card.invoiceAmount) >= 0 && typeof card.invoiceMonth === "string" && /^\d{4}-\d{2}$/.test(card.invoiceMonth) && typeof card.isPaid === "boolean" && validType && validPurchases && typeof card.createdAt === "string" && typeof card.updatedAt === "string";
+  return Number.isInteger(card.id) && typeof card.userId === "number" && typeof card.name === "string" && card.name.trim().length > 0 && typeof card.bank === "string" && typeof card.brand === "string" && Number.isInteger(dueDay) && dueDay >= 1 && dueDay <= 31 && typeof card.totalLimit === "string" && Number(card.totalLimit) >= 0 && typeof card.invoiceAmount === "string" && Number(card.invoiceAmount) >= 0 && typeof card.invoiceMonth === "string" && /^\d{4}-\d{2}$/.test(card.invoiceMonth) && typeof card.isPaid === "boolean" && validType && validPurchases && (card.invoices === undefined || (typeof card.invoices === "object" && card.invoices !== null)) && typeof card.createdAt === "string" && typeof card.updatedAt === "string";
 }
 
-export function creditCardInvoiceValue(card: Pick<CreditCard, "invoiceAmount" | "isPaid">) { return card.isPaid ? 0 : Number(card.invoiceAmount) || 0; }
+export function creditCardInvoiceAmount(card: Pick<CreditCard, "invoiceAmount" | "invoiceMonth" | "invoices">) {
+  const derived = card.invoices?.[card.invoiceMonth];
+  return derived !== undefined ? Number(derived) || 0 : Number(card.invoiceAmount) || 0;
+}
+
+export function creditCardInvoiceValue(card: Pick<CreditCard, "invoiceAmount" | "invoiceMonth" | "invoices" | "isPaid">) { return card.isPaid ? 0 : creditCardInvoiceAmount(card); }
+
+function addMonths(month: string, offset: number) {
+  const [year, currentMonth] = month.split("-").map(Number);
+  const date = new Date(year, currentMonth - 1 + offset, 1);
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+}
+
+export function removeCreditPurchase(cards: CreditCard[], purchaseId: number) {
+  return cards.map(card => {
+    const purchases = (card.purchases ?? []).filter(purchase => purchase.purchaseId !== purchaseId);
+    const invoices: Record<string, string> = {};
+    for (const purchase of purchases) {
+      if (!purchase.invoiceMonth) continue;
+      invoices[purchase.invoiceMonth] = ((Number(invoices[purchase.invoiceMonth]) || 0) + (Number(purchase.amount) || 0)).toFixed(2);
+    }
+    return { ...card, purchases, invoices, invoiceAmount: invoices[card.invoiceMonth] ?? "0.00", isPaid: false, updatedAt: new Date().toISOString() };
+  });
+}
+
+export function applyCreditPurchase(cards: CreditCard[], input: { cardId: number; purchaseId: number; description: string; buyer?: string; total: number; purchasedAt: string; installments: number }) {
+  const card = cards.find(item => item.id === input.cardId);
+  if (!card) return cards;
+  const count = Math.max(1, Math.floor(input.installments));
+  const base = Math.floor((input.total / count) * 100) / 100;
+  const purchases = [...(card.purchases ?? [])];
+  const invoices = { ...(card.invoices ?? {}) };
+  const startMonth = input.purchasedAt.slice(0, 7);
+  for (let index = 0; index < count; index += 1) {
+    const amount = index === count - 1 ? Number((input.total - base * (count - 1)).toFixed(2)) : Number(base.toFixed(2));
+    const invoiceMonth = addMonths(startMonth, index);
+    purchases.push({ id: input.purchaseId + index, purchaseId: input.purchaseId, description: `${input.description} (${index + 1}/${count})`, amount: amount.toFixed(2), purchasedAt: input.purchasedAt, buyer: input.buyer ?? "", installmentIndex: index + 1, installmentsTotal: count, invoiceMonth });
+    invoices[invoiceMonth] = ((Number(invoices[invoiceMonth]) || 0) + amount).toFixed(2);
+  }
+  return cards.map(item => item.id === input.cardId ? { ...item, purchases, invoices, invoiceAmount: invoices[item.invoiceMonth] ?? item.invoiceAmount, isPaid: false, updatedAt: new Date().toISOString() } : item);
+}

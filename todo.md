@@ -265,3 +265,7 @@
 - [x] Diagnosticar falha WebSocket do portal Manus e definir alternativa estável de autenticação Google
 - [x] Implementar login Google OAuth direto sem dependência do portal Manus
 - [ ] Configurar credenciais Google OAuth, callback, sessão e logout no Vercel
+- [x] Adicionar método de pagamento a lançamentos de saída
+- [x] Vincular compras no crédito a um cartão e calcular parcelas por fatura
+- [x] Persistir compras parceladas, atualizar a tela de cartões e validar testes/build
+- [ ] Corrigir o erro final do callback Google e validar login/sessão/logout em produção

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { createLocalCreditCard, creditCardInvoiceValue, deleteLocalCreditCard, isCreditCard, normalizeCreditCard, updateLocalCreditCard, type CreditCard } from "../client/src/lib/localCreditCards";
+import { applyCreditPurchase, createLocalCreditCard, creditCardInvoiceValue, deleteLocalCreditCard, isCreditCard, normalizeCreditCard, updateLocalCreditCard, type CreditCard } from "../client/src/lib/localCreditCards";
 
-const base: CreditCard = { id: 1, userId: 1, name: "Visa principal", bank: "Banco", brand: "Visa", dueDay: 10, totalLimit: "5000", invoiceAmount: "850", invoiceMonth: "2026-08", isPaid: false, cardType: "individual", purchases: [], createdAt: "2026-08-01T00:00:00.000Z", updatedAt: "2026-08-01T00:00:00.000Z" };
+const base: CreditCard = { id: 1, userId: 1, name: "Visa principal", bank: "Banco", brand: "Visa", dueDay: 10, totalLimit: "5000", invoiceAmount: "850", invoiceMonth: "2026-08", isPaid: false, invoices: {}, cardType: "individual", purchases: [], createdAt: "2026-08-01T00:00:00.000Z", updatedAt: "2026-08-01T00:00:00.000Z" };
 
 describe("local credit cards", () => {
   it("creates an incremental card with timestamps and normalized defaults", () => {
@@ -42,6 +42,14 @@ describe("local credit cards", () => {
   it("returns the next unpaid invoice and zero for paid invoice", () => {
     expect(creditCardInvoiceValue(base)).toBe(850);
     expect(creditCardInvoiceValue({ ...base, isPaid: true })).toBe(0);
+  });
+
+  it("applies equal monthly installments and rounds the final installment", () => {
+    const cards = applyCreditPurchase([base], { cardId: 1, purchaseId: 100, description: "Notebook", total: 100, purchasedAt: "2026-08-12", installments: 3 });
+    expect(cards[0].invoices).toEqual({ "2026-08": "33.33", "2026-09": "33.33", "2026-10": "33.34" });
+    expect(cards[0].purchases?.map(purchase => purchase.amount)).toEqual(["33.33", "33.33", "33.34"]);
+    expect(cards[0].purchases?.map(purchase => purchase.installmentIndex)).toEqual([1, 2, 3]);
+    expect(creditCardInvoiceValue(cards[0])).toBe(33.33);
   });
 
   it("rejects invalid due dates", () => {
