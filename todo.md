@@ -277,3 +277,6 @@
 - [x] Criar testes, validar responsividade e publicar as novas funcionalidades
 - [x] Corrigir login Google no deployment público quando o appId chega como undefined
 - [x] Validar a URL de autorização, callback, sessão e publicação da correção
+- [x] Implementar logout com encerramento correto da sessão no painel
+- [x] Adicionar indicador de carregamento no botão de login Google
+- [x] Testar, publicar e enviar as atualizações ao GitHub
