@@ -271,3 +271,7 @@
 - [x] Corrigir o erro final do callback Google e validar login/sessão/logout em produção
 - [x] Corrigir auth.me para aceitar sessão Google direta sem depender de OAUTH_SERVER_URL ou banco legado ausente
 - [x] Validar novamente login Google, auth.me, sessão e logout no deployment Vercel
+- [x] Adicionar navegação mensal de faturas no painel de cartões
+- [x] Persistir e controlar o pagamento de faturas por competência
+- [x] Adicionar filtro do dashboard por método de pagamento
+- [x] Criar testes, validar responsividade e publicar as novas funcionalidades

@@ -23,6 +23,8 @@ export type CreditCard = {
   invoiceAmount: string;
   invoiceMonth: string;
   isPaid: boolean;
+  /** Estado de pagamento por competência no formato YYYY-MM. */
+  paidInvoices?: Record<string, boolean>;
   cardType?: CreditCardType;
   purchases?: CreditCardPurchase[];
   invoices?: Record<string, string>;
@@ -40,6 +42,7 @@ export function normalizeCreditCard(card: CreditCard): CreditCard {
     cardType: card.cardType === "shared" ? "shared" : "individual",
     purchases: Array.isArray(card.purchases) ? card.purchases : [],
     invoices: card.invoices && typeof card.invoices === "object" ? card.invoices : {},
+    ...(card.paidInvoices && typeof card.paidInvoices === "object" ? { paidInvoices: card.paidInvoices } : {}),
   };
 }
 
@@ -87,7 +90,26 @@ export function creditCardInvoiceAmount(card: Pick<CreditCard, "invoiceAmount" |
   return derived !== undefined ? Number(derived) || 0 : Number(card.invoiceAmount) || 0;
 }
 
-export function creditCardInvoiceValue(card: Pick<CreditCard, "invoiceAmount" | "invoiceMonth" | "invoices" | "isPaid">) { return card.isPaid ? 0 : creditCardInvoiceAmount(card); }
+export function creditCardInvoiceValue(card: Pick<CreditCard, "invoiceAmount" | "invoiceMonth" | "invoices" | "isPaid" | "paidInvoices">) { return creditCardIsInvoicePaid(card, card.invoiceMonth) ? 0 : creditCardInvoiceAmount(card); }
+
+export function creditCardInvoiceMonths(card: Pick<CreditCard, "invoiceMonth" | "invoices" | "purchases">) {
+  const months = new Set<string>([card.invoiceMonth]);
+  Object.keys(card.invoices ?? {}).forEach(month => months.add(month));
+  (card.purchases ?? []).forEach(purchase => purchase.invoiceMonth && months.add(purchase.invoiceMonth));
+  return Array.from(months).filter(month => /^\d{4}-\d{2}$/.test(month)).sort();
+}
+
+export function creditCardIsInvoicePaid(card: Pick<CreditCard, "isPaid" | "paidInvoices">, month: string) {
+  return card.paidInvoices?.[month] ?? (month === (card as CreditCard).invoiceMonth ? card.isPaid : false);
+}
+
+export function setCreditCardInvoicePaid(cards: CreditCard[], cardId: number, month: string, paid: boolean) {
+  return cards.map(card => {
+    if (card.id !== cardId) return card;
+    const paidInvoices = { ...(card.paidInvoices ?? {}), [month]: paid };
+    return { ...card, paidInvoices, isPaid: month === card.invoiceMonth ? paid : card.isPaid, updatedAt: new Date().toISOString() };
+  });
+}
 
 function addMonths(month: string, offset: number) {
   const [year, currentMonth] = month.split("-").map(Number);
@@ -103,7 +125,7 @@ export function removeCreditPurchase(cards: CreditCard[], purchaseId: number) {
       if (!purchase.invoiceMonth) continue;
       invoices[purchase.invoiceMonth] = ((Number(invoices[purchase.invoiceMonth]) || 0) + (Number(purchase.amount) || 0)).toFixed(2);
     }
-    return { ...card, purchases, invoices, invoiceAmount: invoices[card.invoiceMonth] ?? "0.00", isPaid: false, updatedAt: new Date().toISOString() };
+    return { ...card, purchases, invoices, paidInvoices: {}, invoiceAmount: invoices[card.invoiceMonth] ?? "0.00", isPaid: false, updatedAt: new Date().toISOString() };
   });
 }
 
@@ -121,5 +143,5 @@ export function applyCreditPurchase(cards: CreditCard[], input: { cardId: number
     purchases.push({ id: input.purchaseId + index, purchaseId: input.purchaseId, description: `${input.description} (${index + 1}/${count})`, amount: amount.toFixed(2), purchasedAt: input.purchasedAt, buyer: input.buyer ?? "", installmentIndex: index + 1, installmentsTotal: count, invoiceMonth });
     invoices[invoiceMonth] = ((Number(invoices[invoiceMonth]) || 0) + amount).toFixed(2);
   }
-  return cards.map(item => item.id === input.cardId ? { ...item, purchases, invoices, invoiceAmount: invoices[item.invoiceMonth] ?? item.invoiceAmount, isPaid: false, updatedAt: new Date().toISOString() } : item);
+  return cards.map(item => item.id === input.cardId ? { ...item, purchases, invoices, paidInvoices: { ...(item.paidInvoices ?? {}), [startMonth]: false }, invoiceAmount: invoices[item.invoiceMonth] ?? item.invoiceAmount, isPaid: false, updatedAt: new Date().toISOString() } : item);
 }
