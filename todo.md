@@ -269,3 +269,5 @@
 - [x] Vincular compras no crédito a um cartão e calcular parcelas por fatura
 - [x] Persistir compras parceladas, atualizar a tela de cartões e validar testes/build
 - [ ] Corrigir o erro final do callback Google e validar login/sessão/logout em produção
+- [ ] Corrigir auth.me para aceitar sessão Google direta sem depender de OAUTH_SERVER_URL ou banco legado ausente
+- [ ] Validar novamente login Google, auth.me, sessão e logout no deployment Vercel

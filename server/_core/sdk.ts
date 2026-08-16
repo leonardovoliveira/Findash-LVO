@@ -289,7 +289,14 @@ class SDKServer {
     const signedInAt = new Date();
     let user = await db.getUserByOpenId(sessionUserId);
 
-    // If user not in DB, sync from OAuth server automatically
+    // Direct Google sessions are already verified by Google and do not need
+    // the legacy Manus OAuth server. This is important for localStorage-first
+    // deployments where DATABASE_URL/OAUTH_SERVER_URL may be intentionally absent.
+    if (!user && session.openId.startsWith("google:")) {
+      return buildDirectGoogleUser(session, signedInAt);
+    }
+
+    // If user not in DB, sync legacy Manus sessions from the OAuth server.
     if (!user) {
       try {
         const userInfo = await this.getUserInfoWithJwt(sessionToken ?? "");
@@ -318,6 +325,24 @@ class SDKServer {
 
     return user;
   }
+}
+
+export function buildDirectGoogleUser(
+  session: { openId: string; name: string },
+  now: Date
+): AuthenticatedUser {
+  return {
+    id: -1,
+    openId: session.openId,
+    name: session.name || "Usuário Google",
+    email: null,
+    avatarUrl: null,
+    loginMethod: "google",
+    role: "user",
+    createdAt: now,
+    updatedAt: now,
+    lastSignedIn: now,
+  } as AuthenticatedUser;
 }
 
 const CRON_OPEN_ID_PREFIX = "cron_";
