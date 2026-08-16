@@ -14,7 +14,7 @@ describe("direct Google OAuth", () => {
     expect(url.searchParams.get("client_secret")).toBeNull();
   });
 
-  it("uses the fixed production callback by default", () => {
+  it("uses the configured production callback URI", () => {
     expect(googleRedirectUri()).toBe("https://findash-lvo.vercel.app/api/auth/google/callback");
   });
 });

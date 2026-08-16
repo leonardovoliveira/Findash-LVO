@@ -264,7 +264,7 @@
 - [x] Diagnosticar portal OAuth travado e confirmar appId válido no URL de autenticação (portal exibiu a tela Findash LVO e provedores, incluindo Google)
 - [x] Diagnosticar falha WebSocket do portal Manus e definir alternativa estável de autenticação Google
 - [x] Implementar login Google OAuth direto sem dependência do portal Manus
-- [ ] Configurar credenciais Google OAuth, callback, sessão e logout no Vercel
+- [x] Configurar credenciais Google OAuth, callback, sessão e logout no Vercel
 - [x] Adicionar método de pagamento a lançamentos de saída
 - [x] Vincular compras no crédito a um cartão e calcular parcelas por fatura
 - [x] Persistir compras parceladas, atualizar a tela de cartões e validar testes/build
