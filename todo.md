@@ -276,4 +276,4 @@
 - [x] Adicionar filtro do dashboard por método de pagamento
 - [x] Criar testes, validar responsividade e publicar as novas funcionalidades
 - [x] Corrigir login Google no deployment público quando o appId chega como undefined
-- [ ] Validar a URL de autorização, callback, sessão e publicação da correção
+- [x] Validar a URL de autorização, callback, sessão e publicação da correção
