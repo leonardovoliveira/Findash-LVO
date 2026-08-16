@@ -295,3 +295,7 @@
 - [x] Ajustar o menu lateral comprimido para exibir apenas ícones centralizados
 - [x] Corrigir overflow e layout do bloco de perfil/logout no modo comprimido
 - [x] Validar responsividade, publicar e sincronizar a correção com o GitHub
+- [x] Limitar a configuração aos oito cards solicitados e restaurar uma ordem padrão controlada
+- [x] Renderizar performance financeira e performance dos investimentos em linhas de largura total
+- [x] Adicionar tooltips, destaque ativo e transições suaves ao sidebar comprimido
+- [x] Validar, publicar e sincronizar todas as alterações com o GitHub

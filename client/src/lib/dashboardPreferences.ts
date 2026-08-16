@@ -1,46 +1,37 @@
 export type DashboardWidgetKey =
-  | "balance"
-  | "calendar"
-  | "rankings"
-  | "investment"
-  | "allocations"
-  | "annualPerformance"
   | "market"
   | "currency"
-  | "selectedDay"
-  | "periodSummary"
-  | "performance";
+  | "expenses"
+  | "income"
+  | "nextInvoice"
+  | "allocationType"
+  | "allocationInstitution"
+  | "periodSummary";
 
 export type DashboardWidgetPreferences = Record<DashboardWidgetKey, boolean> & {
   order: DashboardWidgetKey[];
 };
 
 export const dashboardWidgetKeys: DashboardWidgetKey[] = [
-  "balance",
-  "calendar",
-  "rankings",
-  "investment",
-  "allocations",
-  "annualPerformance",
   "market",
   "currency",
-  "selectedDay",
+  "expenses",
+  "income",
+  "nextInvoice",
+  "allocationType",
+  "allocationInstitution",
   "periodSummary",
-  "performance",
 ];
 
 export const defaultDashboardWidgetPreferences: DashboardWidgetPreferences = {
-  balance: true,
-  calendar: true,
-  rankings: true,
-  investment: true,
-  allocations: true,
-  annualPerformance: true,
   market: true,
   currency: true,
-  selectedDay: true,
+  expenses: true,
+  income: true,
+  nextInvoice: true,
+  allocationType: true,
+  allocationInstitution: true,
   periodSummary: true,
-  performance: true,
   order: [...dashboardWidgetKeys],
 };
 
@@ -81,15 +72,12 @@ export function resetDashboardWidgetPreferences(): DashboardWidgetPreferences {
 }
 
 export const dashboardWidgetOptions: Array<{ key: DashboardWidgetKey; label: string; description: string }> = [
-  { key: "balance", label: "Saldo no período", description: "Exibe o saldo consolidado do mês selecionado." },
-  { key: "calendar", label: "Calendário financeiro", description: "Mostra dias com entradas e saídas e permite consultar lançamentos." },
-  { key: "rankings", label: "Gastos, entradas e próxima fatura", description: "Exibe rankings financeiros e o resumo da próxima fatura." },
-  { key: "investment", label: "Carteira de investimentos", description: "Exibe valor de mercado e acesso rápido para cadastrar posições." },
-  { key: "allocations", label: "Distribuição dos investimentos", description: "Exibe gráficos por tipo e por instituição." },
-  { key: "annualPerformance", label: "Performance anual", description: "Exibe o resultado realizado dos investimentos no ano." },
-  { key: "market", label: "Mercados de referência", description: "Exibe os cards de USD/BRL e BTC/BRL." },
-  { key: "currency", label: "Carteira em moedas", description: "Exibe o resumo de posições e categorias em moedas estrangeiras." },
-  { key: "selectedDay", label: "Lançamentos do dia", description: "Exibe os lançamentos da data selecionada no calendário." },
-  { key: "periodSummary", label: "Resumo do período", description: "Exibe totais de entradas e saídas do período." },
-  { key: "performance", label: "Performance financeira", description: "Exibe o gráfico de evolução financeira." },
+  { key: "market", label: "Moedas de referência", description: "Exibe USD/BRL e BTC/BRL." },
+  { key: "currency", label: "Carteira em moedas", description: "Exibe posições em moedas estrangeiras." },
+  { key: "expenses", label: "Maiores gastos", description: "Exibe os maiores gastos do período." },
+  { key: "income", label: "Maiores entradas", description: "Exibe as maiores entradas do período." },
+  { key: "nextInvoice", label: "Próxima fatura", description: "Exibe o resumo da próxima fatura." },
+  { key: "allocationType", label: "Investimentos por tipo", description: "Exibe a distribuição por categoria." },
+  { key: "allocationInstitution", label: "Investimentos por instituição", description: "Exibe a distribuição por instituição." },
+  { key: "periodSummary", label: "Resumo do período", description: "Exibe totais de entradas e saídas." },
 ];
