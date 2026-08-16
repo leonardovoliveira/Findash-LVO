@@ -259,7 +259,7 @@
 - [x] Validar o fallback de câmbio, produção e sincronização no GitHub
 - [x] Auditar e reativar o fluxo de login Google com sessão protegida
 - [x] Configurar e documentar as variáveis, origens e callback OAuth
-- [ ] Validar login, sessão, logout e comportamento sem autenticação
+- [x] Validar login, sessão, logout e comportamento sem autenticação
 - [x] Configurar VITE_APP_ID no Vercel e validar o redirecionamento OAuth sem appId indefinido (fallback público do App ID incluído no frontend e backend)
 - [x] Diagnosticar portal OAuth travado e confirmar appId válido no URL de autenticação (portal exibiu a tela Findash LVO e provedores, incluindo Google)
 - [x] Diagnosticar falha WebSocket do portal Manus e definir alternativa estável de autenticação Google
@@ -268,6 +268,6 @@
 - [x] Adicionar método de pagamento a lançamentos de saída
 - [x] Vincular compras no crédito a um cartão e calcular parcelas por fatura
 - [x] Persistir compras parceladas, atualizar a tela de cartões e validar testes/build
-- [ ] Corrigir o erro final do callback Google e validar login/sessão/logout em produção
-- [ ] Corrigir auth.me para aceitar sessão Google direta sem depender de OAUTH_SERVER_URL ou banco legado ausente
-- [ ] Validar novamente login Google, auth.me, sessão e logout no deployment Vercel
+- [x] Corrigir o erro final do callback Google e validar login/sessão/logout em produção
+- [x] Corrigir auth.me para aceitar sessão Google direta sem depender de OAUTH_SERVER_URL ou banco legado ausente
+- [x] Validar novamente login Google, auth.me, sessão e logout no deployment Vercel
