@@ -292,3 +292,6 @@
 - [x] Definir grade padrão e alinhamento consistente para os cards do dashboard
 - [x] Ajustar alturas, espaçamentos e ocupação das colunas sem quebrar a ordem personalizada
 - [x] Validar desktop, tablet e mobile, publicar e sincronizar com o GitHub
+- [x] Ajustar o menu lateral comprimido para exibir apenas ícones centralizados
+- [x] Corrigir overflow e layout do bloco de perfil/logout no modo comprimido
+- [x] Validar responsividade, publicar e sincronizar a correção com o GitHub
