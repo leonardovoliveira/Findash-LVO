@@ -1,4 +1,5 @@
 export { COOKIE_NAME, ONE_YEAR_MS } from "@shared/const";
+import { recordAuthEvent } from "@/lib/authEvents";
 
 function createOAuthNonce(): string {
   const cryptoApi = globalThis.crypto;
@@ -22,5 +23,6 @@ export function googleLoginUrl(origin: string) {
 }
 
 export const startLogin = () => {
+  recordAuthEvent("login_started");
   window.location.href = googleLoginUrl(window.location.origin);
 };

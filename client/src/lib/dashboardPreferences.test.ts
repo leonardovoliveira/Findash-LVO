@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { defaultDashboardWidgetPreferences, loadDashboardWidgetPreferences, resetDashboardWidgetPreferences, saveDashboardWidgetPreferences } from "./dashboardPreferences";
+import { dashboardWidgetKeys, defaultDashboardWidgetPreferences, loadDashboardWidgetPreferences, resetDashboardWidgetPreferences, saveDashboardWidgetPreferences } from "./dashboardPreferences";
 
 const storage = new Map<string, string>();
 const localStorageMock = {
@@ -14,22 +14,27 @@ beforeEach(() => {
 });
 
 describe("dashboard widget preferences", () => {
-  it("returns both widgets enabled in the default order", () => {
+  it("returns all widgets enabled in the default order", () => {
     expect(loadDashboardWidgetPreferences()).toEqual(defaultDashboardWidgetPreferences);
   });
 
-  it("persists visibility and custom order", () => {
-    saveDashboardWidgetPreferences({ market: false, currency: true, order: ["currency", "market"] });
-    expect(loadDashboardWidgetPreferences()).toEqual({ market: false, currency: true, order: ["currency", "market"] });
+  it("persists visibility and custom order for every widget", () => {
+    const preferences = { ...defaultDashboardWidgetPreferences, market: false, order: [...dashboardWidgetKeys].reverse() };
+    saveDashboardWidgetPreferences(preferences);
+    expect(loadDashboardWidgetPreferences()).toEqual(preferences);
   });
 
-  it("normalizes missing and unknown order entries", () => {
+  it("normalizes missing and unknown order entries while preserving visibility", () => {
     localStorageMock.setItem("findash-lvo:dashboard-widgets", JSON.stringify({ market: false, order: ["unknown", "currency", "currency"] }));
-    expect(loadDashboardWidgetPreferences()).toEqual({ market: false, currency: true, order: ["currency", "market"] });
+    const loaded = loadDashboardWidgetPreferences();
+    expect(loaded.market).toBe(false);
+    expect(loaded.currency).toBe(true);
+    expect(loaded.order).toEqual(["currency", ...dashboardWidgetKeys.filter(key => key !== "currency")]);
   });
 
   it("restores the default visibility and order", () => {
-    saveDashboardWidgetPreferences({ market: false, currency: false, order: ["currency", "market"] });
+    const preferences = { ...defaultDashboardWidgetPreferences, market: false, currency: false, order: [...dashboardWidgetKeys].reverse() };
+    saveDashboardWidgetPreferences(preferences);
     expect(resetDashboardWidgetPreferences()).toEqual(defaultDashboardWidgetPreferences);
     expect(loadDashboardWidgetPreferences()).toEqual(defaultDashboardWidgetPreferences);
   });

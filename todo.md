@@ -280,3 +280,9 @@
 - [x] Implementar logout com encerramento correto da sessão no painel
 - [x] Adicionar indicador de carregamento no botão de login Google
 - [x] Testar, publicar e enviar as atualizações ao GitHub
+- [x] Permitir ativar, desativar e reorganizar todos os cards do dashboard inicial
+- [x] Exibir o avatar da conta Google no cabeçalho do painel
+- [x] Adicionar modal de confirmação antes do logout
+- [x] Registrar eventos de autenticação para diagnóstico
+- [x] Otimizar e validar logout em mobile e tablet
+- [x] Testar, publicar e enviar as alterações ao GitHub
