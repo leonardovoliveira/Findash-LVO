@@ -32,7 +32,7 @@ export const defaultDashboardWidgetPreferences: DashboardWidgetPreferences = {
   allocationType: true,
   allocationInstitution: true,
   periodSummary: true,
-  order: [...dashboardWidgetKeys],
+  order: ["expenses", "income", "nextInvoice", "allocationType", "allocationInstitution", "market", "currency", "periodSummary"],
 };
 
 const storageKey = "findash-lvo:dashboard-widgets";
@@ -45,10 +45,10 @@ function normalizeOrder(value: unknown): DashboardWidgetKey[] {
 }
 
 export function loadDashboardWidgetPreferences(): DashboardWidgetPreferences {
-  if (typeof window === "undefined") return { ...defaultDashboardWidgetPreferences, order: [...dashboardWidgetKeys] };
+  if (typeof window === "undefined") return { ...defaultDashboardWidgetPreferences, order: [...defaultDashboardWidgetPreferences.order] };
   try {
     const raw = window.localStorage.getItem(storageKey);
-    if (!raw) return { ...defaultDashboardWidgetPreferences, order: [...dashboardWidgetKeys] };
+    if (!raw) return { ...defaultDashboardWidgetPreferences, order: [...defaultDashboardWidgetPreferences.order] };
     const parsed = JSON.parse(raw) as Partial<DashboardWidgetPreferences>;
     return {
       ...defaultDashboardWidgetPreferences,
@@ -56,7 +56,7 @@ export function loadDashboardWidgetPreferences(): DashboardWidgetPreferences {
       order: normalizeOrder(parsed.order),
     } as DashboardWidgetPreferences;
   } catch {
-    return { ...defaultDashboardWidgetPreferences, order: [...dashboardWidgetKeys] };
+    return { ...defaultDashboardWidgetPreferences, order: [...defaultDashboardWidgetPreferences.order] };
   }
 }
 
@@ -66,7 +66,7 @@ export function saveDashboardWidgetPreferences(preferences: DashboardWidgetPrefe
 }
 
 export function resetDashboardWidgetPreferences(): DashboardWidgetPreferences {
-  const defaults = { ...defaultDashboardWidgetPreferences, order: [...dashboardWidgetKeys] };
+  const defaults = { ...defaultDashboardWidgetPreferences, order: [...defaultDashboardWidgetPreferences.order] };
   if (typeof window !== "undefined") window.localStorage.setItem(storageKey, JSON.stringify(defaults));
   return defaults;
 }

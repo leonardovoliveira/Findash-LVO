@@ -299,3 +299,6 @@
 - [x] Renderizar performance financeira e performance dos investimentos em linhas de largura total
 - [x] Adicionar tooltips, destaque ativo e transições suaves ao sidebar comprimido
 - [x] Validar, publicar e sincronizar todas as alterações com o GitHub
+- [x] Definir a composição da imagem como nova ordem padrão dos cards
+- [x] Persistir a nova ordem padrão sem apagar preferências personalizadas já salvas
+- [x] Validar desktop/mobile e publicar o novo layout padrão
