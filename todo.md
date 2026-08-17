@@ -462,3 +462,6 @@
 - [x] Corrigir o registro e a consulta da sessão atual para exibir o dispositivo conectado
 - [x] Tornar perfil e logout acessíveis no menu mobile sem depender de espaço vertical oculto
 - [x] Validar desktop/mobile, testes, publicação e push ao GitHub
+
+- [x] Corrigir a referência da logo na tela inicial e garantir carregamento do asset publicado
+- [x] Validar visual desktop/mobile, testes, build e envio da correção ao GitHub
