@@ -360,3 +360,6 @@
 - [x] Ocultar temporariamente o card Carteira em moedas
 - [x] Exibir no máximo os 10 maiores ativos na Carteira de investimentos e alinhar sua altura
 - [x] Validar desktop/mobile, cotações e sincronizar a alteração com o GitHub
+
+- [x] Investigar o aviso do GitHub sobre não conseguir recuperar o commit mais recente
+- [x] Confirmar a integridade da branch main e corrigir a sincronização se necessário
