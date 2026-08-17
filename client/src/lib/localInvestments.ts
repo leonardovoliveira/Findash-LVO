@@ -19,7 +19,7 @@ export type InvestmentOperation = {
   date: string;
 };
 
-export type InvestmentHistoryPoint = { date: string; value: string; currency?: "BRL" | "USD" };
+export type InvestmentHistoryPoint = { date: string; value: string; currency?: "BRL" | "USD"; assetValue?: string; fxRate?: string };
 
 export type InvestmentInstitutionDetail = {
   institution: string;
@@ -253,8 +253,15 @@ export function investmentPerformanceHistory(item: LocalInvestment, range: "1mo"
   const cutoff = new Date(asOf);
   cutoff.setMonth(cutoff.getMonth() - months);
   const historyConversionRate = item.category === "dollar" ? (Number(item.fxRate) || 1) : 1;
-  const persisted = (item.dailyHistory ?? []).filter(point => point.date >= cutoff.toISOString().slice(0, 10) && point.date <= asOf.toISOString().slice(0, 10)).map(point => ({ date: Date.parse(`${point.date}T12:00:00Z`) / 1000, close: Number(point.value) * (item.category === "dollar" && point.currency !== "BRL" ? historyConversionRate : 1) })).filter(point => Number.isFinite(point.close));
-  if (persisted.length >= 2) return persisted;
+  const persisted = (item.dailyHistory ?? []).filter(point => point.date >= cutoff.toISOString().slice(0, 10) && point.date <= asOf.toISOString().slice(0, 10)).map(point => ({ date: Date.parse(`${point.date}T12:00:00Z`) / 1000, close: Number(point.value) * (item.category === "dollar" && point.currency !== "BRL" ? historyConversionRate : 1), assetNominal: Number(point.assetValue), fxRate: Number(point.fxRate) })).filter(point => Number.isFinite(point.close));
+  if (persisted.length >= 2) {
+    if (item.category !== "dollar") return persisted.map(({ date, close }) => ({ date, close }));
+    const firstWithBreakdown = persisted.find(point => Number.isFinite(point.assetNominal) && point.assetNominal > 0 && Number.isFinite(point.fxRate) && point.fxRate > 0);
+    if (!firstWithBreakdown) return persisted.map(({ date, close }) => ({ date, close }));
+    const baselineAsset = firstWithBreakdown.assetNominal as number;
+    const baselineFx = firstWithBreakdown.fxRate as number;
+    return persisted.map(point => ({ date: point.date, close: point.close, assetEffect: Number.isFinite(point.assetNominal) ? point.assetNominal * baselineFx : undefined, fxEffect: Number.isFinite(point.fxRate) ? baselineAsset * point.fxRate : undefined }));
+  }
   const operations = [...(item.operations ?? [])].sort((a, b) => a.date.localeCompare(b.date) || a.id - b.id);
   const points = new Map<string, number>();
   let quantity = 0;
@@ -346,7 +353,8 @@ export function recordDailyInvestmentHistory(investments: LocalInvestment[], now
   const date = now.toISOString().slice(0, 10);
   return investments.map(item => {
     const value = investmentMarketValue(item);
-    const history = [...(item.dailyHistory ?? []).filter(point => point.date !== date), { date, value: String(value), currency: "BRL" as const }].sort((a, b) => a.date.localeCompare(b.date)).slice(-730);
+    const assetNominal = item.category === "dollar" && item.marketPrice?.trim() ? Number(item.quantity || 0) * Number(item.marketPrice) : undefined;
+    const history = [...(item.dailyHistory ?? []).filter(point => point.date !== date), { date, value: String(value), currency: "BRL" as const, assetValue: Number.isFinite(assetNominal) ? String(assetNominal) : undefined, fxRate: item.category === "dollar" ? item.fxRate : undefined }].sort((a, b) => a.date.localeCompare(b.date)).slice(-730);
     return { ...item, dailyHistory: history };
   });
 }

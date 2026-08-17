@@ -473,3 +473,7 @@
 - [x] Corrigir conversão real USD/BRL em custos, patrimônio e indicadores dos investimentos
 - [x] Adicionar opção unificada para consolidar todos os ativos no gráfico histórico
 - [x] Validar cálculos, gráficos, testes, build, responsividade e publicar no GitHub
+
+- [x] Criar séries separadas de preço do ativo em USD, efeito USD/BRL e total convertido em BRL
+- [x] Integrar linhas, tooltip e legenda da decomposição cambial no gráfico
+- [x] Validar cálculos, testes, build, responsividade e publicar a evolução

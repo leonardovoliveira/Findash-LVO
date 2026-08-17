@@ -170,6 +170,15 @@ describe("local investments", () => {
     expect(updated.dailyHistory?.at(-1)).toMatchObject({ value: "1200", currency: "BRL" });
   });
 
+  it("separates asset-price and FX effects in dollar history", () => {
+    const item = { ...base, category: "dollar" as const, fxRate: "5", dailyHistory: [
+      { date: "2026-08-10", value: "500", currency: "BRL" as const, assetValue: "100", fxRate: "5" },
+      { date: "2026-08-17", value: "660", currency: "BRL" as const, assetValue: "110", fxRate: "6" },
+    ] };
+    const history = investmentPerformanceHistory(item, "1mo", new Date("2026-08-17T12:00:00.000Z"));
+    expect(history.at(-1)).toMatchObject({ close: 660, assetEffect: 550, fxEffect: 600 });
+  });
+
   it("keeps different tickers as separate cards", () => {
     const consolidated = consolidateInvestmentsByTicker([
       { ...base, id: 10, ticker: "GMAT3", institution: "C6" },
