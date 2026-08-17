@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { applyCreditPurchase, creditCardInvoiceUsage, creditCardPurchaseInvoiceMonth, createLocalCreditCard, creditCardInvoiceMonths, creditCardInvoiceValue, creditCardIsInvoicePaid, deleteLocalCreditCard, isCreditCard, normalizeCreditCard, setCreditCardInvoicePaid, updateLocalCreditCard, type CreditCard } from "../client/src/lib/localCreditCards";
+import { applyCreditPurchase, creditCardPurchaseInvoiceMonth, createLocalCreditCard, creditCardInvoiceMonths, creditCardInvoiceValue, creditCardIsInvoicePaid, deleteLocalCreditCard, isCreditCard, normalizeCreditCard, setCreditCardInvoicePaid, updateLocalCreditCard, type CreditCard } from "../client/src/lib/localCreditCards";
 
 const base: CreditCard = { id: 1, userId: 1, name: "Visa principal", bank: "Banco", brand: "Visa", dueDay: 10, closingDay: 19, totalLimit: "5000", invoiceAmount: "850", invoiceMonth: "2026-08", isPaid: false, invoices: {}, cardType: "individual", purchases: [], createdAt: "2026-08-01T00:00:00.000Z", updatedAt: "2026-08-01T00:00:00.000Z" };
 
@@ -45,11 +45,6 @@ describe("local credit cards", () => {
     const [updated] = applyCreditPurchase([base], { cardId: 1, purchaseId: 500, description: "Compra", total: 200, purchasedAt: "2026-08-19", installments: 1 });
     expect(updated.invoices?.["2026-09"]).toBe("200.00");
     expect(updated.purchases?.[0].invoiceMonth).toBe("2026-09");
-  });
-
-  it("calculates invoice usage and caps progress at 100 percent", () => {
-    expect(creditCardInvoiceUsage({ ...base, totalLimit: "1000", invoiceAmount: "250" })).toEqual({ spent: 250, limit: 1000, available: 750, percentage: 25 });
-    expect(creditCardInvoiceUsage({ ...base, totalLimit: "1000", invoiceAmount: "1500" }).percentage).toBe(100);
   });
 
   it("returns the next unpaid invoice and zero for paid invoice", () => {

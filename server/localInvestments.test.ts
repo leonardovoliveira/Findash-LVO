@@ -111,6 +111,12 @@ describe("local investments", () => {
     expect(result.contractedProfit).toBeCloseTo(105, 8);
   });
 
+  it("adds the contracted real rate to IPCA for treasury profitability", () => {
+    const result = investmentProfitability({ ...base, category: "treasury", contractedRate: "6", contractedBenchmark: "IPCA+", benchmarkAnnualRate: "4.5", quantity: "10", averagePrice: "100", currentValue: "1000" });
+    expect(result.contractedAnnualPercent).toBeCloseTo(10.5, 8);
+    expect(result.contractedProfit).toBeCloseTo(105, 8);
+  });
+
   it("keeps different tickers as separate cards", () => {
     const consolidated = consolidateInvestmentsByTicker([
       { ...base, id: 10, ticker: "GMAT3", institution: "C6" },

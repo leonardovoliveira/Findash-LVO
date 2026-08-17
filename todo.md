@@ -396,3 +396,10 @@
 - [x] Expandir horizontalmente o card Cotações no espaço livre do dashboard
 - [x] Corrigir contraste do tooltip dos gráficos de investimentos no dark mode
 - [x] Validar testes, build, responsividade e publicação dos refinamentos
+
+- [x] Remover o card Próximos fechamentos da home e ajustar a grade
+- [x] Usar benchmark CDI/IPCA na rentabilidade contratada do Tesouro Direto
+- [x] Buscar automaticamente as taxas atuais de CDI e IPCA
+- [x] Trocar bandeira do cartão por toggle Visa/Mastercard
+- [x] Exibir marca visual sem asset proprietário conforme a bandeira
+- [x] Validar testes, build, responsividade e sincronização GitHub

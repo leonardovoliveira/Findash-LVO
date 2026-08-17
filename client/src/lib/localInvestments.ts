@@ -249,7 +249,7 @@ export function investmentProfitability(item: LocalInvestment) {
   const profit = marketValue - costBasis + (Number.isFinite(realizedProfit) ? realizedProfit : 0);
   const contractedRate = Number(item.contractedRate ?? 0);
   const benchmarkAnnualRate = Number(item.benchmarkAnnualRate ?? 0);
-  const contractedAnnualPercent = item.contractedBenchmark === "Prefixado" ? contractedRate : contractedRate > 0 && benchmarkAnnualRate > 0 ? (contractedRate / 100) * benchmarkAnnualRate : 0;
+  const contractedAnnualPercent = item.contractedBenchmark === "Prefixado" ? contractedRate : item.contractedBenchmark === "IPCA+" ? contractedRate + benchmarkAnnualRate : contractedRate > 0 && benchmarkAnnualRate > 0 ? (contractedRate / 100) * benchmarkAnnualRate : 0;
   const contractedProfit = costBasis > 0 && contractedAnnualPercent > 0 ? costBasis * contractedAnnualPercent / 100 : 0;
   return { profit, percent: costBasis > 0 ? (profit / costBasis) * 100 : 0, contractedProfit, contractedAnnualPercent };
 }

@@ -87,6 +87,23 @@ export async function fetchTreasuryQuote(ticker: string, fetchedAt: string, sign
   }
 }
 
+export type EconomicBenchmarks = { cdiAnnualRate: number; ipcaAnnualRate: number; cdiDate: string; ipcaDate: string; source: string; fetchedAt: string };
+
+export async function fetchEconomicBenchmarks(fetchImpl: typeof fetch = fetch): Promise<EconomicBenchmarks> {
+  const [cdiResponse, ipcaResponse] = await Promise.all([
+    fetchImpl("https://api.bcb.gov.br/dados/serie/bcdata.sgs.12/dados/ultimos/1?formato=json", { headers: { Accept: "application/json" } }),
+    fetchImpl("https://api.bcb.gov.br/dados/serie/bcdata.sgs.433/dados/ultimos/12?formato=json", { headers: { Accept: "application/json" } }),
+  ]);
+  if (!cdiResponse.ok || !ipcaResponse.ok) throw new Error(`Banco Central respondeu HTTP ${!cdiResponse.ok ? cdiResponse.status : ipcaResponse.status}`);
+  const cdiRows = await cdiResponse.json() as Array<{ data?: string; valor?: string }>;
+  const ipcaRows = await ipcaResponse.json() as Array<{ data?: string; valor?: string }>;
+  const cdiDaily = Number(cdiRows.at(-1)?.valor);
+  const ipcaMonthly = ipcaRows.map(row => Number(row.valor)).filter(Number.isFinite);
+  if (!Number.isFinite(cdiDaily) || ipcaMonthly.length === 0) throw new Error("Indicadores CDI/IPCA sem valor disponível");
+  const ipcaAnnualRate = (ipcaMonthly.reduce((acc, rate) => acc * (1 + rate / 100), 1) - 1) * 100;
+  return { cdiAnnualRate: (Math.pow(1 + cdiDaily / 100, 252) - 1) * 100, ipcaAnnualRate, cdiDate: cdiRows.at(-1)?.data ?? "", ipcaDate: ipcaRows.at(-1)?.data ?? "", source: "Banco Central do Brasil (SGS)", fetchedAt: new Date().toISOString() };
+}
+
 export async function fetchTreasuryHistory(ticker: string, range: "1mo" | "6mo" | "1y", fetchImpl: typeof fetch = fetch, token?: string): Promise<Array<{ date: number; close: number }>> {
   const end = new Date();
   const start = new Date(end);
@@ -152,6 +169,7 @@ export const appRouter = router({
     brapi: protectedProcedure.input(stockQuoteInput).query(({ input }) => fetchBrapiStockQuote(input.symbol)),
     historical: protectedProcedure.input(stockQuoteInput.extend({ range: z.enum(["1d", "5d", "1mo", "3mo", "6mo", "1y"]).default("3mo") })).query(({ input }) => fetchBrapiStockHistory(input.symbol, input.range)),
     treasuryHistorical: protectedProcedure.input(stockQuoteInput.extend({ range: z.enum(["1mo", "6mo", "1y"]).default("1mo") })).query(({ input }) => fetchTreasuryHistory(input.symbol, input.range, fetch, ENV.brapiToken)),
+    benchmarks: protectedProcedure.query(() => fetchEconomicBenchmarks()),
   }),
   finance: router({
     list: protectedProcedure.input(monthInput).query(async ({ ctx, input }) => {

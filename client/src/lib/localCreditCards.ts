@@ -96,11 +96,6 @@ export function creditCardInvoiceAmount(card: Pick<CreditCard, "invoiceAmount" |
 
 export function creditCardInvoiceValue(card: Pick<CreditCard, "invoiceAmount" | "invoiceMonth" | "invoices" | "isPaid" | "paidInvoices">) { return creditCardIsInvoicePaid(card, card.invoiceMonth) ? 0 : creditCardInvoiceAmount(card); }
 
-export function creditCardInvoiceUsage(card: Pick<CreditCard, "invoiceAmount" | "invoiceMonth" | "invoices" | "totalLimit">, month = card.invoiceMonth) {
-  const spent = Number(card.invoices?.[month] ?? (month === card.invoiceMonth ? card.invoiceAmount : 0)) || 0;
-  const limit = Math.max(0, Number(card.totalLimit) || 0);
-  return { spent, limit, available: Math.max(0, limit - spent), percentage: limit > 0 ? Math.min(100, (spent / limit) * 100) : 0 };
-}
 
 export function creditCardInvoiceMonths(card: Pick<CreditCard, "invoiceMonth" | "invoices" | "purchases">) {
   const months = new Set<string>([card.invoiceMonth]);
