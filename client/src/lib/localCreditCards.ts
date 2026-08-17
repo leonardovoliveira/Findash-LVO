@@ -132,16 +132,28 @@ function addMonths(month: string, offset: number) {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
 }
 
-export function removeCreditPurchase(cards: CreditCard[], purchaseId: number) {
+function withoutCreditPurchase(cards: CreditCard[], cardId: number, purchaseId: number) {
   return cards.map(card => {
-    const purchases = (card.purchases ?? []).filter(purchase => purchase.purchaseId !== purchaseId);
+    if (card.id !== cardId) return card;
+    const purchases = (card.purchases ?? []).filter(purchase => (purchase.purchaseId ?? purchase.id) !== purchaseId);
     const invoices: Record<string, string> = {};
     for (const purchase of purchases) {
       if (!purchase.invoiceMonth) continue;
       invoices[purchase.invoiceMonth] = ((Number(invoices[purchase.invoiceMonth]) || 0) + (Number(purchase.amount) || 0)).toFixed(2);
     }
-    return { ...card, purchases, invoices, paidInvoices: {}, invoiceAmount: invoices[card.invoiceMonth] ?? "0.00", isPaid: false, updatedAt: new Date().toISOString() };
+    return { ...card, purchases, invoices, invoiceAmount: invoices[card.invoiceMonth] ?? "0.00", isPaid: false, updatedAt: new Date().toISOString() };
   });
+}
+
+export function removeCreditPurchase(cards: CreditCard[], purchaseId: number) {
+  return cards.map(card => {
+    const next = withoutCreditPurchase([card], card.id, purchaseId)[0];
+    return next ? { ...next, paidInvoices: {}, isPaid: false } : card;
+  });
+}
+
+export function updateCreditPurchase(cards: CreditCard[], input: { cardId: number; purchaseId: number; description: string; store?: string; product?: string; category?: string; buyer?: string; total: number; purchasedAt: string; installments: number }) {
+  return applyCreditPurchase(withoutCreditPurchase(cards, input.cardId, input.purchaseId), input);
 }
 
 export function applyCreditPurchase(cards: CreditCard[], input: { cardId: number; purchaseId: number; description: string; store?: string; product?: string; category?: string; buyer?: string; total: number; purchasedAt: string; installments: number }) {

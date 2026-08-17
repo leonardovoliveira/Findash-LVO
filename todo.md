@@ -425,3 +425,7 @@
 - [x] Adicionar filtros por categoria e comprador na aba Cartões
 - [x] Exportar fatura detalhada por comprador com data, loja, produto, parcela, valor da parcela e total
 - [x] Validar testes, build, responsividade e sincronizar o novo commit com o GitHub
+
+- [x] Permitir editar compras diretamente na lista filtrada da aba Cartões
+- [x] Recalcular competência, parcelas e total da fatura ao salvar uma compra editada
+- [x] Validar persistência local, testes, build e responsividade do novo fluxo

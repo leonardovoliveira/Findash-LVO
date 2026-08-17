@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { applyCreditPurchase, creditCardPurchaseInvoiceMonth, createLocalCreditCard, creditCardInvoiceMonths, creditCardInvoiceValue, creditCardIsInvoicePaid, deleteLocalCreditCard, isCreditCard, normalizeCreditCard, setCreditCardInvoicePaid, updateLocalCreditCard, type CreditCard } from "../client/src/lib/localCreditCards";
+import { applyCreditPurchase, creditCardPurchaseInvoiceMonth, createLocalCreditCard, creditCardInvoiceMonths, creditCardInvoiceValue, creditCardIsInvoicePaid, deleteLocalCreditCard, isCreditCard, normalizeCreditCard, setCreditCardInvoicePaid, updateCreditPurchase, updateLocalCreditCard, type CreditCard } from "../client/src/lib/localCreditCards";
 
 const base: CreditCard = { id: 1, userId: 1, name: "Visa principal", bank: "Banco", brand: "Visa", dueDay: 10, closingDay: 19, totalLimit: "5000", invoiceAmount: "850", invoiceMonth: "2026-08", isPaid: false, invoices: {}, cardType: "individual", purchases: [], createdAt: "2026-08-01T00:00:00.000Z", updatedAt: "2026-08-01T00:00:00.000Z" };
 
@@ -51,6 +51,15 @@ describe("local credit cards", () => {
     const [updated] = applyCreditPurchase([base], { cardId: 1, purchaseId: 700, description: "Fone", store: "Loja A", product: "Fone Bluetooth", category: "Lazer", buyer: "LEANDRO", total: 120, purchasedAt: "2026-08-12", installments: 2 });
     expect(updated.purchases?.[0]).toMatchObject({ store: "Loja A", product: "Fone Bluetooth", category: "Lazer", buyer: "LEANDRO", installmentIndex: 1, installmentsTotal: 2 });
     expect(updated.purchases?.[1]).toMatchObject({ store: "Loja A", product: "Fone Bluetooth", category: "Lazer", buyer: "LEANDRO", installmentIndex: 2, installmentsTotal: 2 });
+  });
+
+  it("edits a grouped purchase and recalculates its invoice installments", () => {
+    const withPurchase = applyCreditPurchase([base], { cardId: 1, purchaseId: 800, description: "Compra", store: "Loja antiga", product: "Produto antigo", category: "Lazer", buyer: "LEANDRO", total: 100, purchasedAt: "2026-08-18", installments: 2 });
+    const edited = updateCreditPurchase(withPurchase, { cardId: 1, purchaseId: 800, description: "Produto novo", store: "Loja nova", product: "Produto novo", category: "Casa", buyer: "JOANA", total: 150, purchasedAt: "2026-08-19", installments: 3 })[0];
+    expect(edited.purchases?.filter(purchase => purchase.purchaseId === 800)).toHaveLength(3);
+    expect(edited.purchases?.every(purchase => purchase.store === "Loja nova" && purchase.category === "Casa" && purchase.buyer === "JOANA")).toBe(true);
+    expect(edited.purchases?.map(purchase => purchase.invoiceMonth)).toEqual(["2026-09", "2026-10", "2026-11"]);
+    expect(edited.invoices?.["2026-09"]).toBe("50.00");
   });
 
   it("returns the next unpaid invoice and zero for paid invoice", () => {
