@@ -319,3 +319,7 @@
 - [x] Auditar o dashboard fixo em viewport móvel de 390px e tablet de 768px sem overflow visível
 - [x] Adicionar confirmação antes de excluir lançamentos, investimentos ou cartões de crédito
 - [x] Atualizar README com a arquitetura de layout fixo e o fluxo direto de OAuth Google
+
+- [x] Reorganizar a grade fixa do dashboard para reproduzir a composição da imagem 2
+- [x] Ajustar proporções, espaçamentos e distribuição das linhas inferiores conforme a referência
+- [x] Validar a nova composição em desktop e mobile e publicar no GitHub
