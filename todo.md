@@ -385,3 +385,8 @@
 - [x] Adicionar data de fechamento ao modelo e ao formulário de cartões
 - [x] Classificar compras no dia do fechamento na próxima competência da fatura
 - [x] Validar faturas, parcelas, edição, persistência e sincronizar com o GitHub
+
+- [x] Exibir aviso automático da competência da fatura ao registrar compra no cartão
+- [x] Criar painel no dashboard com as próximas datas de fechamento de todos os cartões
+- [x] Adicionar filtro de despesas agrupadas pelo mês da fatura do cartão
+- [x] Validar testes, build, responsividade e publicação dos novos fluxos

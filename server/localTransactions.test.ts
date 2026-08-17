@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from "vitest";
-import { createLocalTransaction, exportJson, filterLocalTransactions, loadLocalTransactions, parseBackupJson, parseImportJson, saveLocalTransactions, type LocalTransaction } from "../client/src/lib/localTransactions";
+import { createLocalTransaction, exportJson, filterLocalTransactions, filterLocalTransactionsByInvoiceMonth, loadLocalTransactions, parseBackupJson, parseImportJson, saveLocalTransactions, type LocalTransaction } from "../client/src/lib/localTransactions";
 
 const transaction: LocalTransaction = {
   id: 1,
@@ -52,6 +52,13 @@ describe("local transaction backups", () => {
   it("preserves credit purchase metadata in backups", () => {
     const credit: LocalTransaction = { ...transaction, type: "expense", paymentMethod: "credit", creditCardId: 4, creditTotal: "300.00", amount: "100.00", installmentIndex: 1, installmentsTotal: 3, purchaseId: 99 };
     expect(parseBackupJson(exportJson([credit]))).toEqual([credit]);
+  });
+
+  it("filters credit expenses by invoice month while keeping non-credit entries by occurred date", () => {
+    const credit: LocalTransaction = { ...transaction, id: 8, type: "expense", paymentMethod: "credit", creditCardId: 4, amount: "100.00", invoiceMonth: "2026-09" };
+    const pix: LocalTransaction = { ...transaction, id: 9, type: "expense", paymentMethod: "pix", amount: "50.00", occurredAt: "2026-09-02T12:00:00.000Z" };
+    expect(filterLocalTransactionsByInvoiceMonth([credit, pix], 9, 2026).map(item => item.id)).toEqual([8, 9]);
+    expect(filterLocalTransactionsByInvoiceMonth([credit, pix], 8, 2026)).toEqual([]);
   });
 
   it("saves and loads transactions per user", () => {

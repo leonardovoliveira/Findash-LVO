@@ -11,6 +11,7 @@ export type LocalTransaction = Omit<Transaction, "occurredAt" | "createdAt" | "u
   installmentIndex?: number;
   installmentsTotal?: number;
   purchaseId?: number;
+  invoiceMonth?: string;
 };
 
 export type PaymentMethod = "cash" | "pix" | "boleto" | "debit" | "credit";
@@ -38,6 +39,15 @@ export function saveLocalTransactions(userId: number | string, transactions: Loc
 
 export function filterLocalTransactions(transactions: LocalTransaction[], month: number, year: number) {
   return transactions.filter(item => {
+    const date = new Date(item.occurredAt);
+    return date.getMonth() + 1 === month && date.getFullYear() === year;
+  });
+}
+
+export function filterLocalTransactionsByInvoiceMonth(transactions: LocalTransaction[], month: number, year: number) {
+  const invoiceMonth = `${year}-${String(month).padStart(2, "0")}`;
+  return transactions.filter(item => {
+    if (item.type === "expense" && item.paymentMethod === "credit") return (item.invoiceMonth ?? item.occurredAt.slice(0, 7)) === invoiceMonth;
     const date = new Date(item.occurredAt);
     return date.getMonth() + 1 === month && date.getFullYear() === year;
   });
@@ -77,7 +87,8 @@ export function isLocalTransaction(value: unknown): value is LocalTransaction {
     (item.creditCardId === undefined || Number.isInteger(item.creditCardId)) &&
     (item.installmentIndex === undefined || Number.isInteger(item.installmentIndex)) &&
     (item.installmentsTotal === undefined || (Number.isInteger(item.installmentsTotal) && Number(item.installmentsTotal) >= 1)) &&
-    (item.purchaseId === undefined || Number.isInteger(item.purchaseId))
+    (item.purchaseId === undefined || Number.isInteger(item.purchaseId)) &&
+    (item.invoiceMonth === undefined || (typeof item.invoiceMonth === "string" && /^\\d{4}-\\d{2}$/.test(item.invoiceMonth)))
   );
 }
 
