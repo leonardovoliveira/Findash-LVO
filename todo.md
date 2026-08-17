@@ -311,3 +311,11 @@
 - [x] Fixar a ordem padrão dos cards conforme a referência visual enviada
 - [x] Manter apenas visibilidade e restauração do padrão nas configurações
 - [x] Testar, publicar e sincronizar a simplificação com o GitHub
+- [ ] Remover o botão e o acesso às configurações do dashboard
+- [ ] Manter a composição fixa dos cards conforme a referência visual
+- [ ] Validar, publicar e sincronizar o dashboard fixo com o GitHub
+
+- [x] Remover o acesso e a lógica de configurações do dashboard, mantendo a composição fixa da referência
+- [x] Auditar o dashboard fixo em viewport móvel de 390px e tablet de 768px sem overflow visível
+- [x] Adicionar confirmação antes de excluir lançamentos, investimentos ou cartões de crédito
+- [x] Atualizar README com a arquitetura de layout fixo e o fluxo direto de OAuth Google

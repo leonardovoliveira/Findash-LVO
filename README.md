@@ -135,3 +135,33 @@ pnpm test
 ```
 
 O schema fica em `drizzle/schema.ts` e as migrações devem ser geradas com `pnpm drizzle-kit generate` e aplicadas ao banco antes do primeiro uso.
+
+## Arquitetura final do dashboard
+
+O dashboard utiliza uma **composição fixa**, baseada na referência visual do Findash LVO. Não existe mais menu de configuração, preset, arrastar e soltar ou redimensionamento de cards. A ordem é controlada pelo código para manter alinhamento previsível: saldo e calendário; maiores gastos, maiores entradas e próxima fatura; carteira de investimentos; alocações por tipo e instituição; performance anual; mercados de referência, carteira em moedas e lançamentos do dia; resumo do período e performance financeira em largura ampliada.
+
+O módulo `client/src/lib/dashboardPreferences.ts` mantém somente os identificadores tipados dos cards, evitando que preferências antigas de `localStorage` alterem a composição atual. A interface continua responsiva: em telas pequenas, as colunas são empilhadas; em tablet e desktop, os agrupamentos usam a grade correspondente sem overflow horizontal.
+
+## Persistência e exportação
+
+Lançamentos, posições de investimento, cartões de crédito, faturas pagas por competência, tema e estado recolhido do menu lateral são persistidos localmente no navegador. O usuário pode importar um backup JSON e exportar os dados em JSON, Excel ou PDF com resumo e gráficos. Como os dados financeiros locais não dependem do banco para o uso cotidiano, cada navegador mantém seu próprio conjunto de dados por usuário autenticado.
+
+## Autenticação Google direta
+
+A autenticação de produção usa um fluxo OAuth 2.0 direto com o Google. O botão de login navega para `/api/auth/google`; o backend redireciona para o Google, valida o callback em `/api/auth/google/callback`, troca o código pelo perfil e grava a sessão em cookie assinado por `JWT_SECRET`. O avatar recebido pelo Google é exibido no sidebar, com fallback para as iniciais `LO`.
+
+No Google Cloud Console, cadastre o redirect URI do ambiente publicado, por exemplo:
+
+```text
+https://findash-lvo.vercel.app/api/auth/google/callback
+```
+
+As variáveis obrigatórias do fluxo direto são `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_OAUTH_REDIRECT_URI` e `JWT_SECRET`. O redirect URI precisa corresponder exatamente ao domínio utilizado pelo navegador, incluindo protocolo, caminho e ausência ou presença de barra final. Em produção, use HTTPS; não exponha o client secret no frontend nem o versione em `.env`.
+
+## Exclusões financeiras
+
+A exclusão de lançamentos, posições de investimento e cartões de crédito exige confirmação explícita em modal. Cancelar o modal preserva os dados; confirmar remove o registro do armazenamento local e exibe um toast de sucesso. A exclusão de um lançamento parcelado também remove a compra associada da fatura do cartão.
+
+## Validação
+
+A validação local atual usa `pnpm check`, `pnpm test -- --run` e `pnpm build`. A suíte cobre autenticação, cookies OAuth, filtros, persistência local, cartões, investimentos, cotações e exportações.
