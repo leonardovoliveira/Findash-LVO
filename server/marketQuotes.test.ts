@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { fetchMarketFallback } from "./routers";
+import { fetchMarketFallback, fetchTreasuryQuote } from "./routers";
 
 describe("market quote fallbacks", () => {
   it("maps ExchangeRate-API USD/BRL data", async () => {
@@ -36,6 +36,18 @@ describe("market quote fallbacks", () => {
     const result = await fetchMarketFallback("crypto", "ETH-BRL", "2026-08-15T12:00:00.000Z", new AbortController().signal, fetchMock);
     expect(result).toMatchObject({ ok: true, ticker: "ETH-BRL", price: 18000, changePercent: -1.2, currency: "BRL", source: "CoinGecko" });
     expect(fetchMock).toHaveBeenCalledWith("https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=brl&include_24hr_change=true", expect.any(Object));
+  });
+
+  it("maps current Tesouro Direto indicators to a BRL quote", async () => {
+    const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(new Response(JSON.stringify({ results: [{ symbol: "tesouro-selic-01032031", basePrice: 15432.1, buyPrice: 15420, sellPrice: 15410, updatedAt: "2026-08-17T12:00:00.000Z" }] }), { status: 200 }));
+    const result = await fetchTreasuryQuote("TESOURO-SELIC-01032031", "2026-08-17T12:00:00.000Z", new AbortController().signal, fetchMock, "token-test");
+    expect(result).toMatchObject({ ok: true, ticker: "TESOURO-SELIC-01032031", price: 15432.1, currency: "BRL", source: "brapi.dev/tesouro" });
+    expect(fetchMock).toHaveBeenCalledWith("https://brapi.dev/api/v2/treasury/indicators?symbols=tesouro-selic-01032031", expect.objectContaining({ headers: expect.objectContaining({ Authorization: "Bearer token-test" }) }));
+  });
+
+  it("returns a typed error when Tesouro Direto has no price", async () => {
+    const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(new Response(JSON.stringify({ results: [{ symbol: "tesouro-selic-01032031" }] }), { status: 200 }));
+    await expect(fetchTreasuryQuote("tesouro-selic-01032031", "2026-08-17T12:00:00.000Z", new AbortController().signal, fetchMock)).resolves.toMatchObject({ ok: false, source: "brapi.dev/tesouro", error: "Título sem preço indicativo disponível" });
   });
 
   it("returns a typed error when a fallback provider fails", async () => {

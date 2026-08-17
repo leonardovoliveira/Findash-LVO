@@ -368,3 +368,8 @@
 - [x] Somar quantidades e calcular PM ponderado por custo total
 - [x] Exibir instituições consolidadas separadas por vírgula
 - [x] Validar os cálculos, publicar e sincronizar com o GitHub
+
+- [x] Preservar detalhes por instituição nas posições consolidadas
+- [x] Adicionar expansão com quantidade, custo e rentabilidade individual
+- [x] Integrar cotação atual para Tesouro Direto no fluxo de carteira
+- [x] Validar, publicar e sincronizar as atualizações com o GitHub

@@ -18,6 +18,16 @@ export type InvestmentOperation = {
   date: string;
 };
 
+export type InvestmentInstitutionDetail = {
+  institution: string;
+  quantity: string;
+  averagePrice: string;
+  costBasis: string;
+  currentValue: string;
+  profit: string;
+  profitabilityPercent: string;
+};
+
 export type LocalInvestment = {
   id: number;
   userId: number;
@@ -41,6 +51,8 @@ export type LocalInvestment = {
   quoteError?: string;
   /** Histórico de operações usado para consolidar quantidade, PM e resultado realizado. */
   operations?: InvestmentOperation[];
+  /** Detalhamento original por instituição quando o ticker foi consolidado. */
+  institutionDetails?: InvestmentInstitutionDetail[];
   realizedProfit?: string;
   notes: string;
   createdAt: string;
@@ -69,12 +81,14 @@ export function consolidateInvestmentsByTicker(investments: LocalInvestment[]): 
     const costBasis = group.reduce((sum: number, item: LocalInvestment) => sum + investmentCost(item), 0);
     const latestQuote = [...group].filter(item => item.quoteFetchedAt).sort((a, b) => String(b.quoteFetchedAt).localeCompare(String(a.quoteFetchedAt)))[0];
     const marketPrice = latestQuote?.marketPrice ?? group.find((item: LocalInvestment) => item.marketPrice?.trim())?.marketPrice;
-    const institutions = Array.from(new Set(group.map((item: LocalInvestment) => item.institution.trim()).filter(Boolean))).join(", ");
+    const institutionDetails = group.flatMap((item: LocalInvestment) => item.institutionDetails?.length ? item.institutionDetails : [{ institution: item.institution, quantity: item.quantity, averagePrice: item.averagePrice, costBasis: String(investmentCost(item)), currentValue: String(investmentMarketValue(item)), profit: String(investmentProfitability(item).profit), profitabilityPercent: String(investmentProfitability(item).percent) }]);
+    const institutions = Array.from(new Set(institutionDetails.map((detail: InvestmentInstitutionDetail) => detail.institution.trim()).filter(Boolean))).join(", ");
     const operations = group.flatMap((item: LocalInvestment) => item.operations ?? []).map((operation: InvestmentOperation, index: number) => ({ ...operation, id: operation.id + index * 1000000 }));
     result.push({
       ...first,
       ticker: first.ticker.trim().toUpperCase(),
       institution: institutions || first.institution,
+      institutionDetails,
       quantity: String(quantity),
       averagePrice: String(quantity > 0 ? costBasis / quantity : 0),
       currentValue: marketPrice?.trim() && Number.isFinite(Number(marketPrice)) ? String(quantity * Number(marketPrice)) : String(group.reduce((sum: number, item: LocalInvestment) => sum + investmentValue(item), 0)),

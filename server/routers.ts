@@ -71,6 +71,22 @@ export async function fetchMarketFallback(category: "dollar" | "crypto", ticker:
   return { ok: true, ticker, price, changePercent: Number.isFinite(changePercent) ? changePercent : null, previousClose, currency: "BRL", source: "CoinGecko", fetchedAt };
 }
 
+export async function fetchTreasuryQuote(ticker: string, fetchedAt: string, signal: AbortSignal, fetchImpl: typeof fetch = fetch, token?: string): Promise<MarketQuoteResult> {
+  try {
+    const headers: Record<string, string> = { Accept: "application/json" };
+    if (token) headers.Authorization = `Bearer ${token}`;
+    const response = await fetchImpl(`https://brapi.dev/api/v2/treasury/indicators?symbols=${encodeURIComponent(ticker.trim().toLowerCase())}`, { headers, signal });
+    if (!response.ok) return { ok: false, ticker, source: "brapi.dev/tesouro", fetchedAt, error: `A fonte respondeu HTTP ${response.status}` };
+    const payload = await response.json() as { results?: Array<{ symbol?: string; buyPrice?: number; sellPrice?: number; basePrice?: number; updatedAt?: string }> };
+    const item = payload.results?.[0];
+    const price = Number(item?.basePrice ?? item?.sellPrice ?? item?.buyPrice);
+    if (!Number.isFinite(price)) return { ok: false, ticker, source: "brapi.dev/tesouro", fetchedAt, error: "Título sem preço indicativo disponível" };
+    return { ok: true, ticker, price, changePercent: null, previousClose: null, currency: "BRL", source: "brapi.dev/tesouro", fetchedAt: item?.updatedAt ?? fetchedAt };
+  } catch (error) {
+    return { ok: false, ticker, source: "brapi.dev/tesouro", fetchedAt, error: error instanceof Error && error.name === "AbortError" ? "Tempo limite da cotação excedido" : "Não foi possível consultar a cotação do Tesouro Direto" };
+  }
+}
+
 const transactionInput = z.object({
   type: z.enum(["income", "expense"]),
   description: z.string().trim().min(1).max(180),
@@ -101,6 +117,7 @@ export const appRouter = router({
         const timeout = setTimeout(() => controller.abort(), 8000);
         try {
           if (item.category === "dollar" || item.category === "crypto") return await fetchMarketFallback(item.category, ticker, fetchedAt, controller.signal);
+          if (item.category === "treasury") return await fetchTreasuryQuote(ticker, fetchedAt, controller.signal, fetch, ENV.brapiToken);
           const url = `https://brapi.dev/api/v2/stocks/quote?symbols=${encodeURIComponent(ticker)}`;
           const response = await fetch(url, { headers, signal: controller.signal });
           if (!response.ok) return { ok: false as const, ticker, source: "brapi.dev", fetchedAt, error: `A fonte respondeu HTTP ${response.status}` };
