@@ -339,3 +339,9 @@
 
 - [x] Agrupar carteira de investimentos, mercados de referência e carteira em moedas na mesma coluna contínua
 - [x] Validar o deployment Vercel atualizado e sincronizar o commit corrigido com o GitHub
+
+- [x] Mover Resumo do período para abaixo do Calendário e da Próxima fatura
+- [x] Desativar o card Lançamentos do dia
+- [x] Exibir apenas uma categoria em Maiores gastos e uma categoria em Maiores entradas
+- [x] Exibir apenas a fatura com vencimento mais próximo
+- [x] Equalizar as alturas dos cards e validar/publicar no GitHub
