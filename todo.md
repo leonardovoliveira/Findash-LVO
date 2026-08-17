@@ -302,3 +302,8 @@
 - [x] Definir a composição da imagem como nova ordem padrão dos cards
 - [x] Persistir a nova ordem padrão sem apagar preferências personalizadas já salvas
 - [x] Validar desktop/mobile e publicar o novo layout padrão
+- [x] Criar presets de layout Visão Geral e Foco em Investimentos
+- [x] Permitir redimensionar visualmente largura e altura dos cards com persistência local
+- [x] Adicionar e validar o botão Restaurar padrão nas configurações
+- [x] Igualar tamanho e tipo de gráfico da performance dos investimentos ao gráfico financeiro
+- [x] Testar, publicar e sincronizar as alterações com o GitHub
