@@ -482,3 +482,6 @@
 - [x] Ajustar modal de entrada para Fonte Pagadora, remover Produto e corrigir categorias
 - [x] Exibir percentuais acumulados por componente no gráfico cambial
 - [x] Validar lançamentos, gráfico, testes, build, responsividade e publicar
+
+- [ ] Enviar ao GitHub o commit das correções de lançamentos e percentuais acumulados
+- [ ] Confirmar o hash remoto na branch main e informar o resultado
