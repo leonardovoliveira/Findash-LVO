@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { appendInvestmentOperation, applyInvestmentQuote, consolidateInvestmentOperations, consolidateInvestmentsByTicker, createLocalInvestment, investmentCategories, investmentCost, investmentMarketValue, investmentProfitability, investmentValue, isLocalInvestment, recalculateConsolidatedInvestment, type LocalInvestment } from "../client/src/lib/localInvestments";
+import { appendInvestmentOperation, applyInvestmentQuote, consolidateInvestmentOperations, consolidateInvestmentsByTicker, createLocalInvestment, investmentAccruedValue, investmentCategories, investmentCost, investmentMarketValue, investmentPerformanceHistory, investmentProfitability, investmentValue, isLocalInvestment, recalculateConsolidatedInvestment, type LocalInvestment } from "../client/src/lib/localInvestments";
 
 const base: LocalInvestment = {
   id: 1,
@@ -115,6 +115,30 @@ describe("local investments", () => {
     const result = investmentProfitability({ ...base, category: "treasury", contractedRate: "6", contractedBenchmark: "IPCA+", benchmarkAnnualRate: "4.5", quantity: "10", averagePrice: "100", currentValue: "1000" });
     expect(result.contractedAnnualPercent).toBeCloseTo(10.5, 8);
     expect(result.contractedProfit).toBeCloseTo(105, 8);
+  });
+
+  it("calculates accrued value for contracted fixed income instead of keeping a zero current value", () => {
+    const asOf = new Date("2027-01-01T00:00:00.000Z");
+    const item = { ...base, category: "fixed-income" as const, currentValue: "0", contractedRate: "100", contractedBenchmark: "CDI" as const, benchmarkAnnualRate: "10", createdAt: "2026-01-01T00:00:00.000Z" };
+    expect(investmentAccruedValue(item, asOf)).toBeGreaterThan(1000);
+    expect(investmentMarketValue(item)).toBeGreaterThan(1000);
+  });
+
+  it("consolidates repeated institution details into one non-zero detail", () => {
+    const [item] = consolidateInvestmentsByTicker([
+      { ...base, id: 10, ticker: "CDB", institution: "C6", quantity: "1", averagePrice: "486", currentValue: "486" },
+      { ...base, id: 11, ticker: "CDB", institution: "C6", quantity: "4", averagePrice: "828.5", currentValue: "3314" },
+    ]);
+    expect(item.institutionDetails).toHaveLength(1);
+    expect(item.institutionDetails?.[0].institution).toBe("C6");
+    expect(Number(item.institutionDetails?.[0].quantity)).toBe(5);
+    expect(Number(item.institutionDetails?.[0].currentValue)).toBeGreaterThan(0);
+  });
+
+  it("creates local performance history when remote history is unavailable", () => {
+    const history = investmentPerformanceHistory({ ...base, operations: [{ id: 1, type: "buy", quantity: "10", price: "100", date: "2026-08-01" }], createdAt: "2026-08-01T00:00:00.000Z" }, "1mo", new Date("2026-08-17T00:00:00.000Z"));
+    expect(history.length).toBeGreaterThanOrEqual(2);
+    expect(history.at(-1)?.close).toBe(1050);
   });
 
   it("keeps different tickers as separate cards", () => {

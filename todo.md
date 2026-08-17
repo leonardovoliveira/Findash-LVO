@@ -406,3 +406,7 @@
 
 - [x] Adicionar tooltip explicativo ao cálculo de rentabilidade do Tesouro IPCA+
 - [x] Validar o tooltip e tentar novamente o push para o GitHub
+
+- [x] Corrigir a origem e a exibição do histórico no gráfico Performance dos investimentos
+- [x] Corrigir valores zerados e rentabilidade atualizada de CDB e Tesouro Direto na consolidação por instituição
+- [x] Validar os cenários CDB e RENDA+ 2065, executar testes/build e enviar novo commit ao GitHub
