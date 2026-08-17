@@ -3,9 +3,11 @@ import { COOKIE_NAME } from "../shared/const.js";
 import { getSessionCookieOptions } from "./_core/cookies.js";
 import { systemRouter } from "./_core/systemRouter.js";
 import { protectedProcedure, publicProcedure, router } from "./_core/trpc.js";
+import { TRPCError } from "@trpc/server";
 import { createTransaction, deleteTransaction, listTransactions, updateTransaction } from "./db.js";
 import { ENV } from "./_core/env.js";
 import { fetchBrapiStockHistory, fetchBrapiStockQuote } from "./brapi.js";
+import { loadFinanceState, saveFinanceState, type FinanceStatePayload } from "./supabase.js";
 
 const monthInput = z.object({
   month: z.number().int().min(1).max(12).optional(),
@@ -152,6 +154,29 @@ export const appRouter = router({
       const response = ctx.res as import("express").Response;
       response.clearCookie(COOKIE_NAME, { ...cookieOptions, maxAge: -1 });
       return { success: true } as const;
+    }),
+  }),
+  financeState: router({
+    load: protectedProcedure.query(async ({ ctx }) => {
+      try {
+        return await loadFinanceState(ctx.user.openId);
+      } catch (error) {
+        console.error("[FinanceState] load failed", error);
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Não foi possível carregar os dados financeiros na nuvem" });
+      }
+    }),
+    save: protectedProcedure.input(z.object({ payload: z.unknown() })).mutation(async ({ ctx, input }) => {
+      try {
+        const payload = input.payload as FinanceStatePayload;
+        if (!payload || payload.version !== 1 || !Array.isArray(payload.transactions) || !Array.isArray(payload.investments) || !Array.isArray(payload.creditCards) || !Array.isArray(payload.categories)) {
+          throw new TRPCError({ code: "BAD_REQUEST", message: "Estado financeiro inválido" });
+        }
+        return await saveFinanceState(ctx.user.openId, payload);
+      } catch (error) {
+        if (error instanceof TRPCError) throw error;
+        console.error("[FinanceState] save failed", error);
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Não foi possível sincronizar os dados financeiros" });
+      }
     }),
   }),
   quotes: router({

@@ -429,3 +429,15 @@
 - [x] Permitir editar compras diretamente na lista filtrada da aba Cartões
 - [x] Recalcular competência, parcelas e total da fatura ao salvar uma compra editada
 - [x] Validar persistência local, testes, build e responsividade do novo fluxo
+
+- [x] Auditar a persistência local e mapear entidades financeiras para o Supabase
+- [x] Definir esquema, RLS e credenciais seguras do Supabase
+- [x] Implementar sincronização de lançamentos, cartões, investimentos e categorias por usuário
+- [x] Migrar dados locais existentes sem perda e tratar falhas/offline
+- [x] Validar isolamento por usuário, testes, build e publicação da migração
+
+- [x] Criar tabela finance_state no Supabase com isolamento por owner_key e RLS habilitado
+- [x] Implementar procedures tRPC protegidos para carregar e salvar o estado financeiro
+- [x] Hidratar o dashboard com dados Supabase e migrar o backup local uma única vez
+- [x] Sincronizar alterações financeiras com debounce e feedback de indisponibilidade
+- [x] Validar isolamento, testes, type-check, build e fluxo responsivo da persistência cloud

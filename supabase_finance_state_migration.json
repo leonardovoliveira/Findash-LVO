@@ -1,0 +1,5 @@
+{
+  "project_id": "dyfhikvqkqswobdqnxeq",
+  "name": "create_finance_state",
+  "query": "create table if not exists public.finance_state (owner_key text primary key, payload jsonb not null default '{}'::jsonb, updated_at timestamptz not null default timezone('utc', now())); alter table public.finance_state enable row level security; comment on table public.finance_state is 'Private application state owned by a Findash user openId; accessed only through the server-side service role.';"
+}

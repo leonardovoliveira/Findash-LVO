@@ -91,34 +91,59 @@ export default function Home() {
   const [paymentFilter, setPaymentFilter] = useState<PaymentMethod | "all">("all");
   const [invoiceMonthMode, setInvoiceMonthMode] = useState<"calendar" | "invoice">("calendar");
   const [hydratedStorageId, setHydratedStorageId] = useState<number | string | null>(null);
+  const [cloudHydratedId, setCloudHydratedId] = useState<number | string | null>(null);
   const importInputRef = useRef<HTMLInputElement>(null);
   const userStorageId = user?.id ?? "default";
+  const financeStateQuery = trpc.financeState.load.useQuery(undefined, {
+    enabled: Boolean(user),
+    retry: 1,
+    refetchOnWindowFocus: false,
+  });
+  const financeStateSave = trpc.financeState.save.useMutation({
+    onError: error => toast.error(error.message || "Não foi possível sincronizar os dados na nuvem"),
+  });
 
   useEffect(() => {
-    if (user) {
-      setCategories(loadLocalCategories(userStorageId));
-      setInvestments(loadLocalInvestments(userStorageId));
-      setHydratedInvestmentsId(userStorageId);
+    if (financeStateQuery.error) toast.error("A nuvem financeira está indisponível. Seus dados atuais foram mantidos nesta sessão.");
+  }, [financeStateQuery.error]);
+
+  useEffect(() => {
+    if (!user || financeStateQuery.isLoading || financeStateQuery.isFetching || financeStateQuery.error || cloudHydratedId === userStorageId) return;
+    const remote = financeStateQuery.data?.payload;
+    if (remote) {
+      setTransactions(Array.isArray(remote.transactions) ? remote.transactions as LocalTransaction[] : []);
+      setInvestments(Array.isArray(remote.investments) ? remote.investments as LocalInvestment[] : []);
+      setCreditCards(Array.isArray(remote.creditCards) ? remote.creditCards as CreditCard[] : []);
+      setCategories(Array.isArray(remote.categories) ? remote.categories as LocalCategory[] : []);
+    } else {
+      const localPayload = {
+        version: 1 as const,
+        transactions: loadLocalTransactions(userStorageId),
+        investments: loadLocalInvestments(userStorageId),
+        creditCards: loadLocalCreditCards(userStorageId),
+        categories: loadLocalCategories(userStorageId),
+      };
+      setTransactions(localPayload.transactions);
+      setInvestments(localPayload.investments);
+      setCreditCards(localPayload.creditCards);
+      setCategories(localPayload.categories);
+      if (localPayload.transactions.length || localPayload.investments.length || localPayload.creditCards.length || localPayload.categories.length) {
+        financeStateSave.mutate({ payload: localPayload });
+      }
     }
-  }, [user, userStorageId]);
+    setHydratedInvestmentsId(userStorageId);
+    setHydratedCreditCardsId(userStorageId);
+    setHydratedStorageId(userStorageId);
+    setCloudHydratedId(userStorageId);
+  }, [financeStateQuery.data, financeStateQuery.error, financeStateQuery.isFetching, financeStateQuery.isLoading, cloudHydratedId, user, userStorageId]);
 
   useEffect(() => {
-    if (user && hydratedInvestmentsId === userStorageId) saveLocalInvestments(userStorageId, investments);
-  }, [investments, user, userStorageId, hydratedInvestmentsId]);
-  useEffect(() => {
-    if (user && categories.length) saveLocalCategories(userStorageId, categories);
-  }, [categories, user, userStorageId]);
-
-  useEffect(() => {
-    if (user) {
-      setCreditCards(loadLocalCreditCards(userStorageId));
-      setHydratedCreditCardsId(userStorageId);
-    }
-  }, [user, userStorageId]);
-
-  useEffect(() => {
-    if (user && hydratedCreditCardsId === userStorageId) saveLocalCreditCards(userStorageId, creditCards);
-  }, [creditCards, user, userStorageId, hydratedCreditCardsId]);
+    if (!user || cloudHydratedId !== userStorageId) return;
+    const timer = window.setTimeout(() => financeStateSave.mutate({
+      payload: { version: 1, transactions, investments, creditCards, categories },
+    }), 700);
+    return () => window.clearTimeout(timer);
+  }, [transactions, investments, creditCards, categories, user, userStorageId, cloudHydratedId]);
 
   useEffect(() => {
     const data = benchmarksQuery.data;
@@ -163,17 +188,6 @@ export default function Home() {
   useEffect(() => {
     setSelectedDate(`${year}-${String(month).padStart(2, "0")}-01`);
   }, [month, year]);
-
-  useEffect(() => {
-    if (user) {
-      setTransactions(loadLocalTransactions(userStorageId));
-      setHydratedStorageId(userStorageId);
-    }
-  }, [user, userStorageId]);
-
-  useEffect(() => {
-    if (user && hydratedStorageId === userStorageId) saveLocalTransactions(userStorageId, transactions);
-  }, [transactions, user, userStorageId, hydratedStorageId]);
 
   const saving = false;
   const refreshQuotes = async (targetTicker?: string) => {
