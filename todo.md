@@ -327,3 +327,8 @@
 - [x] Refinar alturas e espaçamentos internos dos cards conforme a imagem de referência
 - [x] Adicionar efeitos de hover aos cards de investimentos
 - [x] Validar, publicar e sincronizar o refinamento visual com o GitHub
+
+- [x] Mover mercados de referência e carteira em moedas para a linha intermediária do dashboard
+- [x] Colocar performance dos investimentos abaixo da performance financeira
+- [x] Unificar gráfico, dimensões e seletores de período das duas performances
+- [x] Validar, publicar e sincronizar o novo alinhamento com o GitHub
