@@ -403,3 +403,6 @@
 - [x] Trocar bandeira do cartão por toggle Visa/Mastercard
 - [x] Exibir marca visual sem asset proprietário conforme a bandeira
 - [x] Validar testes, build, responsividade e sincronização GitHub
+
+- [ ] Adicionar tooltip explicativo ao cálculo de rentabilidade do Tesouro IPCA+
+- [ ] Validar o tooltip e tentar novamente o push para o GitHub
