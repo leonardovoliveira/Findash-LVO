@@ -488,3 +488,5 @@
 
 - [x] Corrigir o gráfico de performance dos investimentos quando há posições e histórico disponível
 - [x] Corrigir a exibição de valores em USD no gráfico e nos cards de distribuição sem trocar USD por BRL indevidamente
+
+- [x] Corrigir o loop de renderização que impede a abertura da aplicação em produção

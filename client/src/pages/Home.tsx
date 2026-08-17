@@ -159,7 +159,6 @@ export default function Home() {
   useEffect(() => {
     if (!user || cloudHydratedId !== userStorageId) return;
     const historyInvestments = recordDailyInvestmentHistory(investments);
-    if (JSON.stringify(historyInvestments) !== JSON.stringify(investments)) setInvestments(historyInvestments);
     const timer = window.setTimeout(() => financeStateSave.mutate({
       payload: { version: 1, transactions, investments: historyInvestments, creditCards, categories },
     }), 700);
