@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { appendInvestmentOperation, applyInvestmentQuote, consolidateInvestmentOperations, consolidateInvestmentsByTicker, createLocalInvestment, investmentAccruedValue, investmentCategories, investmentCost, investmentMarketValue, investmentPerformanceHistory, investmentProfitability, investmentValue, isLocalInvestment, recordDailyInvestmentHistory, recalculateConsolidatedInvestment, type LocalInvestment } from "../client/src/lib/localInvestments";
+import { appendInvestmentOperation, applyInvestmentQuote, consolidateInvestmentOperations, consolidateInvestmentsByTicker, createLocalInvestment, investmentAccruedValue, investmentCategories, investmentCost, investmentMarketValue, investmentPerformanceHistory, investmentProfitability, investmentValue, investmentValueAtDate, isLocalInvestment, recordDailyInvestmentHistory, recalculateConsolidatedInvestment, type LocalInvestment } from "../client/src/lib/localInvestments";
 
 const base: LocalInvestment = {
   id: 1,
@@ -150,6 +150,12 @@ describe("local investments", () => {
     expect(second.dailyHistory?.find(point => point.date === "2026-08-17")?.value).toBe("1250");
   });
 
+  it("uses the USD label value separately from the BRL portfolio value", () => {
+    const item = { ...base, category: "dollar" as const, quantity: "1", averagePrice: "650", currentValue: "3250", marketPrice: "650", fxRate: "5" };
+    expect(Number(item.marketPrice)).toBe(650);
+    expect(investmentMarketValue(item)).toBe(3250);
+  });
+
   it("converts dollar positions to BRL using the current USD/BRL rate", () => {
     const item = { ...base, category: "dollar" as const, quantity: "2", averagePrice: "100", currentValue: "200", marketPrice: "120", fxRate: "5" };
     expect(investmentCost(item)).toBe(1000);
@@ -162,6 +168,11 @@ describe("local investments", () => {
     expect(updated.marketPrice).toBe("120");
     expect(updated.currentValue).toBe("1200");
     expect(updated.fxRate).toBe("5");
+  });
+
+  it("resolves a historical USD point using its own FX rate", () => {
+    const item = { ...base, category: "dollar" as const, quantity: "1", averagePrice: "650", currentValue: "3250", marketPrice: "650", fxRate: "5", dailyHistory: [{ date: "2026-08-10", value: "650", currency: "USD" as const, fxRate: "5" }] };
+    expect(investmentValueAtDate(item, new Date("2026-08-10T12:00:00.000Z"))).toBe(3250);
   });
 
   it("persists daily dollar history in BRL", () => {

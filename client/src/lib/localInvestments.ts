@@ -248,6 +248,27 @@ export function investmentMarketValue(item: Pick<LocalInvestment, "currentValue"
   return investmentAccruedValue({ ...(item as LocalInvestment), category: item.category ?? "fixed-income", contractedRate: item.contractedRate, contractedBenchmark: item.contractedBenchmark, benchmarkAnnualRate: item.benchmarkAnnualRate, createdAt: item.createdAt ?? new Date().toISOString() });
 }
 
+export function investmentValueAtDate(item: LocalInvestment, asOf: Date) {
+  const date = asOf.toISOString().slice(0, 10);
+  const historyPoint = [...(item.dailyHistory ?? [])]
+    .filter(point => point.date <= date && Number.isFinite(Number(point.value)))
+    .sort((a, b) => a.date.localeCompare(b.date))
+    .at(-1);
+  if (historyPoint) {
+    const pointValue = Number(historyPoint.value);
+    if (historyPoint.currency === "USD" && item.category === "dollar") return pointValue * (Number(historyPoint.fxRate ?? item.fxRate) || 1);
+    return pointValue;
+  }
+  const operations = (item.operations ?? []).filter(operation => operation.date <= date);
+  if (operations.length) {
+    const consolidated = consolidateInvestmentOperations(operations);
+    if (date >= new Date().toISOString().slice(0, 10) && item.marketPrice?.trim() && Number.isFinite(Number(item.marketPrice))) return consolidated.quantity * Number(item.marketPrice) * (item.category === "dollar" ? (Number(item.fxRate) || 1) : 1);
+    return consolidated.costBasis * (item.category === "dollar" ? (Number(item.fxRate) || 1) : 1);
+  }
+  const createdDate = item.createdAt?.slice(0, 10);
+  return createdDate && createdDate <= date ? investmentCost(item) : 0;
+}
+
 export function investmentPerformanceHistory(item: LocalInvestment, range: "1mo" | "6mo" | "1y", asOf = new Date()): Array<{ date: number; close: number; assetEffect?: number; fxEffect?: number }> {
   const months = range === "1mo" ? 1 : range === "6mo" ? 6 : 12;
   const cutoff = new Date(asOf);
@@ -282,7 +303,7 @@ export function investmentPerformanceHistory(item: LocalInvestment, range: "1mo"
     }
     points.set(date.toISOString().slice(0, 10), Math.max(0, costBasis));
   }
-  if (!points.size) {
+  if (points.size) {
     const created = new Date(item.createdAt);
     if (Number.isFinite(created.getTime()) && created <= asOf) points.set(created.toISOString().slice(0, 10), investmentCost(item));
   }

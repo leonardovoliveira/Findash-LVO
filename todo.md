@@ -485,3 +485,6 @@
 
 - [x] Enviar ao GitHub o commit das correções de lançamentos e percentuais acumulados
 - [x] Confirmar o hash remoto na branch main e informar o resultado
+
+- [x] Corrigir o gráfico de performance dos investimentos quando há posições e histórico disponível
+- [x] Corrigir a exibição de valores em USD no gráfico e nos cards de distribuição sem trocar USD por BRL indevidamente
