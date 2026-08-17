@@ -1,13 +1,14 @@
 import { z } from "zod";
-import { COOKIE_NAME } from "../shared/const.js";
+import { COOKIE_NAME, ONE_YEAR_MS } from "../shared/const.js";
 import { getSessionCookieOptions } from "./_core/cookies.js";
 import { systemRouter } from "./_core/systemRouter.js";
 import { protectedProcedure, publicProcedure, router } from "./_core/trpc.js";
 import { TRPCError } from "@trpc/server";
-import { createTransaction, deleteTransaction, listAuthSessions, listTransactions, revokeAuthSession, revokeOtherAuthSessions, updateTransaction } from "./db.js";
+import { createAuthSession, createTransaction, deleteTransaction, listAuthSessions, listTransactions, revokeAuthSession, revokeOtherAuthSessions, updateTransaction } from "./db.js";
 import { ENV } from "./_core/env.js";
 import { fetchBrapiStockHistory, fetchBrapiStockQuote } from "./brapi.js";
 import { loadFinanceState, saveFinanceState, type FinanceStatePayload } from "./supabase.js";
+import { sdk } from "./_core/sdk.js";
 
 const monthInput = z.object({
   month: z.number().int().min(1).max(12).optional(),
@@ -157,10 +158,17 @@ export const appRouter = router({
     }),
   }),
   sessions: router({
-    list: protectedProcedure.query(async ({ ctx }) => ({
-      currentSessionId: ctx.sessionId,
-      sessions: await listAuthSessions(ctx.user.openId),
-    })),
+    list: protectedProcedure.query(async ({ ctx }) => {
+      let currentSessionId = ctx.sessionId;
+      if (!currentSessionId) {
+        currentSessionId = sdk.createSessionId();
+        const now = new Date();
+        await createAuthSession({ sessionId: currentSessionId, ownerOpenId: ctx.user.openId, deviceLabel: ctx.req.headers["user-agent"]?.includes("Mobile") ? "Dispositivo móvel" : "Navegador", userAgent: ctx.req.headers["user-agent"] ?? null, createdAt: now, lastSeenAt: now, expiresAt: new Date(now.getTime() + ONE_YEAR_MS) });
+        const token = await sdk.createSessionToken(ctx.user.openId, { name: ctx.user.name || ctx.user.email || "Usuário", sessionId: currentSessionId, expiresInMs: ONE_YEAR_MS });
+        (ctx.res as import("express").Response).cookie(COOKIE_NAME, token, { ...getSessionCookieOptions(ctx.req), maxAge: ONE_YEAR_MS });
+      }
+      return { currentSessionId, sessions: await listAuthSessions(ctx.user.openId) };
+    }),
     revoke: protectedProcedure.input(z.object({ sessionId: z.string().min(1).max(128) })).mutation(async ({ ctx, input }) => {
       await revokeAuthSession(input.sessionId, ctx.user.openId);
       return { success: true } as const;

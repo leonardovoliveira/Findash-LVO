@@ -457,3 +457,8 @@
 - [x] Melhorar o tratamento visual de falhas e retorno do OAuth
 - [x] Integrar a imagem enviada como logo da tela inicial
 - [x] Validar testes, build, visual e publicar no GitHub
+
+- [x] Mover o acionador do perfil para o cartão de usuário do menu lateral
+- [x] Corrigir o registro e a consulta da sessão atual para exibir o dispositivo conectado
+- [x] Tornar perfil e logout acessíveis no menu mobile sem depender de espaço vertical oculto
+- [x] Validar desktop/mobile, testes, publicação e push ao GitHub
