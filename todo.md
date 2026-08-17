@@ -410,3 +410,10 @@
 - [x] Corrigir a origem e a exibição do histórico no gráfico Performance dos investimentos
 - [x] Corrigir valores zerados e rentabilidade atualizada de CDB e Tesouro Direto na consolidação por instituição
 - [x] Validar os cenários CDB e RENDA+ 2065, executar testes/build e enviar novo commit ao GitHub
+
+- [x] Persistir um ponto diário de histórico para cada investimento
+- [x] Adicionar atualização manual de cotação e rentabilidade nos cards de investimentos
+- [x] Mapear símbolos adicionais do Tesouro Direto para cotações externas
+- [x] Converter investimentos em dólar para BRL pela cotação atual e incluir no total da carteira
+- [x] Persistir categorias personalizadas de lançamentos para reutilização
+- [x] Validar os fluxos, executar testes/build e enviar novo commit ao GitHub

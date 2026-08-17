@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { appendInvestmentOperation, applyInvestmentQuote, consolidateInvestmentOperations, consolidateInvestmentsByTicker, createLocalInvestment, investmentAccruedValue, investmentCategories, investmentCost, investmentMarketValue, investmentPerformanceHistory, investmentProfitability, investmentValue, isLocalInvestment, recalculateConsolidatedInvestment, type LocalInvestment } from "../client/src/lib/localInvestments";
+import { appendInvestmentOperation, applyInvestmentQuote, consolidateInvestmentOperations, consolidateInvestmentsByTicker, createLocalInvestment, investmentAccruedValue, investmentCategories, investmentCost, investmentMarketValue, investmentPerformanceHistory, investmentProfitability, investmentValue, isLocalInvestment, recordDailyInvestmentHistory, recalculateConsolidatedInvestment, type LocalInvestment } from "../client/src/lib/localInvestments";
 
 const base: LocalInvestment = {
   id: 1,
@@ -139,6 +139,21 @@ describe("local investments", () => {
     const history = investmentPerformanceHistory({ ...base, operations: [{ id: 1, type: "buy", quantity: "10", price: "100", date: "2026-08-01" }], createdAt: "2026-08-01T00:00:00.000Z" }, "1mo", new Date("2026-08-17T00:00:00.000Z"));
     expect(history.length).toBeGreaterThanOrEqual(2);
     expect(history.at(-1)?.close).toBe(1050);
+  });
+
+  it("persists one daily point and replaces the same date instead of duplicating it", () => {
+    const dated = new Date("2026-08-17T12:00:00.000Z");
+    const item = { ...base, currentValue: "1200", dailyHistory: [{ date: "2026-08-16", value: "1100" }] };
+    const first = recordDailyInvestmentHistory([item], dated)[0];
+    const second = recordDailyInvestmentHistory([{ ...first, currentValue: "1250" }], dated)[0];
+    expect(second.dailyHistory).toHaveLength(2);
+    expect(second.dailyHistory?.find(point => point.date === "2026-08-17")?.value).toBe("1250");
+  });
+
+  it("converts dollar positions to BRL using the current USD/BRL rate", () => {
+    const item = { ...base, category: "dollar" as const, quantity: "2", averagePrice: "100", currentValue: "200", marketPrice: "120", fxRate: "5" };
+    expect(investmentCost(item)).toBe(1000);
+    expect(investmentMarketValue(item)).toBe(1200);
   });
 
   it("keeps different tickers as separate cards", () => {

@@ -71,17 +71,31 @@ export async function fetchMarketFallback(category: "dollar" | "crypto", ticker:
   return { ok: true, ticker, price, changePercent: Number.isFinite(changePercent) ? changePercent : null, previousClose, currency: "BRL", source: "CoinGecko", fetchedAt };
 }
 
+export function treasurySymbolCandidates(ticker: string) {
+  const raw = ticker.trim().toLowerCase();
+  const normalized = raw.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, " ");
+  if (normalized.startsWith("tesouro-")) return [raw];
+  const year = normalized.match(/20\d{2}/)?.[0];
+  if (!year) return [raw];
+  if (normalized.includes("renda")) return [`tesouro-renda-mais-1512${year}`, `tesouro-rend-a-1512${year}`, `tesouro-renda-mais-${year}`, raw];
+  return [`tesouro-ipca-1505${year}`, `tesouro-ipca-${year}`, raw];
+}
+
 export async function fetchTreasuryQuote(ticker: string, fetchedAt: string, signal: AbortSignal, fetchImpl: typeof fetch = fetch, token?: string): Promise<MarketQuoteResult> {
+  const headers: Record<string, string> = { Accept: "application/json" };
+  if (token) headers.Authorization = `Bearer ${token}`;
+  let lastError = "Título sem preço indicativo disponível";
   try {
-    const headers: Record<string, string> = { Accept: "application/json" };
-    if (token) headers.Authorization = `Bearer ${token}`;
-    const response = await fetchImpl(`https://brapi.dev/api/v2/treasury/indicators?symbols=${encodeURIComponent(ticker.trim().toLowerCase())}`, { headers, signal });
-    if (!response.ok) return { ok: false, ticker, source: "brapi.dev/tesouro", fetchedAt, error: `A fonte respondeu HTTP ${response.status}` };
-    const payload = await response.json() as { results?: Array<{ symbol?: string; buyPrice?: number; sellPrice?: number; basePrice?: number; updatedAt?: string }> };
-    const item = payload.results?.[0];
-    const price = Number(item?.basePrice ?? item?.sellPrice ?? item?.buyPrice);
-    if (!Number.isFinite(price)) return { ok: false, ticker, source: "brapi.dev/tesouro", fetchedAt, error: "Título sem preço indicativo disponível" };
-    return { ok: true, ticker, price, changePercent: null, previousClose: null, currency: "BRL", source: "brapi.dev/tesouro", fetchedAt: item?.updatedAt ?? fetchedAt };
+    for (const symbol of treasurySymbolCandidates(ticker)) {
+      const response = await fetchImpl(`https://brapi.dev/api/v2/treasury/indicators?symbols=${encodeURIComponent(symbol)}`, { headers, signal });
+      if (!response.ok) { lastError = `A fonte respondeu HTTP ${response.status}`; continue; }
+      const payload = await response.json() as { results?: Array<{ symbol?: string; buyPrice?: number; sellPrice?: number; basePrice?: number; updatedAt?: string }> };
+      const item = payload.results?.[0];
+      const price = Number(item?.basePrice ?? item?.sellPrice ?? item?.buyPrice);
+      if (!Number.isFinite(price)) continue;
+      return { ok: true, ticker, price, changePercent: null, previousClose: null, currency: "BRL", source: `brapi.dev/tesouro (${item?.symbol ?? symbol})`, fetchedAt: item?.updatedAt ?? fetchedAt };
+    }
+    return { ok: false, ticker, source: "brapi.dev/tesouro", fetchedAt, error: lastError };
   } catch (error) {
     return { ok: false, ticker, source: "brapi.dev/tesouro", fetchedAt, error: error instanceof Error && error.name === "AbortError" ? "Tempo limite da cotação excedido" : "Não foi possível consultar a cotação do Tesouro Direto" };
   }
@@ -108,13 +122,17 @@ export async function fetchTreasuryHistory(ticker: string, range: "1mo" | "6mo" 
   const end = new Date();
   const start = new Date(end);
   start.setMonth(start.getMonth() - (range === "1mo" ? 1 : range === "6mo" ? 6 : 12));
-  const params = new URLSearchParams({ symbols: ticker.trim().toLowerCase(), startDate: start.toISOString().slice(0, 10), endDate: end.toISOString().slice(0, 10) });
   const headers: Record<string, string> = { Accept: "application/json" };
   if (token) headers.Authorization = `Bearer ${token}`;
-  const response = await fetchImpl(`https://brapi.dev/api/v2/treasury/indicators/history?${params.toString()}`, { headers });
-  if (!response.ok) throw new Error(`A fonte respondeu HTTP ${response.status}`);
-  const payload = await response.json() as { results?: Array<{ date?: string | number; basePrice?: number; sellPrice?: number; buyPrice?: number; close?: number }> };
-  return (payload.results ?? []).map(point => ({ date: typeof point.date === "number" ? point.date : Date.parse(String(point.date ?? "")) / 1000, close: Number(point.close ?? point.basePrice ?? point.sellPrice ?? point.buyPrice) })).filter(point => Number.isFinite(point.date) && Number.isFinite(point.close));
+  for (const symbol of treasurySymbolCandidates(ticker)) {
+    const params = new URLSearchParams({ symbols: symbol, startDate: start.toISOString().slice(0, 10), endDate: end.toISOString().slice(0, 10) });
+    const response = await fetchImpl(`https://brapi.dev/api/v2/treasury/indicators/history?${params.toString()}`, { headers });
+    if (!response.ok) continue;
+    const payload = await response.json() as { results?: Array<{ date?: string | number; basePrice?: number; sellPrice?: number; buyPrice?: number; close?: number }> };
+    const result = (payload.results ?? []).map(point => ({ date: typeof point.date === "number" ? point.date : Date.parse(String(point.date ?? "")) / 1000, close: Number(point.close ?? point.basePrice ?? point.sellPrice ?? point.buyPrice) })).filter(point => Number.isFinite(point.date) && Number.isFinite(point.close));
+    if (result.length) return result;
+  }
+  throw new Error("Nenhum histórico disponível para os símbolos do Tesouro Direto informado");
 }
 
 const transactionInput = z.object({
