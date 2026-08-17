@@ -381,3 +381,7 @@
 - [x] Renomear Mercados de referência para Cotações e ocupar a largura horizontal sob a carteira
 - [x] Corrigir gráfico por instituição para usar instituições individuais únicas
 - [x] Validar, publicar e sincronizar todas as alterações com o GitHub
+
+- [x] Adicionar data de fechamento ao modelo e ao formulário de cartões
+- [x] Classificar compras no dia do fechamento na próxima competência da fatura
+- [x] Validar faturas, parcelas, edição, persistência e sincronizar com o GitHub

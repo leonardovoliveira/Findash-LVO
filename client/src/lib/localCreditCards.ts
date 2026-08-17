@@ -19,6 +19,8 @@ export type CreditCard = {
   bank: string;
   brand: string;
   dueDay: number;
+  /** Dia do mês em que a fatura fecha; compras nesse dia já entram na próxima competência. */
+  closingDay: number;
   totalLimit: string;
   invoiceAmount: string;
   invoiceMonth: string;
@@ -40,6 +42,7 @@ export function normalizeCreditCard(card: CreditCard): CreditCard {
   return {
     ...card,
     cardType: card.cardType === "shared" ? "shared" : "individual",
+    closingDay: Number.isInteger(card.closingDay) && card.closingDay >= 1 && card.closingDay <= 31 ? card.closingDay : Math.max(1, Math.min(31, card.dueDay - 6)),
     purchases: Array.isArray(card.purchases) ? card.purchases : [],
     invoices: card.invoices && typeof card.invoices === "object" ? card.invoices : {},
     ...(card.paidInvoices && typeof card.paidInvoices === "object" ? { paidInvoices: card.paidInvoices } : {}),
@@ -82,7 +85,8 @@ export function isCreditCard(value: unknown): value is CreditCard {
     const item = purchase as Record<string, unknown>;
     return Number.isInteger(item.id) && typeof item.description === "string" && Number(item.amount) >= 0 && typeof item.purchasedAt === "string" && typeof item.buyer === "string";
   }));
-  return Number.isInteger(card.id) && typeof card.userId === "number" && typeof card.name === "string" && card.name.trim().length > 0 && typeof card.bank === "string" && typeof card.brand === "string" && Number.isInteger(dueDay) && dueDay >= 1 && dueDay <= 31 && typeof card.totalLimit === "string" && Number(card.totalLimit) >= 0 && typeof card.invoiceAmount === "string" && Number(card.invoiceAmount) >= 0 && typeof card.invoiceMonth === "string" && /^\d{4}-\d{2}$/.test(card.invoiceMonth) && typeof card.isPaid === "boolean" && validType && validPurchases && (card.invoices === undefined || (typeof card.invoices === "object" && card.invoices !== null)) && typeof card.createdAt === "string" && typeof card.updatedAt === "string";
+  const closingDay = typeof card.closingDay === "number" ? card.closingDay : NaN;
+  return Number.isInteger(card.id) && typeof card.userId === "number" && typeof card.name === "string" && card.name.trim().length > 0 && typeof card.bank === "string" && typeof card.brand === "string" && Number.isInteger(dueDay) && dueDay >= 1 && dueDay <= 31 && (card.closingDay === undefined || (Number.isInteger(closingDay) && closingDay >= 1 && closingDay <= 31)) && typeof card.totalLimit === "string" && Number(card.totalLimit) >= 0 && typeof card.invoiceAmount === "string" && Number(card.invoiceAmount) >= 0 && typeof card.invoiceMonth === "string" && /^\d{4}-\d{2}$/.test(card.invoiceMonth) && typeof card.isPaid === "boolean" && validType && validPurchases && (card.invoices === undefined || (typeof card.invoices === "object" && card.invoices !== null)) && typeof card.createdAt === "string" && typeof card.updatedAt === "string";
 }
 
 export function creditCardInvoiceAmount(card: Pick<CreditCard, "invoiceAmount" | "invoiceMonth" | "invoices">) {
@@ -111,6 +115,13 @@ export function setCreditCardInvoicePaid(cards: CreditCard[], cardId: number, mo
   });
 }
 
+export function creditCardPurchaseInvoiceMonth(card: Pick<CreditCard, "closingDay">, purchasedAt: string) {
+  const month = purchasedAt.slice(0, 7);
+  const day = Number(purchasedAt.slice(8, 10));
+  if (!/^\d{4}-\d{2}$/.test(month) || !Number.isInteger(day) || day < 1) return month;
+  return addMonths(month, day >= card.closingDay ? 1 : 0);
+}
+
 function addMonths(month: string, offset: number) {
   const [year, currentMonth] = month.split("-").map(Number);
   const date = new Date(year, currentMonth - 1 + offset, 1);
@@ -136,7 +147,7 @@ export function applyCreditPurchase(cards: CreditCard[], input: { cardId: number
   const base = Math.floor((input.total / count) * 100) / 100;
   const purchases = [...(card.purchases ?? [])];
   const invoices = { ...(card.invoices ?? {}) };
-  const startMonth = input.purchasedAt.slice(0, 7);
+  const startMonth = creditCardPurchaseInvoiceMonth(card, input.purchasedAt);
   for (let index = 0; index < count; index += 1) {
     const amount = index === count - 1 ? Number((input.total - base * (count - 1)).toFixed(2)) : Number(base.toFixed(2));
     const invoiceMonth = addMonths(startMonth, index);

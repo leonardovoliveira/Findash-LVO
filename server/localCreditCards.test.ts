@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { applyCreditPurchase, createLocalCreditCard, creditCardInvoiceMonths, creditCardInvoiceValue, creditCardIsInvoicePaid, deleteLocalCreditCard, isCreditCard, normalizeCreditCard, setCreditCardInvoicePaid, updateLocalCreditCard, type CreditCard } from "../client/src/lib/localCreditCards";
+import { applyCreditPurchase, creditCardPurchaseInvoiceMonth, createLocalCreditCard, creditCardInvoiceMonths, creditCardInvoiceValue, creditCardIsInvoicePaid, deleteLocalCreditCard, isCreditCard, normalizeCreditCard, setCreditCardInvoicePaid, updateLocalCreditCard, type CreditCard } from "../client/src/lib/localCreditCards";
 
-const base: CreditCard = { id: 1, userId: 1, name: "Visa principal", bank: "Banco", brand: "Visa", dueDay: 10, totalLimit: "5000", invoiceAmount: "850", invoiceMonth: "2026-08", isPaid: false, invoices: {}, cardType: "individual", purchases: [], createdAt: "2026-08-01T00:00:00.000Z", updatedAt: "2026-08-01T00:00:00.000Z" };
+const base: CreditCard = { id: 1, userId: 1, name: "Visa principal", bank: "Banco", brand: "Visa", dueDay: 10, closingDay: 19, totalLimit: "5000", invoiceAmount: "850", invoiceMonth: "2026-08", isPaid: false, invoices: {}, cardType: "individual", purchases: [], createdAt: "2026-08-01T00:00:00.000Z", updatedAt: "2026-08-01T00:00:00.000Z" };
 
 describe("local credit cards", () => {
   it("creates an incremental card with timestamps and normalized defaults", () => {
@@ -37,6 +37,14 @@ describe("local credit cards", () => {
   it("deletes only the requested card", () => {
     const second = { ...base, id: 2, name: "Mastercard" };
     expect(deleteLocalCreditCard([base, second], 1)).toEqual([second]);
+  });
+
+  it("assigns purchases before and on the closing day to the expected invoice month", () => {
+    expect(creditCardPurchaseInvoiceMonth({ closingDay: 19 }, "2026-08-18")).toBe("2026-08");
+    expect(creditCardPurchaseInvoiceMonth({ closingDay: 19 }, "2026-08-19")).toBe("2026-09");
+    const [updated] = applyCreditPurchase([base], { cardId: 1, purchaseId: 500, description: "Compra", total: 200, purchasedAt: "2026-08-19", installments: 1 });
+    expect(updated.invoices?.["2026-09"]).toBe("200.00");
+    expect(updated.purchases?.[0].invoiceMonth).toBe("2026-09");
   });
 
   it("returns the next unpaid invoice and zero for paid invoice", () => {
