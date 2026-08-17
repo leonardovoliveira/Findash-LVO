@@ -336,3 +336,6 @@
 - [x] Colocar mercados de referência e carteira em moedas imediatamente abaixo da carteira de investimentos
 - [x] Remover o espaço vertical desnecessário na coluna direita do dashboard
 - [x] Validar desktop/mobile, publicar e sincronizar a correção com o GitHub
+
+- [x] Agrupar carteira de investimentos, mercados de referência e carteira em moedas na mesma coluna contínua
+- [x] Validar o deployment Vercel atualizado e sincronizar o commit corrigido com o GitHub
