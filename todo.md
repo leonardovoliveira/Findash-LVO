@@ -477,3 +477,8 @@
 - [x] Criar séries separadas de preço do ativo em USD, efeito USD/BRL e total convertido em BRL
 - [x] Integrar linhas, tooltip e legenda da decomposição cambial no gráfico
 - [x] Validar cálculos, testes, build, responsividade e publicar a evolução
+
+- [x] Corrigir validação e persistência do modal de saída com Loja/Produto/valor/categoria atuais
+- [x] Ajustar modal de entrada para Fonte Pagadora, remover Produto e corrigir categorias
+- [x] Exibir percentuais acumulados por componente no gráfico cambial
+- [x] Validar lançamentos, gráfico, testes, build, responsividade e publicar

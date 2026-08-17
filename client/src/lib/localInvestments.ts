@@ -248,7 +248,7 @@ export function investmentMarketValue(item: Pick<LocalInvestment, "currentValue"
   return investmentAccruedValue({ ...(item as LocalInvestment), category: item.category ?? "fixed-income", contractedRate: item.contractedRate, contractedBenchmark: item.contractedBenchmark, benchmarkAnnualRate: item.benchmarkAnnualRate, createdAt: item.createdAt ?? new Date().toISOString() });
 }
 
-export function investmentPerformanceHistory(item: LocalInvestment, range: "1mo" | "6mo" | "1y", asOf = new Date()) {
+export function investmentPerformanceHistory(item: LocalInvestment, range: "1mo" | "6mo" | "1y", asOf = new Date()): Array<{ date: number; close: number; assetEffect?: number; fxEffect?: number }> {
   const months = range === "1mo" ? 1 : range === "6mo" ? 6 : 12;
   const cutoff = new Date(asOf);
   cutoff.setMonth(cutoff.getMonth() - months);
