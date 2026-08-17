@@ -345,3 +345,12 @@
 - [x] Exibir apenas uma categoria em Maiores gastos e uma categoria em Maiores entradas
 - [x] Exibir apenas a fatura com vencimento mais próximo
 - [x] Equalizar as alturas dos cards e validar/publicar no GitHub
+
+- [x] Agregar valores por categoria nos cards de maiores gastos e maiores entradas
+- [x] Adicionar estado vazio amigável quando não houver categorias cadastradas
+- [x] Adicionar hover/tooltip com valor, cartão e data exata na próxima fatura
+- [x] Validar, publicar e sincronizar a atualização com o GitHub
+
+- [x] Reposicionar os cards conforme a nova referência visual enviada
+- [x] Equalizar espaçamentos e alturas entre saldo, calendário, resumo, rankings, fatura e carteira
+- [x] Validar desktop/mobile, publicar e sincronizar a nova composição com o GitHub
