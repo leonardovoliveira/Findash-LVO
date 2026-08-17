@@ -441,3 +441,8 @@
 - [x] Hidratar o dashboard com dados Supabase e migrar o backup local uma única vez
 - [x] Sincronizar alterações financeiras com debounce e feedback de indisponibilidade
 - [x] Validar isolamento, testes, type-check, build e fluxo responsivo da persistência cloud
+
+- [ ] Ativar Google OAuth em produção e desabilitar o bypass temporário
+- [ ] Validar callback, sessão, logout e identidade estável usada pelo Supabase
+- [ ] Validar sincronização do mesmo usuário em múltiplos dispositivos
+- [ ] Executar testes, type-check, build, revisão responsiva e publicar a versão OAuth

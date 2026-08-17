@@ -37,6 +37,10 @@ export function googleRedirectUri() {
   return ENV.googleOAuthRedirectUri || DEFAULT_REDIRECT_URI;
 }
 
+export function googleOpenId(subject: string) {
+  return `google:${subject}`;
+}
+
 export function buildGoogleAuthorizationUrl(state: string) {
   if (!hasValidGoogleConfiguration()) throw new Error("Google OAuth is not configured");
   const url = new URL(GOOGLE_AUTHORIZATION_ENDPOINT);
@@ -115,7 +119,7 @@ export function registerGoogleOAuthRoutes(app: Express) {
     try {
       const idToken = await exchangeGoogleCode(code);
       const identity = await verifyGoogleIdentity(idToken);
-      const openId = `google:${identity.sub}`;
+      const openId = googleOpenId(identity.sub!);
       await db.upsertUser({ openId, name: identity.name ?? null, email: identity.email, avatarUrl: identity.picture ?? null, loginMethod: "google", lastSignedIn: new Date() });
       const sessionToken = await sdk.createSessionToken(openId, { name: identity.name || identity.email, expiresInMs: ONE_YEAR_MS });
       res.cookie(COOKIE_NAME, sessionToken, { ...getSessionCookieOptions(req), maxAge: ONE_YEAR_MS });
