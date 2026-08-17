@@ -465,3 +465,7 @@
 
 - [x] Corrigir a referência da logo na tela inicial e garantir carregamento do asset publicado
 - [x] Validar visual desktop/mobile, testes, build e envio da correção ao GitHub
+
+- [x] Diagnosticar e corrigir a falha de sincronização financeira no domínio publicado
+- [x] Corrigir a listagem/registro de dispositivos conectados e sessões ativas
+- [x] Validar dados do mesmo usuário Google em múltiplos dispositivos, testes, build e GitHub
