@@ -354,3 +354,9 @@
 - [x] Reposicionar os cards conforme a nova referência visual enviada
 - [x] Equalizar espaçamentos e alturas entre saldo, calendário, resumo, rankings, fatura e carteira
 - [x] Validar desktop/mobile, publicar e sincronizar a nova composição com o GitHub
+
+- [x] Adicionar ETH/BRL e EUR/BRL ao card de Mercados de referência
+- [x] Mover Mercados de referência para abaixo do card Próxima fatura
+- [x] Ocultar temporariamente o card Carteira em moedas
+- [x] Exibir no máximo os 10 maiores ativos na Carteira de investimentos e alinhar sua altura
+- [x] Validar desktop/mobile, cotações e sincronizar a alteração com o GitHub
