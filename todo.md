@@ -452,3 +452,8 @@
 - [x] Criar seção de dispositivos/sessões conectados no perfil
 - [x] Permitir encerrar sessões remotas com segurança
 - [x] Validar testes, responsividade, publicação e push para o GitHub
+
+- [x] Diagnosticar e corrigir o erro Google authentication failed no callback
+- [x] Melhorar o tratamento visual de falhas e retorno do OAuth
+- [x] Integrar a imagem enviada como logo da tela inicial
+- [x] Validar testes, build, visual e publicar no GitHub

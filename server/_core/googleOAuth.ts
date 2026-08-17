@@ -110,10 +110,17 @@ export function registerGoogleOAuthRoutes(app: Express) {
   app.get("/api/auth/google/callback", async (req, res) => {
     const code = typeof req.query.code === "string" ? req.query.code : undefined;
     const state = typeof req.query.state === "string" ? req.query.state : undefined;
+    const providerError = typeof req.query.error === "string" ? req.query.error : undefined;
     const expectedState = parseCookieHeader(req.headers.cookie ?? "")[stateCookieName(req)];
     clearStateCookie(req, res);
+    if (providerError) {
+      console.warn("[Google OAuth] Provider returned an error", providerError, req.query.error_description ?? "");
+      res.redirect(302, "/?oauth_error=provider_denied");
+      return;
+    }
     if (!code || !sameState(expectedState, state)) {
-      res.status(403).json({ error: "Invalid Google OAuth state" });
+      console.warn("[Google OAuth] Invalid state or missing authorization code");
+      res.redirect(302, "/?oauth_error=invalid_state");
       return;
     }
     try {
@@ -121,15 +128,23 @@ export function registerGoogleOAuthRoutes(app: Express) {
       const identity = await verifyGoogleIdentity(idToken);
       const openId = googleOpenId(identity.sub!);
       await db.upsertUser({ openId, name: identity.name ?? null, email: identity.email, avatarUrl: identity.picture ?? null, loginMethod: "google", lastSignedIn: new Date() });
-      const sessionId = sdk.createSessionId();
-      const now = new Date();
-      await db.createAuthSession({ sessionId, ownerOpenId: openId, deviceLabel: req.headers["user-agent"]?.includes("Mobile") ? "Dispositivo móvel" : "Navegador", userAgent: req.headers["user-agent"] ?? null, createdAt: now, lastSeenAt: now, expiresAt: new Date(now.getTime() + ONE_YEAR_MS) });
-      const sessionToken = await sdk.createSessionToken(openId, { name: identity.name || identity.email, sessionId, expiresInMs: ONE_YEAR_MS });
+      let sessionId: string | undefined;
+      try {
+        const candidate = sdk.createSessionId();
+        const now = new Date();
+        await db.createAuthSession({ sessionId: candidate, ownerOpenId: openId, deviceLabel: req.headers["user-agent"]?.includes("Mobile") ? "Dispositivo móvel" : "Navegador", userAgent: req.headers["user-agent"] ?? null, createdAt: now, lastSeenAt: now, expiresAt: new Date(now.getTime() + ONE_YEAR_MS) });
+        sessionId = candidate;
+      } catch (sessionError) {
+        console.error("[Google OAuth] Session registry unavailable; continuing with a standard session", sessionError instanceof Error ? sessionError.message : sessionError);
+      }
+      const sessionToken = await sdk.createSessionToken(openId, { name: identity.name || identity.email, ...(sessionId ? { sessionId } : {}), expiresInMs: ONE_YEAR_MS });
       res.cookie(COOKIE_NAME, sessionToken, { ...getSessionCookieOptions(req), maxAge: ONE_YEAR_MS });
       res.redirect(302, "/");
     } catch (error) {
-      console.error("[Google OAuth] Callback failed", error instanceof Error ? error.message : error);
-      res.status(502).json({ error: "Google authentication failed" });
+      const message = error instanceof Error ? error.message : String(error);
+      console.error("[Google OAuth] Callback failed", message);
+      res.setHeader("Cache-Control", "no-store");
+      res.redirect(302, "/?oauth_error=authentication_failed");
     }
   });
 }
