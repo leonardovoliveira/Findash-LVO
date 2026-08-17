@@ -323,3 +323,7 @@
 - [x] Reorganizar a grade fixa do dashboard para reproduzir a composição da imagem 2
 - [x] Ajustar proporções, espaçamentos e distribuição das linhas inferiores conforme a referência
 - [x] Validar a nova composição em desktop e mobile e publicar no GitHub
+
+- [x] Refinar alturas e espaçamentos internos dos cards conforme a imagem de referência
+- [x] Adicionar efeitos de hover aos cards de investimentos
+- [x] Validar, publicar e sincronizar o refinamento visual com o GitHub
