@@ -483,5 +483,5 @@
 - [x] Exibir percentuais acumulados por componente no gráfico cambial
 - [x] Validar lançamentos, gráfico, testes, build, responsividade e publicar
 
-- [ ] Enviar ao GitHub o commit das correções de lançamentos e percentuais acumulados
-- [ ] Confirmar o hash remoto na branch main e informar o resultado
+- [x] Enviar ao GitHub o commit das correções de lançamentos e percentuais acumulados
+- [x] Confirmar o hash remoto na branch main e informar o resultado
