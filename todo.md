@@ -332,3 +332,7 @@
 - [x] Colocar performance dos investimentos abaixo da performance financeira
 - [x] Unificar gráfico, dimensões e seletores de período das duas performances
 - [x] Validar, publicar e sincronizar o novo alinhamento com o GitHub
+
+- [x] Colocar mercados de referência e carteira em moedas imediatamente abaixo da carteira de investimentos
+- [x] Remover o espaço vertical desnecessário na coluna direita do dashboard
+- [x] Validar desktop/mobile, publicar e sincronizar a correção com o GitHub
