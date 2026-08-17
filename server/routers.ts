@@ -191,7 +191,7 @@ export const appRouter = router({
     save: protectedProcedure.input(z.object({ payload: z.unknown() })).mutation(async ({ ctx, input }) => {
       try {
         const payload = input.payload as FinanceStatePayload;
-        if (!payload || payload.version !== 1 || !Array.isArray(payload.transactions) || !Array.isArray(payload.investments) || !Array.isArray(payload.creditCards) || !Array.isArray(payload.categories)) {
+        if (!payload || payload.version !== 1 || !Array.isArray(payload.transactions) || !Array.isArray(payload.investments) || !Array.isArray(payload.creditCards) || !Array.isArray(payload.categories) || (payload.budgets !== undefined && !Array.isArray(payload.budgets))) {
           throw new TRPCError({ code: "BAD_REQUEST", message: "Estado financeiro inválido" });
         }
         return await saveFinanceState(ctx.user.openId, payload);

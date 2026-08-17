@@ -6,6 +6,7 @@ export type FinanceStatePayload = {
   investments: unknown[];
   creditCards: unknown[];
   categories: unknown[];
+  budgets?: unknown[];
 };
 
 type FinanceStateRow = {

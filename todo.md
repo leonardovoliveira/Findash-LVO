@@ -490,3 +490,9 @@
 - [x] Corrigir a exibição de valores em USD no gráfico e nos cards de distribuição sem trocar USD por BRL indevidamente
 
 - [x] Corrigir o loop de renderização que impede a abertura da aplicação em produção
+
+- [x] Criar modelo persistido de orçamento mensal por categoria e tipo de despesa
+- [x] Integrar orçamento planejado aos lançamentos reais de despesas por mês
+- [x] Criar página e item lateral Orçamento com despesas fixas e variáveis
+- [x] Implementar gamificação e estado de meta mensal atingida
+- [x] Cobrir cálculos de orçamento com Vitest, validar visualmente e publicar

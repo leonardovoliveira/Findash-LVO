@@ -1,0 +1,142 @@
+import type { LocalTransaction } from "./localTransactions";
+
+export type BudgetKind = "fixed" | "variable";
+
+export type MonthlyBudget = {
+  id: number;
+  month: string;
+  category: string;
+  kind: BudgetKind;
+  plannedAmount: string;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type BudgetLine = MonthlyBudget & {
+  actualAmount: number;
+  remainingAmount: number;
+  percentUsed: number;
+};
+
+export type BudgetSummary = {
+  month: string;
+  plannedTotal: number;
+  actualTotal: number;
+  remainingTotal: number;
+  percentUsed: number;
+  plannedFixed: number;
+  plannedVariable: number;
+  actualFixed: number;
+  actualVariable: number;
+  unplannedActual: number;
+  lines: BudgetLine[];
+  status: "empty" | "on-track" | "achieved" | "over-budget";
+  challengeLabel: string;
+  challengeDetail: string;
+};
+
+const STORAGE_PREFIX = "findash-lvo:budgets:";
+
+export function budgetStorageKey(userId: number | string) {
+  return `${STORAGE_PREFIX}${userId}`;
+}
+
+export function isMonthlyBudget(value: unknown): value is MonthlyBudget {
+  if (!value || typeof value !== "object") return false;
+  const item = value as Record<string, unknown>;
+  return Number.isInteger(item.id)
+    && typeof item.month === "string" && /^\d{4}-\d{2}$/.test(item.month)
+    && typeof item.category === "string" && item.category.trim().length > 0
+    && (item.kind === "fixed" || item.kind === "variable")
+    && typeof item.plannedAmount === "string" && Number(item.plannedAmount) >= 0
+    && typeof item.createdAt === "string" && typeof item.updatedAt === "string";
+}
+
+export function loadLocalBudgets(userId: number | string): MonthlyBudget[] {
+  try {
+    const raw = window.localStorage.getItem(budgetStorageKey(userId));
+    const parsed: unknown = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? parsed.filter(isMonthlyBudget) : [];
+  } catch {
+    return [];
+  }
+}
+
+export function saveLocalBudgets(userId: number | string, budgets: MonthlyBudget[]) {
+  window.localStorage.setItem(budgetStorageKey(userId), JSON.stringify(budgets));
+}
+
+export function createMonthlyBudget(budgets: MonthlyBudget[], input: Omit<MonthlyBudget, "id" | "createdAt" | "updatedAt">, now = new Date()): MonthlyBudget[] {
+  const nowIso = now.toISOString();
+  const entry: MonthlyBudget = {
+    ...input,
+    id: budgets.reduce((max, budget) => Math.max(max, budget.id), 0) + 1,
+    category: input.category.trim(),
+    plannedAmount: Number(input.plannedAmount).toFixed(2),
+    notes: input.notes?.trim() || undefined,
+    createdAt: nowIso,
+    updatedAt: nowIso,
+  };
+  return [...budgets, entry];
+}
+
+export function updateMonthlyBudget(budgets: MonthlyBudget[], id: number, patch: Pick<MonthlyBudget, "category" | "kind" | "plannedAmount" | "notes">, now = new Date()): MonthlyBudget[] {
+  return budgets.map(budget => budget.id === id ? {
+    ...budget,
+    ...patch,
+    category: patch.category.trim(),
+    plannedAmount: Number(patch.plannedAmount).toFixed(2),
+    notes: patch.notes?.trim() || undefined,
+    updatedAt: now.toISOString(),
+  } : budget);
+}
+
+export function removeMonthlyBudget(budgets: MonthlyBudget[], id: number) {
+  return budgets.filter(budget => budget.id !== id);
+}
+
+export function copyPreviousMonthBudget(budgets: MonthlyBudget[], targetMonth: string, now = new Date()): MonthlyBudget[] {
+  const [year, month] = targetMonth.split("-").map(Number);
+  const previousDate = new Date(year, month - 2, 1);
+  const previousMonth = `${previousDate.getFullYear()}-${String(previousDate.getMonth() + 1).padStart(2, "0")}`;
+  const targetCategories = new Set(budgets.filter(budget => budget.month === targetMonth).map(budget => `${budget.kind}:${budget.category.toLocaleLowerCase("pt-BR")}`));
+  const source = budgets.filter(budget => budget.month === previousMonth && !targetCategories.has(`${budget.kind}:${budget.category.toLocaleLowerCase("pt-BR")}`));
+  return source.reduce((next, budget) => createMonthlyBudget(next, { month: targetMonth, category: budget.category, kind: budget.kind, plannedAmount: budget.plannedAmount, notes: budget.notes }, now), budgets);
+}
+
+export function getBudgetSummary(budgets: MonthlyBudget[], transactions: LocalTransaction[], month: string, today = new Date()): BudgetSummary {
+  const monthlyBudgets = budgets.filter(budget => budget.month === month).sort((a, b) => a.kind.localeCompare(b.kind) || a.category.localeCompare(b.category));
+  const expenses = transactions.filter(transaction => transaction.type === "expense" && transaction.occurredAt.slice(0, 7) === month);
+  const actualByCategory = expenses.reduce((totals, transaction) => {
+    const category = transaction.category.trim().toLocaleLowerCase("pt-BR");
+    totals.set(category, (totals.get(category) ?? 0) + Number(transaction.amount || 0));
+    return totals;
+  }, new Map<string, number>());
+  const budgetedCategories = new Set(monthlyBudgets.map(budget => budget.category.trim().toLocaleLowerCase("pt-BR")));
+  const lines = monthlyBudgets.map(budget => {
+    const actualAmount = actualByCategory.get(budget.category.trim().toLocaleLowerCase("pt-BR")) ?? 0;
+    const plannedAmount = Number(budget.plannedAmount) || 0;
+    return { ...budget, actualAmount, remainingAmount: plannedAmount - actualAmount, percentUsed: plannedAmount > 0 ? (actualAmount / plannedAmount) * 100 : actualAmount > 0 ? 100 : 0 };
+  });
+  const plannedTotal = lines.reduce((sum, line) => sum + Number(line.plannedAmount), 0);
+  const actualTotal = expenses.reduce((sum, transaction) => sum + Number(transaction.amount || 0), 0);
+  const plannedFixed = lines.filter(line => line.kind === "fixed").reduce((sum, line) => sum + Number(line.plannedAmount), 0);
+  const plannedVariable = plannedTotal - plannedFixed;
+  const actualFixed = lines.filter(line => line.kind === "fixed").reduce((sum, line) => sum + line.actualAmount, 0);
+  const actualVariable = actualTotal - actualFixed;
+  const unplannedActual = expenses.filter(transaction => !budgetedCategories.has(transaction.category.trim().toLocaleLowerCase("pt-BR"))).reduce((sum, transaction) => sum + Number(transaction.amount || 0), 0);
+  const [year, monthNumber] = month.split("-").map(Number);
+  const endOfMonth = new Date(year, monthNumber, 0, 23, 59, 59, 999);
+  const isClosed = today > endOfMonth;
+  const remainingTotal = plannedTotal - actualTotal;
+  const percentUsed = plannedTotal > 0 ? (actualTotal / plannedTotal) * 100 : 0;
+  const status: BudgetSummary["status"] = plannedTotal <= 0 ? "empty" : actualTotal > plannedTotal ? "over-budget" : isClosed ? "achieved" : "on-track";
+  const challengeLabel = status === "achieved" ? "Meta atingida" : status === "over-budget" ? "Atenção ao orçamento" : status === "on-track" ? "No caminho certo" : "Crie sua meta";
+  const challengeDetail = status === "achieved" ? `Você encerrou o mês com ${formatAmount(remainingTotal)} de folga.` : status === "over-budget" ? `O orçamento foi ultrapassado em ${formatAmount(Math.abs(remainingTotal))}.` : status === "on-track" ? `Ainda há ${formatAmount(Math.max(remainingTotal, 0))} disponíveis para este mês.` : "Cadastre limites por categoria para acompanhar suas metas.";
+  return { month, plannedTotal, actualTotal, remainingTotal, percentUsed, plannedFixed, plannedVariable, actualFixed, actualVariable, unplannedActual, lines, status, challengeLabel, challengeDetail };
+}
+
+function formatAmount(value: number) {
+  return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
+}
