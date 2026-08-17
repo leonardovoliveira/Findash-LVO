@@ -446,3 +446,9 @@
 - [x] Validar callback, sessão, logout e identidade estável usada pelo Supabase
 - [x] Validar sincronização do mesmo usuário em múltiplos dispositivos
 - [x] Executar testes, type-check, build, revisão responsiva e publicar a versão OAuth
+
+- [x] Exibir nome e foto do Google no cabeçalho usando os dados autenticados
+- [x] Adicionar animação e feedback visual durante o login Google
+- [x] Criar seção de dispositivos/sessões conectados no perfil
+- [x] Permitir encerrar sessões remotas com segurança
+- [x] Validar testes, responsividade, publicação e push para o GitHub

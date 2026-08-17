@@ -4,7 +4,7 @@ import { getSessionCookieOptions } from "./_core/cookies.js";
 import { systemRouter } from "./_core/systemRouter.js";
 import { protectedProcedure, publicProcedure, router } from "./_core/trpc.js";
 import { TRPCError } from "@trpc/server";
-import { createTransaction, deleteTransaction, listTransactions, updateTransaction } from "./db.js";
+import { createTransaction, deleteTransaction, listAuthSessions, listTransactions, revokeAuthSession, revokeOtherAuthSessions, updateTransaction } from "./db.js";
 import { ENV } from "./_core/env.js";
 import { fetchBrapiStockHistory, fetchBrapiStockQuote } from "./brapi.js";
 import { loadFinanceState, saveFinanceState, type FinanceStatePayload } from "./supabase.js";
@@ -153,6 +153,21 @@ export const appRouter = router({
       const cookieOptions = getSessionCookieOptions(ctx.req);
       const response = ctx.res as import("express").Response;
       response.clearCookie(COOKIE_NAME, { ...cookieOptions, maxAge: -1 });
+      return { success: true } as const;
+    }),
+  }),
+  sessions: router({
+    list: protectedProcedure.query(async ({ ctx }) => ({
+      currentSessionId: ctx.sessionId,
+      sessions: await listAuthSessions(ctx.user.openId),
+    })),
+    revoke: protectedProcedure.input(z.object({ sessionId: z.string().min(1).max(128) })).mutation(async ({ ctx, input }) => {
+      await revokeAuthSession(input.sessionId, ctx.user.openId);
+      return { success: true } as const;
+    }),
+    revokeOthers: protectedProcedure.mutation(async ({ ctx }) => {
+      if (!ctx.sessionId) throw new TRPCError({ code: "BAD_REQUEST", message: "A sessão atual não possui identificador revogável" });
+      await revokeOtherAuthSessions(ctx.sessionId, ctx.user.openId);
       return { success: true } as const;
     }),
   }),

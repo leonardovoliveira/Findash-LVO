@@ -121,7 +121,10 @@ export function registerGoogleOAuthRoutes(app: Express) {
       const identity = await verifyGoogleIdentity(idToken);
       const openId = googleOpenId(identity.sub!);
       await db.upsertUser({ openId, name: identity.name ?? null, email: identity.email, avatarUrl: identity.picture ?? null, loginMethod: "google", lastSignedIn: new Date() });
-      const sessionToken = await sdk.createSessionToken(openId, { name: identity.name || identity.email, expiresInMs: ONE_YEAR_MS });
+      const sessionId = sdk.createSessionId();
+      const now = new Date();
+      await db.createAuthSession({ sessionId, ownerOpenId: openId, deviceLabel: req.headers["user-agent"]?.includes("Mobile") ? "Dispositivo móvel" : "Navegador", userAgent: req.headers["user-agent"] ?? null, createdAt: now, lastSeenAt: now, expiresAt: new Date(now.getTime() + ONE_YEAR_MS) });
+      const sessionToken = await sdk.createSessionToken(openId, { name: identity.name || identity.email, sessionId, expiresInMs: ONE_YEAR_MS });
       res.cookie(COOKIE_NAME, sessionToken, { ...getSessionCookieOptions(req), maxAge: ONE_YEAR_MS });
       res.redirect(302, "/");
     } catch (error) {

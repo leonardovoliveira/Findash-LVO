@@ -4,6 +4,7 @@ import axios, { type AxiosInstance } from "axios";
 import { parse as parseCookieHeader } from "cookie";
 import type { Request } from "express";
 import { SignJWT, jwtVerify } from "jose";
+import { randomUUID } from "crypto";
 import type { User } from "../../drizzle/schema.js";
 import * as db from "../db.js";
 import { ENV } from "./env.js";
@@ -22,6 +23,7 @@ export type SessionPayload = {
   openId: string;
   appId: string;
   name: string;
+  sessionId?: string;
 };
 
 const EXCHANGE_TOKEN_PATH = `/webdev.v1.WebDevAuthPublicService/ExchangeToken`;
@@ -165,16 +167,21 @@ class SDKServer {
    */
   async createSessionToken(
     openId: string,
-    options: { expiresInMs?: number; name?: string } = {}
+    options: { expiresInMs?: number; name?: string; sessionId?: string } = {}
   ): Promise<string> {
     return this.signSession(
       {
         openId,
         appId: ENV.appId,
         name: options.name || "",
+        sessionId: options.sessionId,
       },
       options
     );
+  }
+
+  createSessionId() {
+    return randomUUID();
   }
 
   async signSession(
@@ -190,6 +197,7 @@ class SDKServer {
       openId: payload.openId,
       appId: payload.appId,
       name: payload.name,
+      sessionId: payload.sessionId,
     })
       .setProtectedHeader({ alg: "HS256", typ: "JWT" })
       .setExpirationTime(expirationSeconds)
@@ -198,7 +206,7 @@ class SDKServer {
 
   async verifySession(
     cookieValue: string | undefined | null
-  ): Promise<{ openId: string; appId: string; name: string } | null> {
+  ): Promise<{ openId: string; appId: string; name: string; sessionId?: string } | null> {
     if (!cookieValue) {
       console.warn("[Auth] Missing session cookie");
       return null;
@@ -209,7 +217,7 @@ class SDKServer {
       const { payload } = await jwtVerify(cookieValue, secretKey, {
         algorithms: ["HS256"],
       });
-      const { openId, appId, name } = payload as Record<string, unknown>;
+      const { openId, appId, name, sessionId } = payload as Record<string, unknown>;
 
       if (
         !isNonEmptyString(openId) ||
@@ -224,6 +232,7 @@ class SDKServer {
         openId,
         appId,
         name,
+        ...(isNonEmptyString(sessionId) ? { sessionId } : {}),
       };
     } catch (error) {
       console.warn("[Auth] Session verification failed", String(error));
@@ -255,6 +264,17 @@ class SDKServer {
     } as GetUserInfoWithJwtResponse;
   }
 
+  async getSessionIdFromRequest(req: Request): Promise<string | null> {
+    const cookies = this.parseCookies(req.headers.cookie);
+    let sessionToken = cookies.get(COOKIE_NAME);
+    if (!sessionToken) {
+      const authHeader = req.headers.authorization;
+      if (typeof authHeader === "string" && authHeader.startsWith("Bearer ")) sessionToken = authHeader.slice(7);
+    }
+    const session = await this.verifySession(sessionToken);
+    return session?.sessionId ?? null;
+  }
+
   async authenticateRequest(req: Request): Promise<AuthenticatedUser> {
     // 1. Prefer the session cookie (regular OAuth login).
     const cookies = this.parseCookies(req.headers.cookie);
@@ -274,6 +294,14 @@ class SDKServer {
 
     if (!session) {
       throw ForbiddenError("Invalid session cookie");
+    }
+
+    if (session.sessionId) {
+      const activeSession = await db.getActiveAuthSession(session.sessionId);
+      if (!activeSession || activeSession.ownerOpenId !== session.openId) {
+        throw ForbiddenError("Session revoked or expired");
+      }
+      await db.touchAuthSession(session.sessionId);
     }
 
     if (session.openId.startsWith(CRON_OPEN_ID_PREFIX)) {

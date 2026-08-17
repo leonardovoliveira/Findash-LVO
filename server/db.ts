@@ -1,6 +1,6 @@
-import { and, desc, eq, gte, lt } from "drizzle-orm";
+import { and, desc, eq, gte, gt, isNull, lt, not } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertTransaction, InsertUser, Transaction, transactions, users } from "../drizzle/schema.js";
+import { AuthSession, InsertAuthSession, InsertTransaction, InsertUser, Transaction, authSessions, transactions, users } from "../drizzle/schema.js";
 import { ENV } from "./_core/env.js";
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -85,4 +85,43 @@ export async function deleteTransaction(id: number, userId: number) {
   if (!db) throw new Error("Database unavailable");
   await db.delete(transactions).where(and(eq(transactions.id, id), eq(transactions.userId, userId)));
   return { success: true } as const;
+}
+
+export async function createAuthSession(input: InsertAuthSession): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database unavailable");
+  await db.insert(authSessions).values(input);
+}
+
+export async function getActiveAuthSession(sessionId: string): Promise<AuthSession | undefined> {
+  const db = await getDb();
+  if (!db) return undefined;
+  const now = new Date();
+  const rows = await db.select().from(authSessions).where(and(eq(authSessions.sessionId, sessionId), isNull(authSessions.revokedAt), gt(authSessions.expiresAt, now))).limit(1);
+  return rows[0];
+}
+
+export async function touchAuthSession(sessionId: string): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(authSessions).set({ lastSeenAt: new Date() }).where(and(eq(authSessions.sessionId, sessionId), isNull(authSessions.revokedAt)));
+}
+
+export async function listAuthSessions(ownerOpenId: string): Promise<AuthSession[]> {
+  const db = await getDb();
+  if (!db) return [];
+  const now = new Date();
+  return db.select().from(authSessions).where(and(eq(authSessions.ownerOpenId, ownerOpenId), isNull(authSessions.revokedAt), gt(authSessions.expiresAt, now))).orderBy(desc(authSessions.lastSeenAt));
+}
+
+export async function revokeAuthSession(sessionId: string, ownerOpenId: string): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database unavailable");
+  await db.update(authSessions).set({ revokedAt: new Date() }).where(and(eq(authSessions.sessionId, sessionId), eq(authSessions.ownerOpenId, ownerOpenId), isNull(authSessions.revokedAt)));
+}
+
+export async function revokeOtherAuthSessions(currentSessionId: string, ownerOpenId: string): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database unavailable");
+  await db.update(authSessions).set({ revokedAt: new Date() }).where(and(eq(authSessions.ownerOpenId, ownerOpenId), isNull(authSessions.revokedAt), not(eq(authSessions.sessionId, currentSessionId))));
 }

@@ -13,6 +13,18 @@ export const users = mysqlTable("users", {
   lastSignedIn: timestamp("lastSignedIn").defaultNow().notNull(),
 });
 
+export const authSessions = mysqlTable("authSessions", {
+  id: int("id").autoincrement().primaryKey(),
+  sessionId: varchar("sessionId", { length: 128 }).notNull().unique(),
+  ownerOpenId: varchar("ownerOpenId", { length: 128 }).notNull(),
+  deviceLabel: varchar("deviceLabel", { length: 160 }).notNull(),
+  userAgent: text("userAgent"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  lastSeenAt: timestamp("lastSeenAt").defaultNow().notNull(),
+  expiresAt: timestamp("expiresAt").notNull(),
+  revokedAt: timestamp("revokedAt"),
+});
+
 export const transactions = mysqlTable("transactions", {
   id: int("id").autoincrement().primaryKey(),
   userId: int("userId").notNull(),
@@ -27,5 +39,7 @@ export const transactions = mysqlTable("transactions", {
 
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
+export type AuthSession = typeof authSessions.$inferSelect;
+export type InsertAuthSession = typeof authSessions.$inferInsert;
 export type Transaction = typeof transactions.$inferSelect;
 export type InsertTransaction = typeof transactions.$inferInsert;
