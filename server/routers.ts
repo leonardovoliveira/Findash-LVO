@@ -87,6 +87,19 @@ export async function fetchTreasuryQuote(ticker: string, fetchedAt: string, sign
   }
 }
 
+export async function fetchTreasuryHistory(ticker: string, range: "1mo" | "6mo" | "1y", fetchImpl: typeof fetch = fetch, token?: string): Promise<Array<{ date: number; close: number }>> {
+  const end = new Date();
+  const start = new Date(end);
+  start.setMonth(start.getMonth() - (range === "1mo" ? 1 : range === "6mo" ? 6 : 12));
+  const params = new URLSearchParams({ symbols: ticker.trim().toLowerCase(), startDate: start.toISOString().slice(0, 10), endDate: end.toISOString().slice(0, 10) });
+  const headers: Record<string, string> = { Accept: "application/json" };
+  if (token) headers.Authorization = `Bearer ${token}`;
+  const response = await fetchImpl(`https://brapi.dev/api/v2/treasury/indicators/history?${params.toString()}`, { headers });
+  if (!response.ok) throw new Error(`A fonte respondeu HTTP ${response.status}`);
+  const payload = await response.json() as { results?: Array<{ date?: string | number; basePrice?: number; sellPrice?: number; buyPrice?: number; close?: number }> };
+  return (payload.results ?? []).map(point => ({ date: typeof point.date === "number" ? point.date : Date.parse(String(point.date ?? "")) / 1000, close: Number(point.close ?? point.basePrice ?? point.sellPrice ?? point.buyPrice) })).filter(point => Number.isFinite(point.date) && Number.isFinite(point.close));
+}
+
 const transactionInput = z.object({
   type: z.enum(["income", "expense"]),
   description: z.string().trim().min(1).max(180),
@@ -138,6 +151,7 @@ export const appRouter = router({
     }),
     brapi: protectedProcedure.input(stockQuoteInput).query(({ input }) => fetchBrapiStockQuote(input.symbol)),
     historical: protectedProcedure.input(stockQuoteInput.extend({ range: z.enum(["1d", "5d", "1mo", "3mo", "6mo", "1y"]).default("3mo") })).query(({ input }) => fetchBrapiStockHistory(input.symbol, input.range)),
+    treasuryHistorical: protectedProcedure.input(stockQuoteInput.extend({ range: z.enum(["1mo", "6mo", "1y"]).default("1mo") })).query(({ input }) => fetchTreasuryHistory(input.symbol, input.range, fetch, ENV.brapiToken)),
   }),
   finance: router({
     list: protectedProcedure.input(monthInput).query(async ({ ctx, input }) => {

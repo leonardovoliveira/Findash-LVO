@@ -373,3 +373,11 @@
 - [x] Adicionar expansão com quantidade, custo e rentabilidade individual
 - [x] Integrar cotação atual para Tesouro Direto no fluxo de carteira
 - [x] Validar, publicar e sincronizar as atualizações com o GitHub
+
+- [x] Adicionar histórico de preços e evolução de rendimento do Tesouro Direto
+- [x] Permitir editar detalhes de cada instituição no card expandido
+- [x] Corrigir edição de investimento para atualizar a posição existente sem duplicar
+- [x] Adicionar rentabilidade contratada para investimentos de renda fixa
+- [x] Renomear Mercados de referência para Cotações e ocupar a largura horizontal sob a carteira
+- [x] Corrigir gráfico por instituição para usar instituições individuais únicas
+- [x] Validar, publicar e sincronizar todas as alterações com o GitHub

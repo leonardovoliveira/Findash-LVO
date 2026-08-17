@@ -9,6 +9,7 @@ export const investmentCategories = [
 
 export type InvestmentCategory = (typeof investmentCategories)[number]["value"];
 export type InvestmentOperationType = "buy" | "sell";
+export type ContractedBenchmark = "none" | "CDI" | "IPCA+" | "Prefixado";
 
 export type InvestmentOperation = {
   id: number;
@@ -26,6 +27,9 @@ export type InvestmentInstitutionDetail = {
   currentValue: string;
   profit: string;
   profitabilityPercent: string;
+  contractedRate?: string;
+  contractedBenchmark?: ContractedBenchmark;
+  benchmarkAnnualRate?: string;
 };
 
 export type LocalInvestment = {
@@ -42,6 +46,12 @@ export type LocalInvestment = {
   currentValue: string;
   /** Cotação unitária retornada pela fonte externa. */
   marketPrice?: string;
+  /** Percentual contratado sobre o benchmark ou taxa anual prefixada. */
+  contractedRate?: string;
+  /** Benchmark contratado para renda fixa. */
+  contractedBenchmark?: ContractedBenchmark;
+  /** Taxa anual atual do benchmark, quando informada manualmente. */
+  benchmarkAnnualRate?: string;
   /** Variação percentual diária retornada pela fonte externa. */
   quoteChangePercent?: string;
   /** Preço de fechamento do pregão anterior retornado pela fonte externa. */
@@ -81,7 +91,7 @@ export function consolidateInvestmentsByTicker(investments: LocalInvestment[]): 
     const costBasis = group.reduce((sum: number, item: LocalInvestment) => sum + investmentCost(item), 0);
     const latestQuote = [...group].filter(item => item.quoteFetchedAt).sort((a, b) => String(b.quoteFetchedAt).localeCompare(String(a.quoteFetchedAt)))[0];
     const marketPrice = latestQuote?.marketPrice ?? group.find((item: LocalInvestment) => item.marketPrice?.trim())?.marketPrice;
-    const institutionDetails = group.flatMap((item: LocalInvestment) => item.institutionDetails?.length ? item.institutionDetails : [{ institution: item.institution, quantity: item.quantity, averagePrice: item.averagePrice, costBasis: String(investmentCost(item)), currentValue: String(investmentMarketValue(item)), profit: String(investmentProfitability(item).profit), profitabilityPercent: String(investmentProfitability(item).percent) }]);
+    const institutionDetails = group.flatMap((item: LocalInvestment) => item.institutionDetails?.length ? item.institutionDetails : [{ institution: item.institution, quantity: item.quantity, averagePrice: item.averagePrice, costBasis: String(investmentCost(item)), currentValue: String(investmentMarketValue(item)), profit: String(investmentProfitability(item).profit), profitabilityPercent: String(investmentProfitability(item).percent), contractedRate: item.contractedRate, contractedBenchmark: item.contractedBenchmark, benchmarkAnnualRate: item.benchmarkAnnualRate }]);
     const institutions = Array.from(new Set(institutionDetails.map((detail: InvestmentInstitutionDetail) => detail.institution.trim()).filter(Boolean))).join(", ");
     const operations = group.flatMap((item: LocalInvestment) => item.operations ?? []).map((operation: InvestmentOperation, index: number) => ({ ...operation, id: operation.id + index * 1000000 }));
     result.push({
@@ -100,11 +110,28 @@ export function consolidateInvestmentsByTicker(investments: LocalInvestment[]): 
       quoteError: latestQuote?.quoteError ?? first.quoteError,
       operations: operations.length ? operations : undefined,
       realizedProfit: String(group.reduce((sum: number, item: LocalInvestment) => sum + (Number(item.realizedProfit) || 0), 0)),
+      contractedRate: first.contractedRate,
+      contractedBenchmark: first.contractedBenchmark,
+      benchmarkAnnualRate: first.benchmarkAnnualRate,
       notes: Array.from(new Set(group.map((item: LocalInvestment) => item.notes.trim()).filter(Boolean))).join(" · "),
       updatedAt: group.map((item: LocalInvestment) => item.updatedAt).sort().at(-1) ?? first.updatedAt,
     });
   }
   return result;
+}
+
+export function recalculateConsolidatedInvestment(item: LocalInvestment, details: InvestmentInstitutionDetail[], overrides: Partial<LocalInvestment> = {}): LocalInvestment {
+  const quantity = details.reduce((sum, detail) => sum + (Number(detail.quantity) || 0), 0);
+  const costBasis = details.reduce((sum, detail) => sum + (Number(detail.costBasis) || (Number(detail.quantity) || 0) * (Number(detail.averagePrice) || 0)), 0);
+  const marketPrice = Number(item.marketPrice);
+  const institutions = Array.from(new Set(details.map(detail => detail.institution.trim()).filter(Boolean))).join(", ");
+  const updatedDetails = details.map(detail => {
+    const detailCost = Number(detail.costBasis) || (Number(detail.quantity) || 0) * (Number(detail.averagePrice) || 0);
+    const detailCurrent = Number(detail.currentValue) || detailCost;
+    const detailProfit = detailCurrent - detailCost;
+    return { ...detail, costBasis: String(detailCost), currentValue: String(detailCurrent), profit: String(detailProfit), profitabilityPercent: detailCost > 0 ? String((detailProfit / detailCost) * 100) : "0" };
+  });
+  return { ...item, ...overrides, institution: institutions || item.institution, institutionDetails: updatedDetails, quantity: String(quantity), averagePrice: String(quantity > 0 ? costBasis / quantity : 0), currentValue: Number.isFinite(marketPrice) && item.marketPrice?.trim() ? String(quantity * marketPrice) : String(costBasis), updatedAt: new Date().toISOString() };
 }
 
 export function loadLocalInvestments(userId: number | string): LocalInvestment[] {
@@ -220,7 +247,11 @@ export function investmentProfitability(item: LocalInvestment) {
   const costBasis = investmentCost(item);
   const realizedProfit = Number(item.realizedProfit ?? 0);
   const profit = marketValue - costBasis + (Number.isFinite(realizedProfit) ? realizedProfit : 0);
-  return { profit, percent: costBasis > 0 ? (profit / costBasis) * 100 : 0 };
+  const contractedRate = Number(item.contractedRate ?? 0);
+  const benchmarkAnnualRate = Number(item.benchmarkAnnualRate ?? 0);
+  const contractedAnnualPercent = item.contractedBenchmark === "Prefixado" ? contractedRate : contractedRate > 0 && benchmarkAnnualRate > 0 ? (contractedRate / 100) * benchmarkAnnualRate : 0;
+  const contractedProfit = costBasis > 0 && contractedAnnualPercent > 0 ? costBasis * contractedAnnualPercent / 100 : 0;
+  return { profit, percent: costBasis > 0 ? (profit / costBasis) * 100 : 0, contractedProfit, contractedAnnualPercent };
 }
 
 export function saveLocalInvestments(userId: number | string, investments: LocalInvestment[]) {

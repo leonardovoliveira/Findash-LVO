@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { fetchMarketFallback, fetchTreasuryQuote } from "./routers";
+import { fetchMarketFallback, fetchTreasuryHistory, fetchTreasuryQuote } from "./routers";
 
 describe("market quote fallbacks", () => {
   it("maps ExchangeRate-API USD/BRL data", async () => {
@@ -48,6 +48,15 @@ describe("market quote fallbacks", () => {
   it("returns a typed error when Tesouro Direto has no price", async () => {
     const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(new Response(JSON.stringify({ results: [{ symbol: "tesouro-selic-01032031" }] }), { status: 200 }));
     await expect(fetchTreasuryQuote("tesouro-selic-01032031", "2026-08-17T12:00:00.000Z", new AbortController().signal, fetchMock)).resolves.toMatchObject({ ok: false, source: "brapi.dev/tesouro", error: "Título sem preço indicativo disponível" });
+  });
+
+  it("maps Tesouro Direto historical prices to chart points", async () => {
+    const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(new Response(JSON.stringify({ results: [{ date: "2026-07-17T00:00:00.000Z", basePrice: 100 }, { date: "2026-08-17T00:00:00.000Z", sellPrice: 104.5 }] }), { status: 200 }));
+    const result = await fetchTreasuryHistory("TESOURO-SELIC-01032031", "1mo", fetchMock, "token-test");
+    expect(result).toHaveLength(2);
+    expect(result[0].close).toBe(100);
+    expect(result[1].close).toBe(104.5);
+    expect(fetchMock).toHaveBeenCalledWith(expect.stringContaining("/api/v2/treasury/indicators/history?"), expect.objectContaining({ headers: expect.objectContaining({ Authorization: "Bearer token-test" }) }));
   });
 
   it("returns a typed error when a fallback provider fails", async () => {

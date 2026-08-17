@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { appendInvestmentOperation, applyInvestmentQuote, consolidateInvestmentOperations, consolidateInvestmentsByTicker, createLocalInvestment, investmentCategories, investmentCost, investmentMarketValue, investmentProfitability, investmentValue, isLocalInvestment, type LocalInvestment } from "../client/src/lib/localInvestments";
+import { appendInvestmentOperation, applyInvestmentQuote, consolidateInvestmentOperations, consolidateInvestmentsByTicker, createLocalInvestment, investmentCategories, investmentCost, investmentMarketValue, investmentProfitability, investmentValue, isLocalInvestment, recalculateConsolidatedInvestment, type LocalInvestment } from "../client/src/lib/localInvestments";
 
 const base: LocalInvestment = {
   id: 1,
@@ -92,6 +92,23 @@ describe("local investments", () => {
     expect(consolidated[0].quantity).toBe("300");
     expect(Number(consolidated[0].averagePrice)).toBeCloseTo((200 * 4.48 + 100 * 6.97) / 300, 8);
     expect(consolidated[0].institution).toBe("C6, INTER");
+  });
+
+  it("recalculates a consolidated position after editing one institution", () => {
+    const [item] = consolidateInvestmentsByTicker([
+      { ...base, id: 10, ticker: "GMAT3", institution: "C6", quantity: "200", averagePrice: "4.48", currentValue: "780" },
+      { ...base, id: 11, ticker: "GMAT3", institution: "INTER", quantity: "100", averagePrice: "6.97", currentValue: "390" },
+    ]);
+    const updated = recalculateConsolidatedInvestment(item, (item.institutionDetails ?? []).map((detail, index) => index === 1 ? { ...detail, quantity: "120", averagePrice: "7.10", costBasis: "852", currentValue: "900" } : detail));
+    expect(updated.quantity).toBe("320");
+    expect(Number(updated.averagePrice)).toBeCloseTo((200 * 4.48 + 120 * 7.10) / 320, 8);
+    expect(updated.institution).toBe("C6, INTER");
+  });
+
+  it("calculates contracted fixed-income profitability from a benchmark", () => {
+    const result = investmentProfitability({ ...base, category: "fixed-income", contractedRate: "100", contractedBenchmark: "CDI", benchmarkAnnualRate: "10.5", quantity: "10", averagePrice: "100", currentValue: "1050" });
+    expect(result.contractedAnnualPercent).toBeCloseTo(10.5, 8);
+    expect(result.contractedProfit).toBeCloseTo(105, 8);
   });
 
   it("keeps different tickers as separate cards", () => {
