@@ -21,7 +21,7 @@ describe("dashboard widget preferences", () => {
   it("persists visibility and custom order for every widget", () => {
     const preferences = { ...defaultDashboardWidgetPreferences, market: false, order: [...dashboardWidgetKeys].reverse() };
     saveDashboardWidgetPreferences(preferences);
-    expect(loadDashboardWidgetPreferences()).toEqual(preferences);
+    expect(loadDashboardWidgetPreferences()).toEqual({ ...preferences, order: [...defaultDashboardWidgetPreferences.order] });
   });
 
   it("normalizes missing and unknown order entries while preserving visibility", () => {
@@ -29,7 +29,7 @@ describe("dashboard widget preferences", () => {
     const loaded = loadDashboardWidgetPreferences();
     expect(loaded.market).toBe(false);
     expect(loaded.currency).toBe(true);
-    expect(loaded.order).toEqual(["currency", ...dashboardWidgetKeys.filter(key => key !== "currency")]);
+    expect(loaded.order).toEqual(defaultDashboardWidgetPreferences.order);
   });
 
   it("persists width and height choices for cards", () => {

@@ -307,3 +307,7 @@
 - [x] Adicionar e validar o botão Restaurar padrão nas configurações
 - [x] Igualar tamanho e tipo de gráfico da performance dos investimentos ao gráfico financeiro
 - [x] Testar, publicar e sincronizar as alterações com o GitHub
+- [x] Remover presets, controles de largura/altura e edição do modal de configurações
+- [x] Fixar a ordem padrão dos cards conforme a referência visual enviada
+- [x] Manter apenas visibilidade e restauração do padrão nas configurações
+- [x] Testar, publicar e sincronizar a simplificação com o GitHub

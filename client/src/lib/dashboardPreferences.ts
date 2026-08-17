@@ -60,7 +60,7 @@ export function loadDashboardWidgetPreferences(): DashboardWidgetPreferences {
     return {
       ...defaultDashboardWidgetPreferences,
       ...Object.fromEntries(dashboardWidgetKeys.map(key => [key, parsed[key] !== false])),
-      order: normalizeOrder(parsed.order),
+      order: [...defaultOrder],
       sizes: normalizeSizes(parsed.sizes),
       heights: normalizeHeights(parsed.heights),
       preset: parsed.preset === "overview" || parsed.preset === "investments" ? parsed.preset : "default",
@@ -72,7 +72,7 @@ export function loadDashboardWidgetPreferences(): DashboardWidgetPreferences {
 
 export function saveDashboardWidgetPreferences(preferences: DashboardWidgetPreferences) {
   if (typeof window === "undefined") return;
-  window.localStorage.setItem(storageKey, JSON.stringify({ ...preferences, order: normalizeOrder(preferences.order), sizes: normalizeSizes(preferences.sizes), heights: normalizeHeights(preferences.heights) }));
+  window.localStorage.setItem(storageKey, JSON.stringify({ ...preferences, order: [...defaultOrder], sizes: normalizeSizes(preferences.sizes), heights: normalizeHeights(preferences.heights), preset: "default" }));
 }
 
 export function resetDashboardWidgetPreferences(): DashboardWidgetPreferences {
