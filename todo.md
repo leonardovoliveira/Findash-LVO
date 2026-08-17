@@ -363,3 +363,8 @@
 
 - [x] Investigar o aviso do GitHub sobre não conseguir recuperar o commit mais recente
 - [x] Confirmar a integridade da branch main e corrigir a sincronização se necessário
+
+- [x] Consolidar o mesmo ticker entre instituições em um único card
+- [x] Somar quantidades e calcular PM ponderado por custo total
+- [x] Exibir instituições consolidadas separadas por vírgula
+- [x] Validar os cálculos, publicar e sincronizar com o GitHub

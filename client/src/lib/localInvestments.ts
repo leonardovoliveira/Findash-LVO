@@ -53,12 +53,52 @@ export function investmentStorageKey(userId: number | string) {
   return `${STORAGE_PREFIX}${userId}`;
 }
 
+export function consolidateInvestmentsByTicker(investments: LocalInvestment[]): LocalInvestment[] {
+  const groups = new Map<string, LocalInvestment[]>();
+  const result: LocalInvestment[] = [];
+  for (const item of investments) {
+    const ticker = item.ticker.trim().toUpperCase();
+    if (!ticker) { result.push(item); continue; }
+    const key = ticker;
+    groups.set(key, [...(groups.get(key) ?? []), item]);
+  }
+  for (const group of Array.from(groups.values())) {
+    if (group.length === 1) { result.push(group[0]); continue; }
+    const first = group[0];
+    const quantity = group.reduce((sum: number, item: LocalInvestment) => sum + (Number(item.quantity) || 0), 0);
+    const costBasis = group.reduce((sum: number, item: LocalInvestment) => sum + investmentCost(item), 0);
+    const latestQuote = [...group].filter(item => item.quoteFetchedAt).sort((a, b) => String(b.quoteFetchedAt).localeCompare(String(a.quoteFetchedAt)))[0];
+    const marketPrice = latestQuote?.marketPrice ?? group.find((item: LocalInvestment) => item.marketPrice?.trim())?.marketPrice;
+    const institutions = Array.from(new Set(group.map((item: LocalInvestment) => item.institution.trim()).filter(Boolean))).join(", ");
+    const operations = group.flatMap((item: LocalInvestment) => item.operations ?? []).map((operation: InvestmentOperation, index: number) => ({ ...operation, id: operation.id + index * 1000000 }));
+    result.push({
+      ...first,
+      ticker: first.ticker.trim().toUpperCase(),
+      institution: institutions || first.institution,
+      quantity: String(quantity),
+      averagePrice: String(quantity > 0 ? costBasis / quantity : 0),
+      currentValue: marketPrice?.trim() && Number.isFinite(Number(marketPrice)) ? String(quantity * Number(marketPrice)) : String(group.reduce((sum: number, item: LocalInvestment) => sum + investmentValue(item), 0)),
+      marketPrice,
+      quoteChangePercent: latestQuote?.quoteChangePercent ?? first.quoteChangePercent,
+      quotePreviousClose: latestQuote?.quotePreviousClose ?? first.quotePreviousClose,
+      quoteFetchedAt: latestQuote?.quoteFetchedAt ?? first.quoteFetchedAt,
+      quoteSource: latestQuote?.quoteSource ?? first.quoteSource,
+      quoteError: latestQuote?.quoteError ?? first.quoteError,
+      operations: operations.length ? operations : undefined,
+      realizedProfit: String(group.reduce((sum: number, item: LocalInvestment) => sum + (Number(item.realizedProfit) || 0), 0)),
+      notes: Array.from(new Set(group.map((item: LocalInvestment) => item.notes.trim()).filter(Boolean))).join(" · "),
+      updatedAt: group.map((item: LocalInvestment) => item.updatedAt).sort().at(-1) ?? first.updatedAt,
+    });
+  }
+  return result;
+}
+
 export function loadLocalInvestments(userId: number | string): LocalInvestment[] {
   try {
     const raw = window.localStorage.getItem(investmentStorageKey(userId));
     if (!raw) return [];
     const parsed: unknown = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed.filter(isLocalInvestment) : [];
+    return Array.isArray(parsed) ? consolidateInvestmentsByTicker(parsed.filter(isLocalInvestment)) : [];
   } catch {
     return [];
   }
@@ -170,7 +210,7 @@ export function investmentProfitability(item: LocalInvestment) {
 }
 
 export function saveLocalInvestments(userId: number | string, investments: LocalInvestment[]) {
-  window.localStorage.setItem(investmentStorageKey(userId), JSON.stringify(investments));
+  window.localStorage.setItem(investmentStorageKey(userId), JSON.stringify(consolidateInvestmentsByTicker(investments)));
 }
 
 export function createLocalInvestment(
@@ -179,7 +219,7 @@ export function createLocalInvestment(
   now = new Date(),
 ) {
   const iso = now.toISOString();
-  return [...investments, { ...input, id: investments.reduce((max, item) => Math.max(max, item.id), 0) + 1, createdAt: iso, updatedAt: iso }];
+  return consolidateInvestmentsByTicker([...investments, { ...input, id: investments.reduce((max, item) => Math.max(max, item.id), 0) + 1, createdAt: iso, updatedAt: iso }]);
 }
 
 export function isLocalInvestment(value: unknown): value is LocalInvestment {

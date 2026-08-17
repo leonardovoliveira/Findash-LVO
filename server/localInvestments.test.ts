@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { appendInvestmentOperation, applyInvestmentQuote, consolidateInvestmentOperations, createLocalInvestment, investmentCategories, investmentCost, investmentMarketValue, investmentProfitability, investmentValue, isLocalInvestment, type LocalInvestment } from "../client/src/lib/localInvestments";
+import { appendInvestmentOperation, applyInvestmentQuote, consolidateInvestmentOperations, consolidateInvestmentsByTicker, createLocalInvestment, investmentCategories, investmentCost, investmentMarketValue, investmentProfitability, investmentValue, isLocalInvestment, type LocalInvestment } from "../client/src/lib/localInvestments";
 
 const base: LocalInvestment = {
   id: 1,
@@ -18,7 +18,7 @@ const base: LocalInvestment = {
 
 describe("local investments", () => {
   it("creates a position with an incremental id and timestamps", () => {
-    const created = createLocalInvestment([base], { ...base, id: undefined as never, createdAt: undefined as never, updatedAt: undefined as never }, new Date("2026-02-01T00:00:00.000Z"));
+    const created = createLocalInvestment([base], { ...base, ticker: "B3SA3", id: undefined as never, createdAt: undefined as never, updatedAt: undefined as never }, new Date("2026-02-01T00:00:00.000Z"));
     expect(created).toHaveLength(2);
     expect(created[1].id).toBe(2);
     expect(created[1].createdAt).toBe("2026-02-01T00:00:00.000Z");
@@ -80,6 +80,26 @@ describe("local investments", () => {
     expect(updated.averagePrice).toBe("100");
     expect(updated.currentValue).toBe("1200");
     expect(investmentProfitability(updated).percent).toBe(20);
+  });
+
+  it("consolidates the same ticker across institutions with a weighted average price", () => {
+    const consolidated = consolidateInvestmentsByTicker([
+      { ...base, id: 10, ticker: "GMAT3", institution: "C6", quantity: "200", averagePrice: "4.48", currentValue: "780" },
+      { ...base, id: 11, ticker: "GMAT3", institution: "INTER", quantity: "100", averagePrice: "6.97", currentValue: "390" },
+    ]);
+    expect(consolidated).toHaveLength(1);
+    expect(consolidated[0].ticker).toBe("GMAT3");
+    expect(consolidated[0].quantity).toBe("300");
+    expect(Number(consolidated[0].averagePrice)).toBeCloseTo((200 * 4.48 + 100 * 6.97) / 300, 8);
+    expect(consolidated[0].institution).toBe("C6, INTER");
+  });
+
+  it("keeps different tickers as separate cards", () => {
+    const consolidated = consolidateInvestmentsByTicker([
+      { ...base, id: 10, ticker: "GMAT3", institution: "C6" },
+      { ...base, id: 11, ticker: "B3SA3", institution: "INTER" },
+    ]);
+    expect(consolidated).toHaveLength(2);
   });
 
   it("rejects invalid positions", () => {
