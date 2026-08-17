@@ -390,3 +390,9 @@
 - [x] Criar painel no dashboard com as próximas datas de fechamento de todos os cartões
 - [x] Adicionar filtro de despesas agrupadas pelo mês da fatura do cartão
 - [x] Validar testes, build, responsividade e publicação dos novos fluxos
+
+- [x] Adicionar barra de progresso de limite e gastos no painel de próximos fechamentos
+- [x] Adicionar ação rápida para nova despesa no cartão selecionado
+- [x] Expandir horizontalmente o card Cotações no espaço livre do dashboard
+- [x] Corrigir contraste do tooltip dos gráficos de investimentos no dark mode
+- [x] Validar testes, build, responsividade e publicação dos refinamentos
