@@ -469,3 +469,7 @@
 - [x] Diagnosticar e corrigir a falha de sincronização financeira no domínio publicado
 - [x] Corrigir a listagem/registro de dispositivos conectados e sessões ativas
 - [x] Validar dados do mesmo usuário Google em múltiplos dispositivos, testes, build e GitHub
+
+- [x] Corrigir conversão real USD/BRL em custos, patrimônio e indicadores dos investimentos
+- [x] Adicionar opção unificada para consolidar todos os ativos no gráfico histórico
+- [x] Validar cálculos, gráficos, testes, build, responsividade e publicar no GitHub

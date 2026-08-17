@@ -19,7 +19,7 @@ export type InvestmentOperation = {
   date: string;
 };
 
-export type InvestmentHistoryPoint = { date: string; value: string };
+export type InvestmentHistoryPoint = { date: string; value: string; currency?: "BRL" | "USD" };
 
 export type InvestmentInstitutionDetail = {
   institution: string;
@@ -81,14 +81,14 @@ export function investmentStorageKey(userId: number | string) {
   return `${STORAGE_PREFIX}${userId}`;
 }
 
-function mergeInstitutionDetails(details: InvestmentInstitutionDetail[], marketPrice?: string) {
+function mergeInstitutionDetails(details: InvestmentInstitutionDetail[], marketPrice?: string, conversionRate = 1) {
   const grouped = new Map<string, InvestmentInstitutionDetail>();
   const quote = Number(marketPrice);
   for (const detail of details) {
     const key = detail.institution.trim().toUpperCase() || "SEM INSTITUIÇÃO";
     const quantity = Number(detail.quantity) || 0;
     const costBasis = Number(detail.costBasis) || quantity * (Number(detail.averagePrice) || 0);
-    const currentValue = Number.isFinite(quote) && String(marketPrice ?? "").trim() ? quantity * quote : (Number(detail.currentValue) > 0 ? Number(detail.currentValue) : costBasis);
+    const currentValue = Number.isFinite(quote) && String(marketPrice ?? "").trim() ? quantity * quote * conversionRate : (Number(detail.currentValue) > 0 ? Number(detail.currentValue) : costBasis);
     const previous = grouped.get(key);
     if (!previous) {
       grouped.set(key, { ...detail, institution: detail.institution.trim(), quantity: String(quantity), averagePrice: String(quantity > 0 ? costBasis / quantity : 0), costBasis: String(costBasis), currentValue: String(currentValue), profit: String(currentValue - costBasis), profitabilityPercent: costBasis > 0 ? String(((currentValue - costBasis) / costBasis) * 100) : "0" });
@@ -118,7 +118,8 @@ export function consolidateInvestmentsByTicker(investments: LocalInvestment[]): 
     const costBasis = group.reduce((sum: number, item: LocalInvestment) => sum + investmentCost(item), 0);
     const latestQuote = [...group].filter(item => item.quoteFetchedAt).sort((a, b) => String(b.quoteFetchedAt).localeCompare(String(a.quoteFetchedAt)))[0];
     const marketPrice = latestQuote?.marketPrice ?? group.find((item: LocalInvestment) => item.marketPrice?.trim())?.marketPrice;
-    const institutionDetails = mergeInstitutionDetails(group.flatMap((item: LocalInvestment) => item.institutionDetails?.length ? item.institutionDetails : [{ institution: item.institution, quantity: item.quantity, averagePrice: item.averagePrice, costBasis: String(investmentCost(item)), currentValue: String(investmentMarketValue(item)), profit: String(investmentProfitability(item).profit), profitabilityPercent: String(investmentProfitability(item).percent), contractedRate: item.contractedRate, contractedBenchmark: item.contractedBenchmark, benchmarkAnnualRate: item.benchmarkAnnualRate }]), marketPrice);
+    const conversionRate = first.category === "dollar" ? (Number(latestQuote?.fxRate ?? first.fxRate) || 1) : 1;
+    const institutionDetails = mergeInstitutionDetails(group.flatMap((item: LocalInvestment) => item.institutionDetails?.length ? item.institutionDetails : [{ institution: item.institution, quantity: item.quantity, averagePrice: item.averagePrice, costBasis: String(investmentCost(item)), currentValue: String(investmentMarketValue(item)), profit: String(investmentProfitability(item).profit), profitabilityPercent: String(investmentProfitability(item).percent), contractedRate: item.contractedRate, contractedBenchmark: item.contractedBenchmark, benchmarkAnnualRate: item.benchmarkAnnualRate }]), marketPrice, conversionRate);
     const institutions = Array.from(new Set(institutionDetails.map((detail: InvestmentInstitutionDetail) => detail.institution.trim()).filter(Boolean))).join(", ");
     const operations = group.flatMap((item: LocalInvestment) => item.operations ?? []).map((operation: InvestmentOperation, index: number) => ({ ...operation, id: operation.id + index * 1000000 }));
     const dailyHistory = Array.from(group.flatMap(item => item.dailyHistory ?? []).reduce((map, point) => map.set(point.date, String((Number(map.get(point.date)) || 0) + (Number(point.value) || 0))), new Map<string, string>()).entries()).sort(([a], [b]) => a.localeCompare(b)).slice(-730).map(([date, value]) => ({ date, value }));
@@ -155,13 +156,14 @@ export function recalculateConsolidatedInvestment(item: LocalInvestment, details
   const costBasis = details.reduce((sum, detail) => sum + (Number(detail.costBasis) || (Number(detail.quantity) || 0) * (Number(detail.averagePrice) || 0)), 0);
   const marketPrice = Number(item.marketPrice);
   const institutions = Array.from(new Set(details.map(detail => detail.institution.trim()).filter(Boolean))).join(", ");
-  const updatedDetails = mergeInstitutionDetails(details, item.marketPrice).map(detail => {
+  const updatedDetails = mergeInstitutionDetails(details, item.marketPrice, item.category === "dollar" ? (Number(item.fxRate) || 1) : 1).map(detail => {
     const detailCost = Number(detail.costBasis) || (Number(detail.quantity) || 0) * (Number(detail.averagePrice) || 0);
     const detailCurrent = Number(detail.currentValue) || detailCost;
     const detailProfit = detailCurrent - detailCost;
     return { ...detail, costBasis: String(detailCost), currentValue: String(detailCurrent), profit: String(detailProfit), profitabilityPercent: detailCost > 0 ? String((detailProfit / detailCost) * 100) : "0" };
   });
-  return { ...item, ...overrides, institution: institutions || item.institution, institutionDetails: updatedDetails, quantity: String(quantity), averagePrice: String(quantity > 0 ? costBasis / quantity : 0), currentValue: Number.isFinite(marketPrice) && item.marketPrice?.trim() ? String(quantity * marketPrice) : String(costBasis), updatedAt: new Date().toISOString() };
+  const conversionRate = item.category === "dollar" ? (Number(item.fxRate) || 1) : 1;
+  return { ...item, ...overrides, institution: institutions || item.institution, institutionDetails: updatedDetails, quantity: String(quantity), averagePrice: String(quantity > 0 ? costBasis / quantity : 0), currentValue: Number.isFinite(marketPrice) && item.marketPrice?.trim() ? String(quantity * marketPrice * conversionRate) : String(costBasis), updatedAt: new Date().toISOString() };
 }
 
 export function loadLocalInvestments(userId: number | string): LocalInvestment[] {
@@ -198,18 +200,19 @@ export type InvestmentQuote = {
   error?: string;
 };
 
-export function applyInvestmentQuote(item: LocalInvestment, quote: InvestmentQuote): LocalInvestment {
+export function applyInvestmentQuote(item: LocalInvestment, quote: InvestmentQuote, fxRate?: number): LocalInvestment {
   if (!quote.ok || !Number.isFinite(quote.price)) {
     return { ...item, quoteFetchedAt: quote.fetchedAt, quoteSource: item.quoteSource, quoteError: quote.error ?? "Cotação indisponível" };
   }
   const price = quote.price ?? 0;
+  const conversionRate = item.category === "dollar" ? (Number(fxRate ?? item.fxRate) || 1) : 1;
   return {
     ...item,
     marketPrice: String(price),
     quoteChangePercent: Number.isFinite(quote.changePercent) ? String(quote.changePercent) : item.quoteChangePercent,
     quotePreviousClose: Number.isFinite(quote.previousClose) ? String(quote.previousClose) : item.quotePreviousClose,
-    currentValue: String(Number(item.quantity || 0) * price),
-    fxRate: item.fxRate,
+    currentValue: String(Number(item.quantity || 0) * price * conversionRate),
+    fxRate: item.category === "dollar" && conversionRate > 1 ? String(conversionRate) : item.fxRate,
     quoteFetchedAt: quote.fetchedAt,
     quoteSource: quote.source,
     quoteError: "",
@@ -249,7 +252,8 @@ export function investmentPerformanceHistory(item: LocalInvestment, range: "1mo"
   const months = range === "1mo" ? 1 : range === "6mo" ? 6 : 12;
   const cutoff = new Date(asOf);
   cutoff.setMonth(cutoff.getMonth() - months);
-  const persisted = (item.dailyHistory ?? []).filter(point => point.date >= cutoff.toISOString().slice(0, 10) && point.date <= asOf.toISOString().slice(0, 10)).map(point => ({ date: Date.parse(`${point.date}T12:00:00Z`) / 1000, close: Number(point.value) })).filter(point => Number.isFinite(point.close));
+  const historyConversionRate = item.category === "dollar" ? (Number(item.fxRate) || 1) : 1;
+  const persisted = (item.dailyHistory ?? []).filter(point => point.date >= cutoff.toISOString().slice(0, 10) && point.date <= asOf.toISOString().slice(0, 10)).map(point => ({ date: Date.parse(`${point.date}T12:00:00Z`) / 1000, close: Number(point.value) * (item.category === "dollar" && point.currency !== "BRL" ? historyConversionRate : 1) })).filter(point => Number.isFinite(point.close));
   if (persisted.length >= 2) return persisted;
   const operations = [...(item.operations ?? [])].sort((a, b) => a.date.localeCompare(b.date) || a.id - b.id);
   const points = new Map<string, number>();
@@ -263,7 +267,7 @@ export function investmentPerformanceHistory(item: LocalInvestment, range: "1mo"
     if (!Number.isFinite(opQuantity) || !Number.isFinite(opPrice)) continue;
     if (operation.type === "buy") {
       quantity += opQuantity;
-      costBasis += opQuantity * opPrice;
+      costBasis += opQuantity * opPrice * (item.category === "dollar" ? (Number(item.fxRate) || 1) : 1);
     } else {
       const sold = Math.min(opQuantity, quantity);
       costBasis -= sold * (quantity > 0 ? costBasis / quantity : 0);
@@ -322,7 +326,7 @@ export function appendInvestmentOperation(item: LocalInvestment, operation: Inve
     operations,
     quantity: String(consolidated.quantity),
     averagePrice: String(consolidated.averagePrice),
-    currentValue: item.marketPrice?.trim() && Number.isFinite(marketPrice) ? String(consolidated.quantity * marketPrice) : String(consolidated.costBasis),
+    currentValue: item.marketPrice?.trim() && Number.isFinite(marketPrice) ? String(consolidated.quantity * marketPrice * (item.category === "dollar" ? (Number(item.fxRate) || 1) : 1)) : String(consolidated.costBasis),
     realizedProfit: String(consolidated.realizedProfit),
     updatedAt: now.toISOString(),
   };
@@ -342,7 +346,7 @@ export function recordDailyInvestmentHistory(investments: LocalInvestment[], now
   const date = now.toISOString().slice(0, 10);
   return investments.map(item => {
     const value = investmentMarketValue(item);
-    const history = [...(item.dailyHistory ?? []).filter(point => point.date !== date), { date, value: String(value) }].sort((a, b) => a.date.localeCompare(b.date)).slice(-730);
+    const history = [...(item.dailyHistory ?? []).filter(point => point.date !== date), { date, value: String(value), currency: "BRL" as const }].sort((a, b) => a.date.localeCompare(b.date)).slice(-730);
     return { ...item, dailyHistory: history };
   });
 }

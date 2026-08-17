@@ -156,6 +156,20 @@ describe("local investments", () => {
     expect(investmentMarketValue(item)).toBe(1200);
   });
 
+  it("converts a dollar quote into BRL instead of only changing its display currency", () => {
+    const item = { ...base, category: "dollar" as const, quantity: "2", currentValue: "0", fxRate: "5" };
+    const updated = applyInvestmentQuote(item, { ok: true, price: 120, source: "brapi.dev", fetchedAt: "2026-08-17T12:00:00.000Z" }, 5);
+    expect(updated.marketPrice).toBe("120");
+    expect(updated.currentValue).toBe("1200");
+    expect(updated.fxRate).toBe("5");
+  });
+
+  it("persists daily dollar history in BRL", () => {
+    const item = { ...base, category: "dollar" as const, currentValue: "1200", marketPrice: "120", quantity: "2", fxRate: "5" };
+    const [updated] = recordDailyInvestmentHistory([item], new Date("2026-08-17T12:00:00.000Z"));
+    expect(updated.dailyHistory?.at(-1)).toMatchObject({ value: "1200", currency: "BRL" });
+  });
+
   it("keeps different tickers as separate cards", () => {
     const consolidated = consolidateInvestmentsByTicker([
       { ...base, id: 10, ticker: "GMAT3", institution: "C6" },
