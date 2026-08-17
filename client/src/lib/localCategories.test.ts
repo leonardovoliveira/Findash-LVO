@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { addLocalCategory, normalizeLocalCategories } from "./localCategories";
+import { addLocalCategory, deleteLocalCategory, isDefaultCategory, normalizeLocalCategories, updateLocalCategory } from "./localCategories";
 
 describe("local categories", () => {
   it("normalizes and deduplicates custom categories", () => {
@@ -11,5 +11,16 @@ describe("local categories", () => {
     const first = addLocalCategory([], { label: "Pets", icon: "✦" });
     const second = addLocalCategory(first, { label: " pets ", icon: "◆" });
     expect(second).toEqual([{ label: "Pets", icon: "✦" }]);
+  });
+
+  it("updates and deletes custom categories", () => {
+    const updated = updateLocalCategory([{ label: "Pets", icon: "✦" }], "Pets", { label: "Animais", icon: "◆" });
+    expect(updated).toEqual([{ label: "Animais", icon: "◆" }]);
+    expect(deleteLocalCategory(updated, "animais")).toEqual([]);
+  });
+
+  it("identifies default categories so they remain protected", () => {
+    expect(isDefaultCategory("Moradia")).toBe(true);
+    expect(isDefaultCategory("Pets")).toBe(false);
   });
 });

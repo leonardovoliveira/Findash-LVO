@@ -47,6 +47,12 @@ describe("local credit cards", () => {
     expect(updated.purchases?.[0].invoiceMonth).toBe("2026-09");
   });
 
+  it("preserves structured purchase fields across invoice installments", () => {
+    const [updated] = applyCreditPurchase([base], { cardId: 1, purchaseId: 700, description: "Fone", store: "Loja A", product: "Fone Bluetooth", category: "Lazer", buyer: "LEANDRO", total: 120, purchasedAt: "2026-08-12", installments: 2 });
+    expect(updated.purchases?.[0]).toMatchObject({ store: "Loja A", product: "Fone Bluetooth", category: "Lazer", buyer: "LEANDRO", installmentIndex: 1, installmentsTotal: 2 });
+    expect(updated.purchases?.[1]).toMatchObject({ store: "Loja A", product: "Fone Bluetooth", category: "Lazer", buyer: "LEANDRO", installmentIndex: 2, installmentsTotal: 2 });
+  });
+
   it("returns the next unpaid invoice and zero for paid invoice", () => {
     expect(creditCardInvoiceValue(base)).toBe(850);
     expect(creditCardInvoiceValue({ ...base, isPaid: true })).toBe(0);

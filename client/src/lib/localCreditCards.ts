@@ -3,6 +3,9 @@ export type CreditCardType = "individual" | "shared";
 export type CreditCardPurchase = {
   id: number;
   description: string;
+  store?: string;
+  product?: string;
+  category?: string;
   amount: string;
   purchasedAt: string;
   buyer: string;
@@ -141,7 +144,7 @@ export function removeCreditPurchase(cards: CreditCard[], purchaseId: number) {
   });
 }
 
-export function applyCreditPurchase(cards: CreditCard[], input: { cardId: number; purchaseId: number; description: string; buyer?: string; total: number; purchasedAt: string; installments: number }) {
+export function applyCreditPurchase(cards: CreditCard[], input: { cardId: number; purchaseId: number; description: string; store?: string; product?: string; category?: string; buyer?: string; total: number; purchasedAt: string; installments: number }) {
   const card = cards.find(item => item.id === input.cardId);
   if (!card) return cards;
   const count = Math.max(1, Math.floor(input.installments));
@@ -152,7 +155,7 @@ export function applyCreditPurchase(cards: CreditCard[], input: { cardId: number
   for (let index = 0; index < count; index += 1) {
     const amount = index === count - 1 ? Number((input.total - base * (count - 1)).toFixed(2)) : Number(base.toFixed(2));
     const invoiceMonth = addMonths(startMonth, index);
-    purchases.push({ id: input.purchaseId + index, purchaseId: input.purchaseId, description: `${input.description} (${index + 1}/${count})`, amount: amount.toFixed(2), purchasedAt: input.purchasedAt, buyer: input.buyer ?? "", installmentIndex: index + 1, installmentsTotal: count, invoiceMonth });
+    purchases.push({ id: input.purchaseId + index, purchaseId: input.purchaseId, description: `${input.description} (${index + 1}/${count})`, store: input.store, product: input.product, category: input.category, amount: amount.toFixed(2), purchasedAt: input.purchasedAt, buyer: input.buyer ?? "", installmentIndex: index + 1, installmentsTotal: count, invoiceMonth });
     invoices[invoiceMonth] = ((Number(invoices[invoiceMonth]) || 0) + amount).toFixed(2);
   }
   return cards.map(item => item.id === input.cardId ? { ...item, purchases, invoices, paidInvoices: { ...(item.paidInvoices ?? {}), [startMonth]: false }, invoiceAmount: invoices[item.invoiceMonth] ?? item.invoiceAmount, isPaid: false, updatedAt: new Date().toISOString() } : item);

@@ -417,3 +417,11 @@
 - [x] Converter investimentos em dólar para BRL pela cotação atual e incluir no total da carteira
 - [x] Persistir categorias personalizadas de lançamentos para reutilização
 - [x] Validar os fluxos, executar testes/build e enviar novo commit ao GitHub
+
+- [x] Permitir editar e excluir categorias personalizadas no modal de lançamentos
+- [x] Adicionar indicador de carregamento ao botão de atualização manual dos investimentos
+- [x] Substituir Comprador por lista compartilhada com compradores predefinidos e opção de adicionar outro
+- [x] Dividir a descrição de compras em campos Loja e Produto
+- [x] Adicionar filtros por categoria e comprador na aba Cartões
+- [x] Exportar fatura detalhada por comprador com data, loja, produto, parcela, valor da parcela e total
+- [x] Validar testes, build, responsividade e sincronizar o novo commit com o GitHub

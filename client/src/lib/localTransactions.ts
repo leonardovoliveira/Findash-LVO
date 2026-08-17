@@ -5,6 +5,8 @@ export type LocalTransaction = Omit<Transaction, "occurredAt" | "createdAt" | "u
   createdAt: string;
   updatedAt: string;
   icon?: string;
+  store?: string;
+  product?: string;
   paymentMethod?: PaymentMethod;
   creditCardId?: number;
   creditTotal?: string;

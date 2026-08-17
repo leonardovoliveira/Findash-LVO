@@ -48,3 +48,20 @@ export function addLocalCategory(categories: LocalCategory[], category: LocalCat
   if (categories.some(item => item.label.toLocaleLowerCase() === label.toLocaleLowerCase())) return categories;
   return [...categories, { label, icon: category.icon.trim() || "✦" }];
 }
+
+export function updateLocalCategory(categories: LocalCategory[], currentLabel: string, patch: LocalCategory) {
+  const label = patch.label.trim();
+  if (!label) return categories;
+  const duplicate = categories.some(item => item.label.toLocaleLowerCase() === label.toLocaleLowerCase() && item.label.toLocaleLowerCase() !== currentLabel.trim().toLocaleLowerCase());
+  if (duplicate) return categories;
+  return categories.map(item => item.label.toLocaleLowerCase() === currentLabel.trim().toLocaleLowerCase() ? { label, icon: patch.icon.trim() || item.icon || "✦" } : item);
+}
+
+export function deleteLocalCategory(categories: LocalCategory[], label: string) {
+  const normalized = label.trim().toLocaleLowerCase();
+  return categories.filter(item => item.label.toLocaleLowerCase() !== normalized);
+}
+
+export function isDefaultCategory(label: string) {
+  return defaults.some(item => item.label.toLocaleLowerCase() === label.trim().toLocaleLowerCase());
+}
