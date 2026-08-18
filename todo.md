@@ -527,3 +527,7 @@
 - [x] Calcular limite disponível considerando todas as faturas futuras em aberto
 - [x] Ajustar a barra de uso de limite para leitura clara em dispositivos móveis
 - [x] Cobrir o comprometimento futuro com Vitest, validar responsividade e publicar
+
+- [x] Permitir dar baixa e desfazer baixa da fatura no modal de detalhes
+- [x] Exibir tooltip na barra de limite com valor comprometido por parcelas futuras
+- [x] Cobrir ações e detalhamento com Vitest, validar visualmente e publicar

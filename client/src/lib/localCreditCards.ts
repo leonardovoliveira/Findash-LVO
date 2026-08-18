@@ -120,6 +120,10 @@ export function creditCardFutureCommitment(card: Pick<CreditCard, "invoiceAmount
   }, 0);
 }
 
+export function creditCardFutureInstallmentCommitment(card: Pick<CreditCard, "purchases" | "isPaid" | "paidInvoices">, month: string) {
+  return (card.purchases ?? []).filter(purchase => (purchase.installmentsTotal ?? 1) > 1 && Boolean(purchase.invoiceMonth) && purchase.invoiceMonth! > month && !creditCardIsInvoicePaid(card, purchase.invoiceMonth!)).reduce((sum, purchase) => sum + Math.max(0, Number(purchase.amount) || 0), 0);
+}
+
 export function creditCardAvailableLimit(card: Pick<CreditCard, "totalLimit" | "invoiceAmount" | "invoiceMonth" | "invoices" | "isPaid" | "paidInvoices">, month: string) {
   const totalLimit = Math.max(0, Number(card.totalLimit) || 0);
   return Math.max(0, totalLimit - creditCardFutureCommitment(card, month));
