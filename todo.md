@@ -523,3 +523,7 @@
 - [x] Criar cards de crédito com limite total, disponível e barra de uso
 - [x] Implementar animação de virada e modal detalhado da fatura em aberto
 - [x] Cobrir cálculos de limite com Vitest, validar visualmente e publicar
+
+- [x] Calcular limite disponível considerando todas as faturas futuras em aberto
+- [x] Ajustar a barra de uso de limite para leitura clara em dispositivos móveis
+- [x] Cobrir o comprometimento futuro com Vitest, validar responsividade e publicar

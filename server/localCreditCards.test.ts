@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { applyCreditPurchase, creditCardAvailableLimit, creditCardLimitUsagePercent, creditCardPurchaseInvoiceMonth, createLocalCreditCard, creditCardInvoiceMonths, creditCardInvoiceValue, creditCardIsInvoicePaid, deleteLocalCreditCard, isCreditCard, normalizeCreditCard, setCreditCardInvoicePaid, updateCreditPurchase, updateLocalCreditCard, type CreditCard } from "../client/src/lib/localCreditCards";
+import { applyCreditPurchase, creditCardAvailableLimit, creditCardFutureCommitment, creditCardLimitUsagePercent, creditCardPurchaseInvoiceMonth, createLocalCreditCard, creditCardInvoiceMonths, creditCardInvoiceValue, creditCardIsInvoicePaid, deleteLocalCreditCard, isCreditCard, normalizeCreditCard, setCreditCardInvoicePaid, updateCreditPurchase, updateLocalCreditCard, type CreditCard } from "../client/src/lib/localCreditCards";
 
 const base: CreditCard = { id: 1, userId: 1, name: "Visa principal", bank: "Banco", brand: "Visa", dueDay: 10, closingDay: 19, totalLimit: "5000", invoiceAmount: "850", invoiceMonth: "2026-08", isPaid: false, invoices: {}, cardType: "individual", purchases: [], createdAt: "2026-08-01T00:00:00.000Z", updatedAt: "2026-08-01T00:00:00.000Z" };
 
@@ -68,10 +68,11 @@ describe("local credit cards", () => {
   });
 
   it("calculates available limit and percentage used for the selected unpaid invoice", () => {
-    const card = { ...base, totalLimit: "5000", invoices: { "2026-08": "1250" } };
-    expect(creditCardAvailableLimit(card, "2026-08")).toBe(3750);
-    expect(creditCardLimitUsagePercent(card, "2026-08")).toBe(25);
-    expect(creditCardAvailableLimit({ ...card, paidInvoices: { "2026-08": true } }, "2026-08")).toBe(5000);
+    const card = { ...base, totalLimit: "5000", invoices: { "2026-08": "1250", "2026-09": "900" } };
+    expect(creditCardFutureCommitment(card, "2026-08")).toBe(2150);
+    expect(creditCardAvailableLimit(card, "2026-08")).toBe(2850);
+    expect(creditCardLimitUsagePercent(card, "2026-08")).toBe(43);
+    expect(creditCardAvailableLimit({ ...card, paidInvoices: { "2026-08": true } }, "2026-08")).toBe(4100);
   });
 
   it("applies equal monthly installments and rounds the final installment", () => {

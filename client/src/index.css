@@ -256,6 +256,46 @@
   @media (max-width: 1023px) {
     .glass-sidebar { display: none; }
   }
+
+  @media (max-width: 639px) {
+    article[role="button"][tabindex="0"] {
+      min-height: 272px;
+    }
+
+    article[role="button"][tabindex="0"] > div {
+      min-height: 272px;
+    }
+
+    article[role="button"][tabindex="0"] .glass-panel {
+      padding: 1rem;
+    }
+
+    article[role="button"][tabindex="0"] .glass-panel > div:nth-of-type(3) {
+      margin-top: 1rem;
+    }
+
+    article[role="button"][tabindex="0"] .glass-panel > div:nth-of-type(3) > div:first-child {
+      align-items: flex-end;
+      gap: 0.75rem;
+    }
+
+    article[role="button"][tabindex="0"] .glass-panel > div:nth-of-type(3) > div:first-child > p {
+      max-width: 8rem;
+      line-height: 1.25;
+      padding-bottom: 0.15rem;
+    }
+
+    article[role="button"][tabindex="0"] .glass-panel > div:nth-of-type(3) > div:nth-child(2) {
+      height: 0.65rem;
+      margin-top: 0.9rem;
+    }
+
+    article[role="button"][tabindex="0"] .glass-panel > div:nth-of-type(3) > p {
+      margin-top: 0.65rem;
+      font-size: 0.75rem;
+      line-height: 1.35;
+    }
+  }
 }
 
 @layer components {
