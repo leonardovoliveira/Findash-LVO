@@ -105,6 +105,16 @@ export function copyPreviousMonthBudget(budgets: MonthlyBudget[], targetMonth: s
   return source.reduce((next, budget) => createMonthlyBudget(next, { month: targetMonth, category: budget.category, kind: budget.kind, plannedAmount: budget.plannedAmount, notes: budget.notes }, now), budgets);
 }
 
+export function budgetCategoriesForMonth(budgets: MonthlyBudget[], month: string) {
+  const seen = new Set<string>();
+  return budgets.filter(budget => budget.month === month).map(budget => budget.category.trim()).filter(category => {
+    const key = category.toLocaleLowerCase("pt-BR");
+    if (!category || seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
 export function getBudgetSummary(budgets: MonthlyBudget[], transactions: LocalTransaction[], month: string, today = new Date()): BudgetSummary {
   const monthlyBudgets = budgets.filter(budget => budget.month === month).sort((a, b) => a.kind.localeCompare(b.kind) || a.category.localeCompare(b.category));
   const expenses = transactions.filter(transaction => transaction.type === "expense" && transaction.occurredAt.slice(0, 7) === month);

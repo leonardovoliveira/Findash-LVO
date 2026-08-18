@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { copyPreviousMonthBudget, createMonthlyBudget, getBudgetSummary, removeMonthlyBudget, updateMonthlyBudget } from "../client/src/lib/localBudgets";
+import { budgetCategoriesForMonth, copyPreviousMonthBudget, createMonthlyBudget, getBudgetSummary, removeMonthlyBudget, updateMonthlyBudget } from "../client/src/lib/localBudgets";
 import type { LocalTransaction } from "../client/src/lib/localTransactions";
 
 const transactions: LocalTransaction[] = [
@@ -9,6 +9,13 @@ const transactions: LocalTransaction[] = [
 ];
 
 describe("local budgets", () => {
+  it("returns unique budget categories for the selected month", () => {
+    const initial = createMonthlyBudget([], { month: "2026-08", category: "Moradia", kind: "fixed", plannedAmount: "1000" });
+    const current = createMonthlyBudget(initial, { month: "2026-08", category: " moradia ", kind: "variable", plannedAmount: "200" });
+    const budgets = createMonthlyBudget(current, { month: "2026-09", category: "Viagem", kind: "variable", plannedAmount: "400" });
+    expect(budgetCategoriesForMonth(budgets, "2026-08")).toEqual(["Moradia"]);
+  });
+
   it("creates, updates and removes monthly budget lines", () => {
     const created = createMonthlyBudget([], { month: "2026-08", category: "Moradia", kind: "fixed", plannedAmount: "1400" }, new Date("2026-08-01T12:00:00.000Z"));
     expect(created).toHaveLength(1);

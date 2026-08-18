@@ -21,7 +21,7 @@ import { dashboardWidgetKeys, type DashboardWidgetKey } from "@/lib/dashboardPre
 import { addLocalCategory, deleteLocalCategory, isDefaultCategory, loadLocalCategories, saveLocalCategories, updateLocalCategory, type LocalCategory } from "@/lib/localCategories";
 import CreditCardsPage, { NextInvoiceCard, type CreditCardForm } from "@/pages/CreditCardsPage";
 import BudgetPage, { type BudgetDraft } from "@/pages/BudgetPage";
-import { copyPreviousMonthBudget, createMonthlyBudget, loadLocalBudgets, removeMonthlyBudget, updateMonthlyBudget, type MonthlyBudget } from "@/lib/localBudgets";
+import { budgetCategoriesForMonth, copyPreviousMonthBudget, createMonthlyBudget, loadLocalBudgets, removeMonthlyBudget, updateMonthlyBudget, type MonthlyBudget } from "@/lib/localBudgets";
 import { Button } from "@/components/ui/button";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -75,6 +75,15 @@ export default function Home() {
   const [deleteRequest, setDeleteRequest] = useState<DeleteRequest | null>(null);
   const [pendingImport, setPendingImport] = useState<{ transactions: LocalTransaction[]; source: "Excel" | "JSON" } | null>(null);
   const [quickOperation, setQuickOperation] = useState<{ item: LocalInvestment; type: InvestmentOperationType } | null>(null);
+  useEffect(() => {
+    const budgetCategories = budgetCategoriesForMonth(budgets, `${year}-${String(month).padStart(2, "0")}`);
+    if (!budgetCategories.length) return;
+    setCategories(current => {
+      const known = new Set(current.map(category => category.label.trim().toLocaleLowerCase("pt-BR")));
+      const additions = budgetCategories.filter(category => !known.has(category.toLocaleLowerCase("pt-BR"))).map(label => ({ label, icon: "◎" }));
+      return additions.length ? [...current, ...additions] : current;
+    });
+  }, [budgets, month, year]);
   useEffect(() => {
     const startOperation = (event: Event) => {
       const detail = (event as CustomEvent<{ id: number; type: InvestmentOperationType }>).detail;

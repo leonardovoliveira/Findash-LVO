@@ -513,3 +513,8 @@
 - [x] Trocar detalhes por histórico de aplicações e resgates e ocultar expansão sem movimentações
 - [x] Adicionar ações rápidas de Aplicar e Resgatar nos cards de ativos
 - [x] Cobrir cotações e movimentações com Vitest, validar visualmente e publicar
+
+- [x] Exibir categorias configuradas no Orçamento entre as opções de saída
+- [x] Permitir rolagem completa no modal de lançamento de saída
+- [x] Remover o seletor global duplicado de mês e ano da página de cartões
+- [x] Cobrir a integração de categorias com testes, validar visualmente e publicar

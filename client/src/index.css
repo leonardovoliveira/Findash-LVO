@@ -225,6 +225,9 @@
     border-color: color-mix(in srgb, var(--foreground) 18%, transparent) !important;
     box-shadow: 0 28px 100px color-mix(in srgb, var(--foreground) 28%, transparent), 0 0 80px color-mix(in srgb, var(--primary) 14%, transparent), inset 0 1px color-mix(in srgb, var(--foreground) 10%, transparent);
     backdrop-filter: blur(30px) saturate(135%);
+    max-height: calc(100dvh - 1.5rem);
+    overflow-y: auto;
+    overscroll-behavior: contain;
   }
 
   .glass-modal input {
@@ -236,6 +239,11 @@
   .glass-modal input:focus {
     border-color: rgba(213, 151, 255, .75) !important;
     box-shadow: 0 0 0 3px rgba(190, 106, 255, .14), 0 0 24px rgba(190, 106, 255, .12);
+  }
+
+  body:has(select[aria-label="Selecionar competência"]) .glass-header > div > div:last-child > div:first-child,
+  body:has(select[aria-label="Selecionar competência"]) .glass-header + div > div:nth-child(2) {
+    display: none !important;
   }
 
   .app-shell .bg-primary {
