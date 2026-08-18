@@ -504,3 +504,6 @@
 
 - [x] Corrigir tooltips do menu lateral recolhido para não ficarem visíveis sem hover
 - [x] Validar o menu recolhido e publicar a correção
+
+- [x] Corrigir sobreposição dos rótulos do menu recolhido sobre os cards
+- [x] Validar e publicar a correção de camadas visuais
