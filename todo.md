@@ -501,3 +501,6 @@
 - [x] Validar e converter planilha Excel em lançamentos financeiros
 - [x] Solicitar confirmação antes de substituir os lançamentos atuais pela importação Excel
 - [x] Testar importação Excel, validar interface e publicar
+
+- [x] Corrigir tooltips do menu lateral recolhido para não ficarem visíveis sem hover
+- [x] Validar o menu recolhido e publicar a correção
