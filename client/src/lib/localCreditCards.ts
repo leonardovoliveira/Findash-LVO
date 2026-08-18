@@ -111,6 +111,19 @@ export function creditCardIsInvoicePaid(card: Pick<CreditCard, "isPaid" | "paidI
   return card.paidInvoices?.[month] ?? (month === (card as CreditCard).invoiceMonth ? card.isPaid : false);
 }
 
+export function creditCardAvailableLimit(card: Pick<CreditCard, "totalLimit" | "invoiceAmount" | "invoiceMonth" | "invoices" | "isPaid" | "paidInvoices">, month: string) {
+  const totalLimit = Math.max(0, Number(card.totalLimit) || 0);
+  const invoiceAmount = card.invoices?.[month] !== undefined ? Number(card.invoices[month]) || 0 : month === card.invoiceMonth ? Number(card.invoiceAmount) || 0 : 0;
+  const used = creditCardIsInvoicePaid(card, month) ? 0 : Math.max(0, invoiceAmount);
+  return Math.max(0, totalLimit - used);
+}
+
+export function creditCardLimitUsagePercent(card: Pick<CreditCard, "totalLimit" | "invoiceAmount" | "invoiceMonth" | "invoices" | "isPaid" | "paidInvoices">, month: string) {
+  const totalLimit = Number(card.totalLimit) || 0;
+  if (totalLimit <= 0) return 0;
+  return Math.min(100, Math.max(0, ((totalLimit - creditCardAvailableLimit(card, month)) / totalLimit) * 100));
+}
+
 export function setCreditCardInvoicePaid(cards: CreditCard[], cardId: number, month: string, paid: boolean) {
   return cards.map(card => {
     if (card.id !== cardId) return card;

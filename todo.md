@@ -518,3 +518,8 @@
 - [x] Permitir rolagem completa no modal de lançamento de saída
 - [x] Remover o seletor global duplicado de mês e ano da página de cartões
 - [x] Cobrir a integração de categorias com testes, validar visualmente e publicar
+
+- [x] Substituir o widget de quantidade de cartões pelo limite disponível total
+- [x] Criar cards de crédito com limite total, disponível e barra de uso
+- [x] Implementar animação de virada e modal detalhado da fatura em aberto
+- [x] Cobrir cálculos de limite com Vitest, validar visualmente e publicar
