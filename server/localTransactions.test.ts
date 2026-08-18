@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it } from "vitest";
-import { createLocalTransaction, exportJson, filterLocalTransactions, filterLocalTransactionsByInvoiceMonth, loadLocalTransactions, parseBackupJson, parseImportJson, saveLocalTransactions, type LocalTransaction } from "../client/src/lib/localTransactions";
+import * as XLSX from "xlsx";
+import { createLocalTransaction, exportJson, filterLocalTransactions, filterLocalTransactionsByInvoiceMonth, loadLocalTransactions, parseBackupJson, parseExcelTransactions, parseImportJson, saveLocalTransactions, type LocalTransaction } from "../client/src/lib/localTransactions";
 
 const transaction: LocalTransaction = {
   id: 1,
@@ -70,5 +71,26 @@ describe("local transaction backups", () => {
     saveLocalTransactions(7, [transaction]);
     expect(loadLocalTransactions(7)).toEqual([transaction]);
     expect(loadLocalTransactions(8)).toEqual([]);
+  });
+
+  it("imports the Lançamentos sheet from a Findash-compatible Excel workbook", () => {
+    const workbook = XLSX.utils.book_new();
+    const sheet = XLSX.utils.json_to_sheet([
+      { Data: "10/08/2026", Tipo: "Entrada", "Descrição": "Salário", Categoria: "Trabalho", Valor: 2500 },
+      { Data: "12/08/2026", Tipo: "Saída", "Descrição": "Mercado", Categoria: "Alimentação", Valor: "123,45" },
+    ]);
+    XLSX.utils.book_append_sheet(workbook, sheet, "Lançamentos");
+    const file = XLSX.write(workbook, { type: "array", bookType: "xlsx" });
+    const imported = parseExcelTransactions(file, 9, new Date("2026-08-17T12:00:00.000Z"));
+    expect(imported).toHaveLength(2);
+    expect(imported[0]).toMatchObject({ id: 1, userId: 9, type: "income", description: "Salário", amount: "2500.00", category: "Trabalho" });
+    expect(imported[1]).toMatchObject({ id: 2, type: "expense", amount: "123.45", category: "Alimentação" });
+  });
+
+  it("rejects Excel rows missing required launch fields", () => {
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, XLSX.utils.json_to_sheet([{ Data: "10/08/2026", Tipo: "Saída", Categoria: "Lazer", Valor: 40 }]), "Lançamentos");
+    const file = XLSX.write(workbook, { type: "array", bookType: "xlsx" });
+    expect(() => parseExcelTransactions(file, 9)).toThrow("Planilha inválida em linha 2");
   });
 });

@@ -496,3 +496,8 @@
 - [x] Criar página e item lateral Orçamento com despesas fixas e variáveis
 - [x] Implementar gamificação e estado de meta mensal atingida
 - [x] Cobrir cálculos de orçamento com Vitest, validar visualmente e publicar
+
+- [x] Permitir selecionar arquivos Excel no botão Importar
+- [x] Validar e converter planilha Excel em lançamentos financeiros
+- [x] Solicitar confirmação antes de substituir os lançamentos atuais pela importação Excel
+- [x] Testar importação Excel, validar interface e publicar
