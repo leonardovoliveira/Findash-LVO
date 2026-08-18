@@ -507,3 +507,9 @@
 
 - [x] Corrigir sobreposição dos rótulos do menu recolhido sobre os cards
 - [x] Validar e publicar a correção de camadas visuais
+
+- [x] Corrigir a busca de cotação automática para ativos negociados em bolsa
+- [x] Corrigir a consolidação e os valores exibidos das movimentações de investimentos
+- [x] Trocar detalhes por histórico de aplicações e resgates e ocultar expansão sem movimentações
+- [x] Adicionar ações rápidas de Aplicar e Resgatar nos cards de ativos
+- [x] Cobrir cotações e movimentações com Vitest, validar visualmente e publicar

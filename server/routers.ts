@@ -33,6 +33,33 @@ const stockQuoteInput = z.object({
 
 type MarketQuoteResult = { ok: true; ticker: string; price: number; changePercent: number | null; previousClose: number | null; currency: string; source: string; fetchedAt: string } | { ok: false; ticker: string; source: string; fetchedAt: string; error: string };
 
+function firstFinite(...values: unknown[]) {
+  for (const value of values) {
+    const parsed = typeof value === "number" ? value : Number(value);
+    if (Number.isFinite(parsed)) return parsed;
+  }
+  return null;
+}
+
+export function extractBrapiStockQuote(payload: unknown) {
+  const root = payload as { results?: Array<{ data?: Record<string, unknown> } & Record<string, unknown>>; currency?: Array<Record<string, unknown>>; coins?: Array<Record<string, unknown>> };
+  const result = root.results?.[0];
+  const stock = (result?.data ?? result ?? {}) as Record<string, unknown>;
+  const currency = root.currency?.[0] ?? {};
+  const crypto = root.coins?.[0] ?? {};
+  const price = firstFinite(stock.regularMarketPrice, stock.price, stock.close, currency.bid, crypto.regularMarketPrice, crypto.price);
+  if (price === null) return null;
+  const timestamp = stock.regularMarketTime ?? stock.updatedAt ?? currency.updatedAt ?? crypto.regularMarketTime;
+  const parsedTime = timestamp ? new Date(String(timestamp)) : null;
+  return {
+    price,
+    changePercent: firstFinite(stock.regularMarketChangePercent, stock.changePercent, currency.pctChange, crypto.regularMarketChangePercent),
+    previousClose: firstFinite(stock.regularMarketPreviousClose, stock.previousClose, crypto.regularMarketPreviousClose),
+    currency: String(stock.currency ?? currency.toCurrency ?? crypto.currency ?? "BRL"),
+    fetchedAt: parsedTime && Number.isFinite(parsedTime.getTime()) ? parsedTime.toISOString() : undefined,
+  };
+}
+
 export async function fetchMarketFallback(category: "dollar" | "crypto", ticker: string, fetchedAt: string, signal: AbortSignal, fetchImpl: typeof fetch = fetch): Promise<MarketQuoteResult> {
   if (category === "dollar") {
     const pair = ticker === "EUR-BRL" ? "EUR-BRL" : "USD-BRL";
@@ -217,14 +244,9 @@ export const appRouter = router({
           const url = `https://brapi.dev/api/v2/stocks/quote?symbols=${encodeURIComponent(ticker)}`;
           const response = await fetch(url, { headers, signal: controller.signal });
           if (!response.ok) return { ok: false as const, ticker, source: "brapi.dev", fetchedAt, error: `A fonte respondeu HTTP ${response.status}` };
-          const payload = await response.json() as any;
-          const stock = payload.results?.[0]?.data;
-          const currency = payload.currency?.[0];
-          const crypto = payload.coins?.[0];
-          const price = stock?.regularMarketPrice ?? Number(currency?.bid) ?? crypto?.regularMarketPrice;
-          const quoteTime = stock?.regularMarketTime ?? (currency?.updatedAt ? new Date(currency.updatedAt).toISOString() : crypto?.regularMarketTime) ?? fetchedAt;
-          if (!Number.isFinite(price)) return { ok: false as const, ticker, source: "brapi.dev", fetchedAt: quoteTime, error: "Ticker sem cotação disponível" };
-          return { ok: true as const, ticker, price, changePercent: stock?.regularMarketChangePercent ?? crypto?.regularMarketChange ?? null, previousClose: stock?.regularMarketPreviousClose ?? null, currency: stock?.currency ?? currency?.toCurrency ?? crypto?.currency ?? "BRL", source: "brapi.dev", fetchedAt: quoteTime };
+          const extracted = extractBrapiStockQuote(await response.json());
+          if (!extracted) return { ok: false as const, ticker, source: "brapi.dev", fetchedAt, error: "Ticker sem cotação disponível" };
+          return { ok: true as const, ticker, price: extracted.price, changePercent: extracted.changePercent, previousClose: extracted.previousClose, currency: extracted.currency, source: "brapi.dev", fetchedAt: extracted.fetchedAt ?? fetchedAt };
         } catch (error) {
           return { ok: false as const, ticker, source: "brapi.dev", fetchedAt, error: error instanceof Error && error.name === "AbortError" ? "Tempo limite da cotação excedido" : "Não foi possível consultar a cotação" };
         } finally {

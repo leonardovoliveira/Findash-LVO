@@ -1,7 +1,12 @@
 import { describe, expect, it, vi } from "vitest";
-import { fetchMarketFallback, fetchTreasuryHistory, fetchTreasuryQuote, treasurySymbolCandidates } from "./routers";
+import { extractBrapiStockQuote, fetchMarketFallback, fetchTreasuryHistory, fetchTreasuryQuote, treasurySymbolCandidates } from "./routers";
 
 describe("market quote fallbacks", () => {
+  it("reads quoted prices from the current and legacy brapi result shapes", () => {
+    expect(extractBrapiStockQuote({ results: [{ data: { regularMarketPrice: 101.26, regularMarketChangePercent: 0.19, regularMarketPreviousClose: 101.07, currency: "BRL" } }] })).toMatchObject({ price: 101.26, changePercent: 0.19, previousClose: 101.07, currency: "BRL" });
+    expect(extractBrapiStockQuote({ results: [{ regularMarketPrice: 25.5, changePercent: -1.2, previousClose: 25.8, currency: "BRL" }] })).toMatchObject({ price: 25.5, changePercent: -1.2, previousClose: 25.8, currency: "BRL" });
+  });
+
   it("maps ExchangeRate-API USD/BRL data", async () => {
     const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(new Response(JSON.stringify({ result: "success", rates: { BRL: 5.184431 }, time_last_update_unix: "1786752151" }), { status: 200 }));
     const result = await fetchMarketFallback("dollar", "USD-BRL", "2026-08-15T12:00:00.000Z", new AbortController().signal, fetchMock);

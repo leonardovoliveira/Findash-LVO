@@ -82,6 +82,14 @@ describe("local investments", () => {
     expect(investmentProfitability(updated).percent).toBe(20);
   });
 
+  it("keeps an existing legacy balance when an application is added to a position without operations", () => {
+    const updated = appendInvestmentOperation({ ...base, quantity: "5", averagePrice: "100", currentValue: "600", marketPrice: "120" }, { id: 2, type: "buy", quantity: "2", price: "110", date: "2026-03-01", institution: "Corretora" }, new Date("2026-03-02T00:00:00.000Z"));
+    expect(updated.quantity).toBe("7");
+    expect(Number(updated.averagePrice)).toBeCloseTo((5 * 100 + 2 * 110) / 7, 8);
+    expect(updated.operations).toHaveLength(2);
+    expect(updated.currentValue).toBe("840");
+  });
+
   it("consolidates the same ticker across institutions with a weighted average price", () => {
     const consolidated = consolidateInvestmentsByTicker([
       { ...base, id: 10, ticker: "GMAT3", institution: "C6", quantity: "200", averagePrice: "4.48", currentValue: "780" },

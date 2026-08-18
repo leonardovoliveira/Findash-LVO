@@ -17,6 +17,7 @@ export type InvestmentOperation = {
   quantity: string;
   price: string;
   date: string;
+  institution?: string;
 };
 
 export type InvestmentHistoryPoint = { date: string; value: string; currency?: "BRL" | "USD"; assetValue?: string; fxRate?: string };
@@ -112,7 +113,15 @@ export function consolidateInvestmentsByTicker(investments: LocalInvestment[]): 
     groups.set(key, [...(groups.get(key) ?? []), item]);
   }
   for (const group of Array.from(groups.values())) {
-    if (group.length === 1) { result.push(group[0]); continue; }
+    if (group.length === 1) {
+      const single = group[0];
+      const legacyDetails = single.institutionDetails?.length
+        ? single.institutionDetails.filter(detail => Number(detail.quantity) > 0 || Number(detail.costBasis) > 0)
+        : [{ institution: single.institution, quantity: single.quantity, averagePrice: single.averagePrice, costBasis: String(investmentCost(single)), currentValue: String(investmentMarketValue(single)), profit: String(investmentProfitability(single).profit), profitabilityPercent: String(investmentProfitability(single).percent), contractedRate: single.contractedRate, contractedBenchmark: single.contractedBenchmark, benchmarkAnnualRate: single.benchmarkAnnualRate }];
+      const institutionDetails = mergeInstitutionDetails(legacyDetails, single.marketPrice, single.category === "dollar" ? (Number(single.fxRate) || 1) : 1);
+      result.push({ ...single, institution: Array.from(new Set(institutionDetails.map(detail => detail.institution.trim()).filter(Boolean))).join(", ") || single.institution, institutionDetails });
+      continue;
+    }
     const first = group[0];
     const quantity = group.reduce((sum: number, item: LocalInvestment) => sum + (Number(item.quantity) || 0), 0);
     const costBasis = group.reduce((sum: number, item: LocalInvestment) => sum + investmentCost(item), 0);
@@ -193,8 +202,8 @@ export function investmentValue(item: Pick<LocalInvestment, "currentValue" | "qu
 export type InvestmentQuote = {
   ok: boolean;
   price?: number;
-  changePercent?: number;
-  previousClose?: number;
+  changePercent?: number | null;
+  previousClose?: number | null;
   source: string;
   fetchedAt: string;
   error?: string;
@@ -346,7 +355,11 @@ export function consolidateInvestmentOperations(operations: InvestmentOperation[
 }
 
 export function appendInvestmentOperation(item: LocalInvestment, operation: InvestmentOperation, now = new Date()): LocalInvestment {
-  const operations = [...(item.operations ?? []), operation];
+  const existingOperations = item.operations?.filter(candidate => Number(candidate.quantity) > 0 && Number(candidate.price) >= 0) ?? [];
+  const seededLegacyOperation = existingOperations.length || Number(item.quantity) <= 0
+    ? []
+    : [{ id: -Math.max(1, item.id), type: "buy" as const, quantity: item.quantity, price: item.averagePrice, date: item.createdAt.slice(0, 10), institution: item.institution }];
+  const operations = [...seededLegacyOperation, ...existingOperations, operation];
   const consolidated = consolidateInvestmentOperations(operations);
   const marketPrice = Number(item.marketPrice);
   return {
