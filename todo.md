@@ -531,3 +531,7 @@
 - [x] Permitir dar baixa e desfazer baixa da fatura no modal de detalhes
 - [x] Exibir tooltip na barra de limite com valor comprometido por parcelas futuras
 - [x] Cobrir ações e detalhamento com Vitest, validar visualmente e publicar
+
+- [x] Solicitar confirmação antes de desfazer a baixa de uma fatura
+- [x] Abrir detalhes dos lançamentos ao clicar em categorias do Orçamento
+- [x] Cobrir as novas interações com Vitest, validar visualmente e publicar

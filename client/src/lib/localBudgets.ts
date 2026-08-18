@@ -115,6 +115,11 @@ export function budgetCategoriesForMonth(budgets: MonthlyBudget[], month: string
   });
 }
 
+export function budgetCategoryTransactions(transactions: LocalTransaction[], month: string, category: string) {
+  const normalizedCategory = category.trim().toLocaleLowerCase("pt-BR");
+  return transactions.filter(transaction => transaction.type === "expense" && transaction.occurredAt.slice(0, 7) === month && transaction.category.trim().toLocaleLowerCase("pt-BR") === normalizedCategory).sort((a, b) => b.occurredAt.localeCompare(a.occurredAt));
+}
+
 export function getBudgetSummary(budgets: MonthlyBudget[], transactions: LocalTransaction[], month: string, today = new Date()): BudgetSummary {
   const monthlyBudgets = budgets.filter(budget => budget.month === month).sort((a, b) => a.kind.localeCompare(b.kind) || a.category.localeCompare(b.category));
   const expenses = transactions.filter(transaction => transaction.type === "expense" && transaction.occurredAt.slice(0, 7) === month);

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { budgetCategoriesForMonth, copyPreviousMonthBudget, createMonthlyBudget, getBudgetSummary, removeMonthlyBudget, updateMonthlyBudget } from "../client/src/lib/localBudgets";
+import { budgetCategoriesForMonth, budgetCategoryTransactions, copyPreviousMonthBudget, createMonthlyBudget, getBudgetSummary, removeMonthlyBudget, updateMonthlyBudget } from "../client/src/lib/localBudgets";
 import type { LocalTransaction } from "../client/src/lib/localTransactions";
 
 const transactions: LocalTransaction[] = [
@@ -14,6 +14,12 @@ describe("local budgets", () => {
     const current = createMonthlyBudget(initial, { month: "2026-08", category: " moradia ", kind: "variable", plannedAmount: "200" });
     const budgets = createMonthlyBudget(current, { month: "2026-09", category: "Viagem", kind: "variable", plannedAmount: "400" });
     expect(budgetCategoriesForMonth(budgets, "2026-08")).toEqual(["Moradia"]);
+  });
+
+  it("returns expense transactions from the selected month and category", () => {
+    const matches = budgetCategoryTransactions(transactions, "2026-08", "alimentação");
+    expect(matches).toHaveLength(1);
+    expect(matches[0]).toMatchObject({ description: "Mercado", category: "Alimentação", type: "expense" });
   });
 
   it("creates, updates and removes monthly budget lines", () => {
