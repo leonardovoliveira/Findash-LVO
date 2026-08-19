@@ -150,6 +150,10 @@ export function creditCardPurchaseInvoiceMonth(card: Pick<CreditCard, "closingDa
   return addMonths(month, day >= card.closingDay ? 1 : 0);
 }
 
+export function creditCardInvoiceMonthAfter(month: string, offset: number) {
+  return /^\d{4}-\d{2}$/.test(month) ? addMonths(month, offset) : month;
+}
+
 function addMonths(month: string, offset: number) {
   const [year, currentMonth] = month.split("-").map(Number);
   const date = new Date(year, currentMonth - 1 + offset, 1);

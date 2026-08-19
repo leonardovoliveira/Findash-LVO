@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { applyCreditPurchase, creditCardAvailableLimit, creditCardFutureCommitment, creditCardFutureInstallmentCommitment, creditCardLimitUsagePercent, creditCardPurchaseInvoiceMonth, createLocalCreditCard, creditCardInvoiceMonths, creditCardInvoiceValue, creditCardIsInvoicePaid, deleteLocalCreditCard, isCreditCard, normalizeCreditCard, setCreditCardInvoicePaid, updateCreditPurchase, updateLocalCreditCard, type CreditCard } from "../client/src/lib/localCreditCards";
+import { applyCreditPurchase, creditCardAvailableLimit, creditCardFutureCommitment, creditCardFutureInstallmentCommitment, creditCardInvoiceMonthAfter, creditCardLimitUsagePercent, creditCardPurchaseInvoiceMonth, createLocalCreditCard, creditCardInvoiceMonths, creditCardInvoiceValue, creditCardIsInvoicePaid, deleteLocalCreditCard, isCreditCard, normalizeCreditCard, setCreditCardInvoicePaid, updateCreditPurchase, updateLocalCreditCard, type CreditCard } from "../client/src/lib/localCreditCards";
 
 const base: CreditCard = { id: 1, userId: 1, name: "Visa principal", bank: "Banco", brand: "Visa", dueDay: 10, closingDay: 19, totalLimit: "5000", invoiceAmount: "850", invoiceMonth: "2026-08", isPaid: false, invoices: {}, cardType: "individual", purchases: [], createdAt: "2026-08-01T00:00:00.000Z", updatedAt: "2026-08-01T00:00:00.000Z" };
 
@@ -92,6 +92,12 @@ describe("local credit cards", () => {
     expect(creditCardIsInvoicePaid(paid[0], "2026-09")).toBe(true);
     expect(creditCardIsInvoicePaid(paid[0], "2026-08")).toBe(false);
     expect(paid[0].isPaid).toBe(false);
+  });
+
+  it("navigates invoice months across year boundaries", () => {
+    expect(creditCardInvoiceMonthAfter("2026-12", 1)).toBe("2027-01");
+    expect(creditCardInvoiceMonthAfter("2026-01", -1)).toBe("2025-12");
+    expect(creditCardInvoiceMonthAfter("invalid", 1)).toBe("invalid");
   });
 
   it("rejects invalid due dates", () => {

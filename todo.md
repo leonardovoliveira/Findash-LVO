@@ -535,3 +535,6 @@
 - [x] Solicitar confirmação antes de desfazer a baixa de uma fatura
 - [x] Abrir detalhes dos lançamentos ao clicar em categorias do Orçamento
 - [x] Cobrir as novas interações com Vitest, validar visualmente e publicar
+
+- [x] Adicionar navegação de fatura anterior e próxima no modal de cartões
+- [x] Cobrir a ordem de competências com Vitest, validar visualmente e publicar
