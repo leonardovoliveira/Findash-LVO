@@ -611,3 +611,4 @@
 - [x] Incluir gráfico de pizza de distribuição por instituição no extrato PDF de investimentos
 - [x] Cobrir backup, alerta e extrato com testes, validar responsividade e publicar
 - [x] Abrir modal glassmorphism com os lançamentos ao selecionar um dia no calendário
+- [x] Corrigir reinvestimento de CDB que é associado indevidamente a outro ativo

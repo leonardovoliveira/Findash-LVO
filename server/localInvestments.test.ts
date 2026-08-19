@@ -24,6 +24,17 @@ describe("local investments", () => {
     expect(created[1].createdAt).toBe("2026-02-01T00:00:00.000Z");
   });
 
+  it("keeps an existing ticker as the immediate target for a new investment operation", () => {
+    const cdb = { ...base, id: 10, ticker: "CDB C6 POS LD", category: "fixed-income" as const, institution: "C6", quantity: "1", averagePrice: "450", currentValue: "450", operations: [{ id: 10, type: "buy" as const, quantity: "1", price: "450", date: "2026-08-18" }] };
+    const gmat3 = { ...base, id: 11, ticker: "GMAT3", category: "equities" as const, institution: "C6", quantity: "200", averagePrice: "4.48", currentValue: "896" };
+    const created = createLocalInvestment([cdb, gmat3], { ...cdb, quantity: "0", averagePrice: "0", currentValue: "0", operations: [] }, new Date("2026-08-19T00:00:00.000Z"));
+    const target = created.at(-1)!;
+    const updated = appendInvestmentOperation(target, { id: 12, type: "buy", quantity: "1", price: "950", date: "2026-08-19", institution: "C6" });
+    expect(target.ticker).toBe("CDB C6 POS LD");
+    expect(updated.operations?.some(operation => operation.price === "950")).toBe(true);
+    expect(created.find(item => item.ticker === "GMAT3")?.operations).toBeUndefined();
+  });
+
   it("accepts every requested investment category", () => {
     expect(investmentCategories.map(category => category.value)).toEqual(["fixed-income", "equities", "funds", "treasury", "dollar", "crypto"]);
     expect(investmentCategories).toHaveLength(6);

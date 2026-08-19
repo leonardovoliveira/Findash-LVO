@@ -480,7 +480,10 @@ export function createLocalInvestment(
   now = new Date(),
 ) {
   const iso = now.toISOString();
-  return consolidateInvestmentsByTicker([...investments, { ...input, id: investments.reduce((max, item) => Math.max(max, item.id), 0) + 1, createdAt: iso, updatedAt: iso }]);
+  const consolidated = consolidateInvestmentsByTicker([...investments, { ...input, id: investments.reduce((max, item) => Math.max(max, item.id), 0) + 1, createdAt: iso, updatedAt: iso }]);
+  const targetTicker = input.ticker.trim().toUpperCase();
+  const target = consolidated.find(item => item.ticker.trim().toUpperCase() === targetTicker);
+  return target ? [...consolidated.filter(item => item.id !== target.id), target] : consolidated;
 }
 
 export function isLocalInvestment(value: unknown): value is LocalInvestment {
