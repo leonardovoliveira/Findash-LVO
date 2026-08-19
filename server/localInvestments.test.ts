@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { appendInvestmentOperation, applyInvestmentQuote, consolidateInvestmentOperations, consolidateInvestmentsByTicker, createLocalInvestment, investmentAccruedValue, investmentCategories, investmentCost, investmentMarketValue, investmentPerformanceHistory, investmentProfitability, investmentValue, investmentValueAtDate, isLocalInvestment, normalizeInstitutionName, recordDailyInvestmentHistory, recalculateConsolidatedInvestment, type LocalInvestment } from "../client/src/lib/localInvestments";
+import { appendInvestmentOperation, applyInvestmentQuote, canonicalInstitutionName, consolidateInvestmentOperations, consolidateInvestmentsByTicker, createLocalInvestment, filterInvestmentsByInstitution, investmentAccruedValue, investmentCategories, investmentCost, investmentInstitutionAllocations, investmentMarketValue, investmentPerformanceHistory, investmentProfitability, investmentValue, investmentValueAtDate, isLocalInvestment, normalizeInstitutionName, recordDailyInvestmentHistory, recalculateConsolidatedInvestment, removeInvestmentOperation, updateInvestmentOperation, type LocalInvestment } from "../client/src/lib/localInvestments";
 
 const base: LocalInvestment = {
   id: 1,
@@ -99,7 +99,7 @@ describe("local investments", () => {
     expect(consolidated[0].ticker).toBe("GMAT3");
     expect(consolidated[0].quantity).toBe("300");
     expect(Number(consolidated[0].averagePrice)).toBeCloseTo((200 * 4.48 + 100 * 6.97) / 300, 8);
-    expect(consolidated[0].institution).toBe("C6, INTER");
+    expect(consolidated[0].institution).toBe("C6, Inter");
   });
 
   it("merges institution names without differentiating case", () => {
@@ -113,6 +113,35 @@ describe("local investments", () => {
     expect(consolidated[0].institutionDetails?.[0].quantity).toBe("15");
   });
 
+  it("uses catalog spelling for known institutions", () => {
+    expect(canonicalInstitutionName("  INTER ")).toBe("Inter");
+    expect(canonicalInstitutionName("c6")).toBe("C6");
+  });
+
+  it("filters positions by institution without differentiating case", () => {
+    const positions = [{ ...base, institution: "Inter" }, { ...base, id: 2, institution: "C6" }];
+    expect(filterInvestmentsByInstitution(positions, "INTER").map(item => item.id)).toEqual([1]);
+  });
+
+  it("does not duplicate a legacy position total across combined institution labels", () => {
+    const allocations = investmentInstitutionAllocations({ ...base, institution: "C6, INTER", quantity: "10", averagePrice: "100", currentValue: "1000" });
+    expect(allocations).toEqual([
+      { name: "C6", value: 500, currency: "BRL" },
+      { name: "INTER", value: 500, currency: "BRL" },
+    ]);
+    expect(allocations.reduce((sum, entry) => sum + entry.value, 0)).toBe(1000);
+  });
+
+  it("edits and removes an individual investment operation with recalculation", () => {
+    const item = appendInvestmentOperation({ ...base, quantity: "0", averagePrice: "0", currentValue: "0", operations: [] }, { id: 1, type: "buy", quantity: "10", price: "100", date: "2026-01-01" });
+    const updated = updateInvestmentOperation(item, { id: 1, type: "buy", quantity: "5", price: "120", date: "2026-01-02" });
+    expect(updated.quantity).toBe("5");
+    expect(updated.averagePrice).toBe("120");
+    const removed = removeInvestmentOperation(updated, 1);
+    expect(removed.quantity).toBe("0");
+    expect(removed.operations).toEqual([]);
+  });
+
   it("recalculates a consolidated position after editing one institution", () => {
     const [item] = consolidateInvestmentsByTicker([
       { ...base, id: 10, ticker: "GMAT3", institution: "C6", quantity: "200", averagePrice: "4.48", currentValue: "780" },
@@ -121,7 +150,7 @@ describe("local investments", () => {
     const updated = recalculateConsolidatedInvestment(item, (item.institutionDetails ?? []).map((detail, index) => index === 1 ? { ...detail, quantity: "120", averagePrice: "7.10", costBasis: "852", currentValue: "900" } : detail));
     expect(updated.quantity).toBe("320");
     expect(Number(updated.averagePrice)).toBeCloseTo((200 * 4.48 + 120 * 7.10) / 320, 8);
-    expect(updated.institution).toBe("C6, INTER");
+    expect(updated.institution).toBe("C6, Inter");
   });
 
   it("calculates contracted fixed-income profitability from a benchmark", () => {

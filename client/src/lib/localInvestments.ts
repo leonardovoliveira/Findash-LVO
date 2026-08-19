@@ -81,6 +81,52 @@ export function normalizeInstitutionName(value: string) {
   return value.trim().replace(/\s+/g, " ").toLocaleLowerCase("pt-BR");
 }
 
+export const standardInvestmentInstitutions = ["C6", "Inter", "Nomad", "XP", "BTG Pactual", "Itaú", "Nubank", "Rico", "Clear", "Ágora", "Banco do Brasil", "Caixa", "Santander", "Bradesco"] as const;
+
+/** Usa a grafia oficial do catálogo quando a instituição já é conhecida. */
+export function canonicalInstitutionName(value: string) {
+  const trimmed = value.trim().replace(/\s+/g, " ");
+  const canonical = standardInvestmentInstitutions.find(item => normalizeInstitutionName(item) === normalizeInstitutionName(trimmed));
+  return canonical ?? trimmed;
+}
+
+export function investmentInstitutionCatalog(investments: LocalInvestment[]) {
+  const discovered = investments.flatMap(item => (item.institutionDetails?.length ? item.institutionDetails.map(detail => detail.institution) : [item.institution]))
+    .flatMap(value => value.split(","))
+    .map(canonicalInstitutionName)
+    .filter(Boolean);
+  return Array.from(new Map([...standardInvestmentInstitutions, ...discovered].map(name => [normalizeInstitutionName(name), name])).values()).sort((a, b) => a.localeCompare(b, "pt-BR"));
+}
+
+export type InvestmentInstitutionAllocation = { name: string; value: number; currency: "BRL" | "USD" };
+
+/** Distribui o valor de mercado sem duplicar posições legadas que listam mais de uma instituição. */
+export function investmentInstitutionAllocations(item: LocalInvestment): InvestmentInstitutionAllocation[] {
+  const currency = item.category === "dollar" ? "USD" : "BRL";
+  const conversion = item.category === "dollar" ? (Number(item.fxRate) || 1) : 1;
+  const marketValue = investmentMarketValue(item) / conversion;
+  const details = item.institutionDetails?.length
+    ? item.institutionDetails.map(detail => ({ institution: detail.institution, value: Number(detail.currentValue) / conversion }))
+    : [{ institution: item.institution, value: marketValue }];
+  const grouped = new Map<string, InvestmentInstitutionAllocation>();
+  for (const detail of details) {
+    const names = detail.institution.split(",").map(name => name.trim()).filter(Boolean);
+    const valuePerInstitution = (Number.isFinite(detail.value) ? detail.value : 0) / Math.max(1, names.length);
+    for (const name of names.length ? names : ["Sem instituição"]) {
+      const key = normalizeInstitutionName(name) || "sem instituição";
+      const previous = grouped.get(key);
+      grouped.set(key, { name: previous?.name ?? name, value: (previous?.value ?? 0) + valuePerInstitution, currency });
+    }
+  }
+  return Array.from(grouped.values());
+}
+
+export function filterInvestmentsByInstitution(investments: LocalInvestment[], query: string) {
+  const normalizedQuery = normalizeInstitutionName(query);
+  if (!normalizedQuery) return investments;
+  return investments.filter(item => investmentInstitutionAllocations(item).some(entry => normalizeInstitutionName(entry.name).includes(normalizedQuery)));
+}
+
 const STORAGE_PREFIX = "findash-lvo:investments:";
 
 export function investmentStorageKey(userId: number | string) {
@@ -97,7 +143,7 @@ function mergeInstitutionDetails(details: InvestmentInstitutionDetail[], marketP
     const currentValue = Number.isFinite(quote) && String(marketPrice ?? "").trim() ? quantity * quote * conversionRate : (Number(detail.currentValue) > 0 ? Number(detail.currentValue) : costBasis);
     const previous = grouped.get(key);
     if (!previous) {
-      grouped.set(key, { ...detail, institution: detail.institution.trim(), quantity: String(quantity), averagePrice: String(quantity > 0 ? costBasis / quantity : 0), costBasis: String(costBasis), currentValue: String(currentValue), profit: String(currentValue - costBasis), profitabilityPercent: costBasis > 0 ? String(((currentValue - costBasis) / costBasis) * 100) : "0" });
+      grouped.set(key, { ...detail, institution: canonicalInstitutionName(detail.institution), quantity: String(quantity), averagePrice: String(quantity > 0 ? costBasis / quantity : 0), costBasis: String(costBasis), currentValue: String(currentValue), profit: String(currentValue - costBasis), profitabilityPercent: costBasis > 0 ? String(((currentValue - costBasis) / costBasis) * 100) : "0" });
       continue;
     }
     const totalQuantity = Number(previous.quantity) + quantity;
@@ -376,6 +422,32 @@ export function appendInvestmentOperation(item: LocalInvestment, operation: Inve
     realizedProfit: String(consolidated.realizedProfit),
     updatedAt: now.toISOString(),
   };
+}
+
+function rebuildInvestmentFromOperations(item: LocalInvestment, operations: InvestmentOperation[], now: Date) {
+  const consolidated = consolidateInvestmentOperations(operations);
+  const marketPrice = Number(item.marketPrice);
+  return {
+    ...item,
+    operations,
+    quantity: String(consolidated.quantity),
+    averagePrice: String(consolidated.averagePrice),
+    currentValue: item.marketPrice?.trim() && Number.isFinite(marketPrice) ? String(consolidated.quantity * marketPrice * (item.category === "dollar" ? (Number(item.fxRate) || 1) : 1)) : String(consolidated.costBasis * (item.category === "dollar" ? (Number(item.fxRate) || 1) : 1)),
+    realizedProfit: String(consolidated.realizedProfit),
+    updatedAt: now.toISOString(),
+  };
+}
+
+/** Atualiza uma movimentação mantendo os cálculos consolidados de quantidade e preço médio. */
+export function updateInvestmentOperation(item: LocalInvestment, operation: InvestmentOperation, now = new Date()) {
+  const operations = (item.operations ?? []).map(current => current.id === operation.id ? operation : current);
+  return operations.some(current => current.id === operation.id) ? rebuildInvestmentFromOperations(item, operations, now) : item;
+}
+
+/** Exclui uma movimentação individual e recalcula a posição restante. */
+export function removeInvestmentOperation(item: LocalInvestment, operationId: number, now = new Date()) {
+  const operations = (item.operations ?? []).filter(current => current.id !== operationId);
+  return operations.length !== (item.operations ?? []).length ? rebuildInvestmentFromOperations(item, operations, now) : item;
 }
 
 export function investmentProfitability(item: LocalInvestment) {

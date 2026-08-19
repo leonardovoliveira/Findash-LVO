@@ -588,3 +588,9 @@
 
 - [x] Consolidar instituições de investimento sem diferenciar maiúsculas e minúsculas nos cards e gráficos
 - [x] Cobrir a normalização de instituições com testes e publicar a atualização
+
+- [x] Corrigir o valor distribuído por instituição para não repetir o total consolidado do ativo
+- [x] Criar cadastro padronizado de instituições reutilizável no formulário de investimentos
+- [x] Adicionar filtro e busca de ativos por instituição na tela de investimentos
+- [x] Permitir editar ou excluir cada movimentação individual de investimento
+- [x] Cobrir os novos cálculos e fluxos com testes, validar responsividade e publicar
