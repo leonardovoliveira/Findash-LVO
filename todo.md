@@ -594,3 +594,8 @@
 - [x] Adicionar filtro e busca de ativos por instituição na tela de investimentos
 - [x] Permitir editar ou excluir cada movimentação individual de investimento
 - [x] Cobrir os novos cálculos e fluxos com testes, validar responsividade e publicar
+
+- [x] Gerar PDF de fatura individual somente com os lançamentos e o total do comprador selecionado
+- [x] Remover a área global de movimentações individuais e levar editar/excluir para o card do ativo
+- [x] Ajustar a densidade, altura e visualização dos widgets do Orçamento em telas móveis
+- [x] Cobrir os ajustes com testes, validar em desktop/mobile e publicar

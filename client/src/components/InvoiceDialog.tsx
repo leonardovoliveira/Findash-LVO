@@ -46,7 +46,7 @@ export default function InvoiceDialog({ card, month, onClose, onTogglePaid }: { 
   const selectMonth = (value: string) => { setViewMonth(value); setBuyer("all"); setConfirmReversal(false); };
   const buildPdf = async (download = true) => {
     const { exportCreditCardInvoicePdf } = await import("@/lib/financialExports");
-    return exportCreditCardInvoicePdf({ card, month: viewMonth, purchases: filteredPurchases, invoiceAmount: exportAmount, isPaid: paid, futureInstallmentCount: futureCount, futureInstallmentAmount: futureAmount, userName: user?.name ?? "Usuário Findash", userEmail: user?.email ?? "", buyerFilterLabel: buyer === "all" ? "Todos os compradores" : buyer, download });
+    return exportCreditCardInvoicePdf({ card, month: viewMonth, purchases: filteredPurchases, invoiceAmount: exportAmount, isPaid: paid, buyerFilterLabel: buyer === "all" ? "Todos os compradores" : buyer, download });
   };
   const exportPdf = async () => { try { await buildPdf(); toast.success("PDF da fatura gerado"); } catch { toast.error("Não foi possível gerar o PDF da fatura"); } };
   const share = async (channel: "email" | "whatsapp") => {

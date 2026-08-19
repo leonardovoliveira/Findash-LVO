@@ -244,20 +244,17 @@ export function exportCreditCardInvoicePdf({
   purchases,
   invoiceAmount,
   isPaid,
-  futureInstallmentCount,
-  futureInstallmentAmount,
-  userName,
-  userEmail,
   buyerFilterLabel = "Todos os compradores",
   download = true,
 }: {
-  card: Pick<CreditCard, "name" | "brand" | "dueDay" | "totalLimit">;
+  card: Pick<CreditCard, "name" | "brand" | "dueDay">;
   month: string;
   purchases: CreditCardPurchase[];
   invoiceAmount: number;
   isPaid: boolean;
-  futureInstallmentCount: number;
-  futureInstallmentAmount: number;
+  /** Campos aceitos somente para compatibilidade com fluxos antigos; não são exibidos no PDF individual. */
+  futureInstallmentCount?: number;
+  futureInstallmentAmount?: number;
   userName?: string;
   userEmail?: string;
   buyerFilterLabel?: string;
@@ -289,67 +286,57 @@ export function exportCreditCardInvoicePdf({
     doc.text(`Gerado em ${new Date().toLocaleString("pt-BR")}`, pageWidth - margin, 21, { align: "right" });
     doc.setTextColor(171, 166, 188);
     doc.setFontSize(8);
-    doc.text(`Titular: ${pdfSafeText(userName || "Usuário Findash", 42)}`, margin, 34);
-    if (userEmail) doc.text(pdfSafeText(userEmail, 44), margin, 39);
+    doc.text(`Comprador: ${pdfSafeText(buyerFilterLabel, 42)}`, margin, 34);
   };
   paintPage();
   heading();
   doc.setFillColor(31, 28, 43);
-  doc.roundedRect(margin, 47, pageWidth - margin * 2, 31, 5, 5, "F");
+  doc.roundedRect(margin, 43, pageWidth - margin * 2, 31, 5, 5, "F");
   doc.setTextColor(245, 243, 255);
   doc.setFont("helvetica", "bold");
   doc.setFontSize(16);
-  doc.text(`Fatura de ${pdfSafeText(card.name, 34)}`, margin + 7, 59);
+  doc.text(`Fatura de ${pdfSafeText(buyerFilterLabel, 34)}`, margin + 7, 55);
   doc.setTextColor(177, 169, 202);
   doc.setFont("helvetica", "normal");
   doc.setFontSize(9);
-  doc.text(`${card.brand} · competência ${invoiceMonthLabel(month)}`, margin + 7, 67);
-  doc.text(`Vencimento dia ${card.dueDay}`, pageWidth - margin - 7, 59, { align: "right" });
+  doc.text(`${pdfSafeText(card.name, 20)} · ${card.brand} · competência ${invoiceMonthLabel(month)}`, margin + 7, 63);
+  doc.text(`Vencimento dia ${card.dueDay}`, pageWidth - margin - 7, 55, { align: "right" });
   doc.setTextColor(isPaid ? 110 : 250, isPaid ? 231 : 204, isPaid ? 183 : 21);
   doc.setFont("helvetica", "bold");
-  doc.text(isPaid ? "FATURA PAGA" : "EM ABERTO", pageWidth - margin - 7, 67, { align: "right" });
-
-  const summary = [
-    ["Valor da fatura", brl.format(invoiceAmount), [245, 243, 255] as const],
-    ["Parcelas futuras", `${futureInstallmentCount} · ${brl.format(futureInstallmentAmount)}`, [251, 191, 36] as const],
-    ["Limite total", brl.format(Number(card.totalLimit) || 0), purple],
-  ];
-  summary.forEach(([label, value, color], index) => {
-    const width = (pageWidth - margin * 2 - 8) / 3;
-    const x = margin + index * (width + 4);
-    doc.setFillColor(27, 25, 38);
-    doc.roundedRect(x, 86, width, 25, 4, 4, "F");
-    doc.setTextColor(166, 158, 185);
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(8);
-    doc.text(String(label), x + 4, 94);
-    doc.setTextColor(...(color as [number, number, number]));
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(10);
-    doc.text(pdfSafeText(String(value), 22), x + 4, 104);
-  });
+  doc.text(isPaid ? "FATURA PAGA" : "EM ABERTO", pageWidth - margin - 7, 63, { align: "right" });
 
   doc.setFillColor(27, 25, 38);
-  doc.roundedRect(margin, 119, pageWidth - margin * 2, 49, 4, 4, "F");
+  doc.roundedRect(margin, 82, pageWidth - margin * 2, 25, 4, 4, "F");
+  doc.setTextColor(166, 158, 185);
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(8);
+  doc.text(`Total da fatura — ${pdfSafeText(buyerFilterLabel, 28)}`, margin + 5, 91);
+  doc.setTextColor(245, 243, 255);
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(13);
+  doc.text(brl.format(invoiceAmount), margin + 5, 101);
+
+  doc.setFillColor(27, 25, 38);
+  doc.roundedRect(margin, 115, pageWidth - margin * 2, 49, 4, 4, "F");
   doc.setTextColor(245, 243, 255);
   doc.setFont("helvetica", "bold");
   doc.setFontSize(11);
-  doc.text("Distribuição por categoria", margin + 5, 128);
+  doc.text("Distribuição por categoria", margin + 5, 124);
   doc.setFont("helvetica", "normal");
   doc.setTextColor(171, 166, 188);
   doc.setFontSize(7.5);
-  doc.text(`Filtro aplicado: ${buyerFilterLabel}`, pageWidth - margin - 5, 128, { align: "right" });
-  const chartItems = drawInvoiceCategoryPie(doc, categories, margin + 25, 147, 14);
+  doc.text(`Comprador: ${buyerFilterLabel}`, pageWidth - margin - 5, 124, { align: "right" });
+  const chartItems = drawInvoiceCategoryPie(doc, categories, margin + 25, 143, 14);
   if (!chartItems.length) {
     doc.setTextColor(171, 166, 188);
     doc.setFontSize(8);
-    doc.text("Sem gastos por categoria para esta seleção.", margin + 52, 150);
+    doc.text("Sem gastos por categoria para esta seleção.", margin + 52, 146);
   } else {
     chartItems.forEach((item, index) => {
       const row = index % 3;
       const column = index < 3 ? 0 : 1;
       const x = margin + 52 + column * 67;
-      const y = 139 + row * 9;
+      const y = 135 + row * 9;
       doc.setFillColor(...item.color);
       doc.roundedRect(x, y - 3, 3, 3, 0.5, 0.5, "F");
       doc.setTextColor(215, 210, 229);
@@ -359,7 +346,7 @@ export function exportCreditCardInvoicePdf({
     });
   }
 
-  let y = 181;
+  let y = 177;
   const rowHeader = () => {
     doc.setTextColor(245, 243, 255);
     doc.setFont("helvetica", "bold");
