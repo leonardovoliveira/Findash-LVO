@@ -30,6 +30,7 @@ vi.mock("jspdf", () => ({
     setLineWidth() {}
     line() {}
     lines() {}
+    output() { return new Blob(["pdf"], { type: "application/pdf" }); }
     save = save;
   },
 }));

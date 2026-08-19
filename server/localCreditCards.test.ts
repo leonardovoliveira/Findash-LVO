@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { applyCreditPurchase, creditCardAvailableLimit, creditCardFutureCommitment, creditCardFutureInstallmentCommitment, creditCardFutureInstallmentCount, creditCardInvoiceMonthAfter, creditCardLimitUsagePercent, creditCardPurchaseInvoiceMonth, createLocalCreditCard, creditCardInvoiceMonths, creditCardInvoiceValue, creditCardIsInvoicePaid, deleteLocalCreditCard, isCreditCard, normalizeCreditCard, setCreditCardInvoicePaid, updateCreditPurchase, updateLocalCreditCard, type CreditCard } from "../client/src/lib/localCreditCards";
+import { applyCreditPurchase, creditCardAvailableLimit, creditCardFutureCommitment, creditCardFutureInstallmentCommitment, creditCardFutureInstallmentCount, creditCardInvoiceComparison, creditCardInvoiceMonthAfter, creditCardLimitUsagePercent, creditCardPurchaseInvoiceMonth, createLocalCreditCard, creditCardInvoiceMonths, creditCardInvoiceValue, creditCardIsInvoicePaid, deleteLocalCreditCard, isCreditCard, normalizeCreditCard, setCreditCardInvoicePaid, updateCreditPurchase, updateLocalCreditCard, type CreditCard } from "../client/src/lib/localCreditCards";
 
-const base: CreditCard = { id: 1, userId: 1, name: "Visa principal", bank: "Banco", brand: "Visa", dueDay: 10, closingDay: 19, totalLimit: "5000", invoiceAmount: "850", invoiceMonth: "2026-08", isPaid: false, invoices: {}, cardType: "individual", purchases: [], createdAt: "2026-08-01T00:00:00.000Z", updatedAt: "2026-08-01T00:00:00.000Z" };
+const base: CreditCard = { id: 1, userId: 1, name: "Visa principal", bank: "Banco", bankAddress: "", brand: "Visa", dueDay: 10, closingDay: 19, totalLimit: "5000", invoiceAmount: "850", invoiceMonth: "2026-08", isPaid: false, invoices: {}, cardType: "individual", purchases: [], createdAt: "2026-08-01T00:00:00.000Z", updatedAt: "2026-08-01T00:00:00.000Z" };
 
 describe("local credit cards", () => {
   it("creates an incremental card with timestamps and normalized defaults", () => {
@@ -99,6 +99,12 @@ describe("local credit cards", () => {
     expect(creditCardInvoiceMonthAfter("2026-12", 1)).toBe("2027-01");
     expect(creditCardInvoiceMonthAfter("2026-01", -1)).toBe("2025-12");
     expect(creditCardInvoiceMonthAfter("invalid", 1)).toBe("invalid");
+  });
+
+  it("compares the current invoice against the prior competency", () => {
+    const card = { ...base, invoices: { "2026-07": "500", "2026-08": "650" } };
+    expect(creditCardInvoiceComparison(card, "2026-08")).toMatchObject({ previousMonth: "2026-07", previous: 500, current: 650, difference: 150, percentage: 30 });
+    expect(creditCardInvoiceComparison(card, "2026-06")).toMatchObject({ previous: 0, current: 0, percentage: null });
   });
 
   it("rejects invalid due dates", () => {

@@ -554,3 +554,10 @@
 - [x] Incluir gráfico de pizza por categoria no PDF da fatura
 - [x] Permitir filtrar a exportação da fatura por comprador ou todos
 - [x] Cobrir PDF e filtros com Vitest, validar responsividade e publicar
+
+- [x] Adicionar logotipo visual e endereço configurável do banco ao cabeçalho da fatura em PDF
+- [x] Implementar compartilhamento da fatura por e-mail e WhatsApp após gerar o PDF
+- [x] Exibir comparação entre a competência atual e o mês anterior no modal de fatura
+- [x] Reorganizar o cabeçalho do modal em título completo e controles em linha separada
+- [x] Corrigir o rodapé do modal para que seletor e botões sejam sempre visíveis e não sofram corte
+- [x] Cobrir os novos cálculos e comportamentos com Vitest, validar em desktop/mobile e publicar

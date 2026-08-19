@@ -20,6 +20,8 @@ export type CreditCard = {
   userId: number;
   name: string;
   bank: string;
+  /** Endereço informado pelo usuário para identificação no cabeçalho do PDF. */
+  bankAddress?: string;
   brand: string;
   dueDay: number;
   /** Dia do mês em que a fatura fecha; compras nesse dia já entram na próxima competência. */
@@ -44,6 +46,7 @@ export function creditCardStorageKey(userId: number | string) { return `${STORAG
 export function normalizeCreditCard(card: CreditCard): CreditCard {
   return {
     ...card,
+    bankAddress: typeof card.bankAddress === "string" ? card.bankAddress.trim() : "",
     cardType: card.cardType === "shared" ? "shared" : "individual",
     closingDay: Number.isInteger(card.closingDay) && card.closingDay >= 1 && card.closingDay <= 31 ? card.closingDay : Math.max(1, Math.min(31, card.dueDay - 6)),
     purchases: Array.isArray(card.purchases) ? card.purchases : [],
@@ -89,7 +92,7 @@ export function isCreditCard(value: unknown): value is CreditCard {
     return Number.isInteger(item.id) && typeof item.description === "string" && Number(item.amount) >= 0 && typeof item.purchasedAt === "string" && typeof item.buyer === "string";
   }));
   const closingDay = typeof card.closingDay === "number" ? card.closingDay : NaN;
-  return Number.isInteger(card.id) && typeof card.userId === "number" && typeof card.name === "string" && card.name.trim().length > 0 && typeof card.bank === "string" && typeof card.brand === "string" && Number.isInteger(dueDay) && dueDay >= 1 && dueDay <= 31 && (card.closingDay === undefined || (Number.isInteger(closingDay) && closingDay >= 1 && closingDay <= 31)) && typeof card.totalLimit === "string" && Number(card.totalLimit) >= 0 && typeof card.invoiceAmount === "string" && Number(card.invoiceAmount) >= 0 && typeof card.invoiceMonth === "string" && /^\d{4}-\d{2}$/.test(card.invoiceMonth) && typeof card.isPaid === "boolean" && validType && validPurchases && (card.invoices === undefined || (typeof card.invoices === "object" && card.invoices !== null)) && typeof card.createdAt === "string" && typeof card.updatedAt === "string";
+  return Number.isInteger(card.id) && typeof card.userId === "number" && typeof card.name === "string" && card.name.trim().length > 0 && typeof card.bank === "string" && (card.bankAddress === undefined || typeof card.bankAddress === "string") && typeof card.brand === "string" && Number.isInteger(dueDay) && dueDay >= 1 && dueDay <= 31 && (card.closingDay === undefined || (Number.isInteger(closingDay) && closingDay >= 1 && closingDay <= 31)) && typeof card.totalLimit === "string" && Number(card.totalLimit) >= 0 && typeof card.invoiceAmount === "string" && Number(card.invoiceAmount) >= 0 && typeof card.invoiceMonth === "string" && /^\d{4}-\d{2}$/.test(card.invoiceMonth) && typeof card.isPaid === "boolean" && validType && validPurchases && (card.invoices === undefined || (typeof card.invoices === "object" && card.invoices !== null)) && typeof card.createdAt === "string" && typeof card.updatedAt === "string";
 }
 
 export function creditCardInvoiceAmount(card: Pick<CreditCard, "invoiceAmount" | "invoiceMonth" | "invoices">) {
@@ -98,6 +101,14 @@ export function creditCardInvoiceAmount(card: Pick<CreditCard, "invoiceAmount" |
 }
 
 export function creditCardInvoiceValue(card: Pick<CreditCard, "invoiceAmount" | "invoiceMonth" | "invoices" | "isPaid" | "paidInvoices">) { return creditCardIsInvoicePaid(card, card.invoiceMonth) ? 0 : creditCardInvoiceAmount(card); }
+
+export function creditCardInvoiceComparison(card: Pick<CreditCard, "invoiceAmount" | "invoiceMonth" | "invoices">, month: string) {
+  const previousMonth = creditCardInvoiceMonthAfter(month, -1);
+  const current = Number(card.invoices?.[month] ?? (month === card.invoiceMonth ? card.invoiceAmount : 0)) || 0;
+  const previous = Number(card.invoices?.[previousMonth] ?? (previousMonth === card.invoiceMonth ? card.invoiceAmount : 0)) || 0;
+  const difference = current - previous;
+  return { current, previous, previousMonth, difference, percentage: previous > 0 ? (difference / previous) * 100 : null };
+}
 
 
 export function creditCardInvoiceMonths(card: Pick<CreditCard, "invoiceMonth" | "invoices" | "purchases">) {
