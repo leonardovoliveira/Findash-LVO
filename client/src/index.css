@@ -315,6 +315,35 @@
       font-size: 0.75rem;
       line-height: 1.35;
     }
+
+    [data-slot="dialog-content"].glass-modal:has(select[aria-label="Selecionar competência da fatura"]) {
+      max-height: calc(100dvh - 0.5rem);
+      padding: 0.75rem;
+    }
+
+    [data-slot="dialog-content"].glass-modal:has(select[aria-label="Selecionar competência da fatura"]) [data-slot="dialog-header"] {
+      gap: 0.65rem;
+    }
+
+    [data-slot="dialog-content"].glass-modal:has(select[aria-label="Selecionar competência da fatura"]) [data-slot="dialog-title"] {
+      font-size: 1.05rem;
+    }
+
+    [data-slot="dialog-content"].glass-modal:has(select[aria-label="Selecionar competência da fatura"]) [data-slot="dialog-footer"] {
+      padding-top: 0.75rem;
+    }
+
+    [data-slot="dialog-content"].glass-modal:has(select[aria-label="Selecionar competência da fatura"]) [data-slot="dialog-footer"] p {
+      line-height: 1.3;
+    }
+  }
+
+  .glass-modal:has(input[placeholder="Ex.: BOVA11, CDB"]) form > div.grid:has(> div:nth-child(4) button:first-child.border-primary\/50) > div:nth-child(5) {
+    display: none;
+  }
+
+  .glass-modal:has(input[placeholder="Ex.: BOVA11, CDB"]) form > div.grid:has(> div:nth-child(4) button:first-child.border-primary\/50) > div:nth-child(6) {
+    grid-column: 1 / -1;
   }
 }
 

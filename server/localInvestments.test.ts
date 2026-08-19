@@ -178,6 +178,14 @@ describe("local investments", () => {
     expect(updated.fxRate).toBe("5");
   });
 
+  it("preserves the USD unit price as the average price after a purchase", () => {
+    const item = { ...base, category: "dollar" as const, quantity: "0", averagePrice: "0", currentValue: "0", fxRate: "5", operations: [] };
+    const updated = appendInvestmentOperation(item, { id: 1, type: "buy", quantity: "24", price: "12.29", date: "2026-08-19" });
+    expect(Number(updated.averagePrice)).toBeCloseTo(12.29, 8);
+    expect(investmentCost(updated)).toBeCloseTo(1474.8, 8);
+    expect(Number(updated.currentValue)).toBeCloseTo(1474.8, 8);
+  });
+
   it("resolves a historical USD point using its own FX rate", () => {
     const item = { ...base, category: "dollar" as const, quantity: "1", averagePrice: "650", currentValue: "3250", marketPrice: "650", fxRate: "5", dailyHistory: [{ date: "2026-08-10", value: "650", currency: "USD" as const, fxRate: "5" }] };
     expect(investmentValueAtDate(item, new Date("2026-08-10T12:00:00.000Z"))).toBe(3250);

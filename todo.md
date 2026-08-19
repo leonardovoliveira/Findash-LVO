@@ -565,3 +565,10 @@
 - [x] Corrigir a sobreposição dos indicadores de valor no modal de fatura
 - [x] Reorganizar as ações do rodapé para eliminar botões cortados ou concorrentes
 - [x] Validar o modal de fatura em larguras desktop e mobile, executar testes e publicar
+
+- [x] Agrupar compartilhamento de fatura em um único menu suspenso
+- [x] Criar apresentação compacta da fatura para telas móveis pequenas
+- [x] Remover nome e endereço do banco do cabeçalho do PDF de fatura
+- [x] Corrigir a preservação do preço médio de operações em USD
+- [x] Ocultar o campo Quantidade no formulário de investimentos de renda fixa
+- [x] Cobrir os ajustes com testes, validar responsividade e publicar

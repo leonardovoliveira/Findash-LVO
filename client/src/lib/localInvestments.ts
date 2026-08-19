@@ -367,7 +367,7 @@ export function appendInvestmentOperation(item: LocalInvestment, operation: Inve
     operations,
     quantity: String(consolidated.quantity),
     averagePrice: String(consolidated.averagePrice),
-    currentValue: item.marketPrice?.trim() && Number.isFinite(marketPrice) ? String(consolidated.quantity * marketPrice * (item.category === "dollar" ? (Number(item.fxRate) || 1) : 1)) : String(consolidated.costBasis),
+    currentValue: item.marketPrice?.trim() && Number.isFinite(marketPrice) ? String(consolidated.quantity * marketPrice * (item.category === "dollar" ? (Number(item.fxRate) || 1) : 1)) : String(consolidated.costBasis * (item.category === "dollar" ? (Number(item.fxRate) || 1) : 1)),
     realizedProfit: String(consolidated.realizedProfit),
     updatedAt: now.toISOString(),
   };

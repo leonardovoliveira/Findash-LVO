@@ -263,7 +263,7 @@ export function exportCreditCardInvoicePdf({
   buyerFilterLabel = "Todos os compradores",
   download = true,
 }: {
-  card: Pick<CreditCard, "name" | "bank" | "bankAddress" | "brand" | "dueDay" | "totalLimit">;
+  card: Pick<CreditCard, "name" | "brand" | "dueDay" | "totalLimit">;
   month: string;
   purchases: CreditCardPurchase[];
   invoiceAmount: number;
@@ -283,7 +283,6 @@ export function exportCreditCardInvoicePdf({
   const categories = invoiceCategorySummary(purchases);
   const safeCardName = card.name.toLowerCase().replace(/[^a-z0-9]+/gi, "-").replace(/(^-|-$)/g, "");
   const filename = `findash-lvo-fatura-${safeCardName || "cartao"}-${month}.pdf`;
-  const bankMonogram = (card.bank || "Banco").trim().split(/\s+/).slice(0, 2).map(part => part[0]).join("").toUpperCase().slice(0, 2) || "BK";
   const paintPage = () => {
     doc.setFillColor(13, 14, 21);
     doc.rect(0, 0, pageWidth, pageHeight, "F");
@@ -304,21 +303,6 @@ export function exportCreditCardInvoicePdf({
     doc.setFontSize(8);
     doc.text(`Titular: ${pdfSafeText(userName || "Usuário Findash", 42)}`, margin, 34);
     if (userEmail) doc.text(pdfSafeText(userEmail, 44), margin, 39);
-    doc.setFillColor(31, 28, 43);
-    doc.roundedRect(pageWidth - margin - 53, 31, 53, 16, 3, 3, "F");
-    doc.setFillColor(139, 92, 246);
-    doc.roundedRect(pageWidth - margin - 49, 34, 10, 10, 2, 2, "F");
-    doc.setTextColor(255, 255, 255);
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(6);
-    doc.text(bankMonogram, pageWidth - margin - 44, 40.5, { align: "center" });
-    doc.setTextColor(236, 232, 255);
-    doc.setFontSize(7.5);
-    doc.text(pdfSafeText(card.bank || "Banco emissor", 18), pageWidth - margin - 5, 38, { align: "right" });
-    doc.setFont("helvetica", "normal");
-    doc.setTextColor(171, 166, 188);
-    doc.setFontSize(5.8);
-    doc.text(pdfSafeText(card.bankAddress?.trim() || "Endereço do banco não informado", 38), pageWidth - margin - 5, 42.5, { align: "right" });
   };
   paintPage();
   heading();
@@ -331,7 +315,7 @@ export function exportCreditCardInvoicePdf({
   doc.setTextColor(177, 169, 202);
   doc.setFont("helvetica", "normal");
   doc.setFontSize(9);
-  doc.text(`${card.bank} · ${card.brand} · competência ${invoiceMonthLabel(month)}`, margin + 7, 67);
+  doc.text(`${card.brand} · competência ${invoiceMonthLabel(month)}`, margin + 7, 67);
   doc.text(`Vencimento dia ${card.dueDay}`, pageWidth - margin - 7, 59, { align: "right" });
   doc.setTextColor(isPaid ? 110 : 250, isPaid ? 231 : 204, isPaid ? 183 : 21);
   doc.setFont("helvetica", "bold");
