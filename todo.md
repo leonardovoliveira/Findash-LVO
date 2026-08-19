@@ -582,3 +582,6 @@
 - [x] Fortalecer validação, isolamento por usuário e proteção contra conteúdo inseguro
 - [x] Otimizar carregamento e divisão de código sem reduzir funcionalidades
 - [x] Executar testes, build, revisão visual e publicar relatório técnico da revisão
+
+- [x] Corrigir a validação de estado financeiro para aceitar dados históricos legítimos sem permitir payloads inseguros
+- [x] Cobrir a compatibilidade retroativa da sincronização com testes e publicar a correção

@@ -6,10 +6,12 @@ const FORBIDDEN_KEYS = new Set(["__proto__", "prototype", "constructor"]);
 
 function isSafeJsonValue(value: unknown, depth = 0): boolean {
   if (depth > 16) return false;
-  if (value === null || typeof value === "string" || typeof value === "boolean") return true;
+  // Campos opcionais de versões anteriores podem chegar como undefined pelo SuperJSON.
+  if (value === undefined || value === null || typeof value === "string" || typeof value === "boolean") return true;
   if (typeof value === "number") return Number.isFinite(value);
   if (Array.isArray(value)) return value.length <= MAX_COLLECTION_ITEMS && value.every(item => isSafeJsonValue(item, depth + 1));
   if (typeof value !== "object") return false;
+  if (value instanceof Date) return Number.isFinite(value.getTime());
   const prototype = Object.getPrototypeOf(value);
   if (prototype !== Object.prototype && prototype !== null) return false;
   return Object.entries(value).every(([key, item]) => !FORBIDDEN_KEYS.has(key) && isSafeJsonValue(item, depth + 1));
