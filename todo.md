@@ -544,3 +544,7 @@
 - [x] Criar estado vazio informativo para faturas sem compras
 - [x] Ajustar dimensões e rolagem do modal para evitar cortes
 - [x] Cobrir os novos cálculos com Vitest, validar visualmente e publicar
+
+- [x] Gerar PDF estilizado com os detalhes da fatura atual
+- [x] Adicionar botão de exportação em PDF ao modal da fatura
+- [x] Cobrir os dados exportados com Vitest, validar o fluxo e publicar

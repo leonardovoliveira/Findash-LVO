@@ -65,4 +65,10 @@ describe("financial exports", () => {
     exportFinancialPdf({ transactions: [transaction], investments: [investment], creditCards: [card], income: 2500, expense: 0, performance: [{ month: "Ago", balance: 2500 }] });
     expect(save).toHaveBeenCalledOnce();
   });
+
+  it("saves a styled credit card invoice PDF", async () => {
+    const { exportCreditCardInvoicePdf } = await import("./financialExports");
+    exportCreditCardInvoicePdf({ card, month: "2026-08", purchases: [], invoiceAmount: 300, isPaid: false, futureInstallmentCount: 2, futureInstallmentAmount: 120 });
+    expect(save).toHaveBeenCalledWith("findash-lvo-fatura-platinum-2026-08.pdf");
+  });
 });

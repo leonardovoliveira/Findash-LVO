@@ -2,7 +2,7 @@ import { jsPDF } from "jspdf";
 import * as XLSX from "xlsx";
 import type { LocalTransaction } from "./localTransactions";
 import type { LocalInvestment } from "./localInvestments";
-import type { CreditCard } from "./localCreditCards";
+import type { CreditCard, CreditCardPurchase } from "./localCreditCards";
 
 const brl = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
 
@@ -198,4 +198,157 @@ export function exportFinancialPdf({
   doc.setFontSize(8);
   doc.text("Os dados deste relatório foram gerados a partir do armazenamento local deste navegador.", margin, y);
   downloadPdf(doc, `findash-lvo-relatorio-${new Date().toISOString().slice(0, 10)}.pdf`);
+}
+
+function invoiceMonthLabel(month: string) {
+  const [year, value] = month.split("-").map(Number);
+  return new Intl.DateTimeFormat("pt-BR", { month: "long", year: "numeric" }).format(new Date(year, value - 1, 1));
+}
+
+function pdfSafeText(value: string, limit: number) {
+  return value.length > limit ? `${value.slice(0, Math.max(0, limit - 1))}…` : value;
+}
+
+export function exportCreditCardInvoicePdf({
+  card,
+  month,
+  purchases,
+  invoiceAmount,
+  isPaid,
+  futureInstallmentCount,
+  futureInstallmentAmount,
+}: {
+  card: Pick<CreditCard, "name" | "bank" | "brand" | "dueDay" | "totalLimit">;
+  month: string;
+  purchases: CreditCardPurchase[];
+  invoiceAmount: number;
+  isPaid: boolean;
+  futureInstallmentCount: number;
+  futureInstallmentAmount: number;
+}) {
+  const doc = new jsPDF({ unit: "mm", format: "a4" });
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = 297;
+  const margin = 14;
+  const purple = [139, 92, 246] as const;
+  const paintPage = () => {
+    doc.setFillColor(13, 14, 21);
+    doc.rect(0, 0, pageWidth, pageHeight, "F");
+  };
+  const heading = () => {
+    doc.setTextColor(236, 232, 255);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(21);
+    doc.text("Findash LVO", margin, 21);
+    doc.setTextColor(...purple);
+    doc.setFontSize(9);
+    doc.text("FATURA DE CARTÃO", margin, 28);
+    doc.setTextColor(171, 166, 188);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(9);
+    doc.text(`Gerado em ${new Date().toLocaleString("pt-BR")}`, pageWidth - margin, 21, { align: "right" });
+  };
+  paintPage();
+  heading();
+  doc.setFillColor(31, 28, 43);
+  doc.roundedRect(margin, 37, pageWidth - margin * 2, 31, 5, 5, "F");
+  doc.setTextColor(245, 243, 255);
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(16);
+  doc.text(`Fatura de ${pdfSafeText(card.name, 34)}`, margin + 7, 49);
+  doc.setTextColor(177, 169, 202);
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(9);
+  doc.text(`${card.bank} · ${card.brand} · competência ${invoiceMonthLabel(month)}`, margin + 7, 57);
+  doc.text(`Vencimento dia ${card.dueDay}`, pageWidth - margin - 7, 49, { align: "right" });
+  doc.setTextColor(isPaid ? 110 : 250, isPaid ? 231 : 204, isPaid ? 183 : 21);
+  doc.setFont("helvetica", "bold");
+  doc.text(isPaid ? "FATURA PAGA" : "EM ABERTO", pageWidth - margin - 7, 57, { align: "right" });
+
+  const summary = [
+    ["Valor da fatura", brl.format(invoiceAmount), [245, 243, 255] as const],
+    ["Parcelas futuras", `${futureInstallmentCount} · ${brl.format(futureInstallmentAmount)}`, [251, 191, 36] as const],
+    ["Limite total", brl.format(Number(card.totalLimit) || 0), purple],
+  ];
+  summary.forEach(([label, value, color], index) => {
+    const width = (pageWidth - margin * 2 - 8) / 3;
+    const x = margin + index * (width + 4);
+    doc.setFillColor(27, 25, 38);
+    doc.roundedRect(x, 76, width, 25, 4, 4, "F");
+    doc.setTextColor(166, 158, 185);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(8);
+    doc.text(String(label), x + 4, 84);
+    doc.setTextColor(...(color as [number, number, number]));
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(10);
+    doc.text(pdfSafeText(String(value), 22), x + 4, 94);
+  });
+
+  let y = 114;
+  const rowHeader = () => {
+    doc.setTextColor(245, 243, 255);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(12);
+    doc.text("Lançamentos da fatura", margin, y);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(164, 156, 185);
+    doc.setFontSize(8);
+    doc.text(`${purchases.length} compra(s)`, pageWidth - margin, y, { align: "right" });
+    y += 8;
+    doc.setFillColor(37, 34, 51);
+    doc.roundedRect(margin, y - 5, pageWidth - margin * 2, 7, 2, 2, "F");
+    doc.setTextColor(187, 181, 203);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(7);
+    doc.text("DATA", margin + 3, y);
+    doc.text("ESTABELECIMENTO / PRODUTO", margin + 24, y);
+    doc.text("PARCELA", pageWidth - 62, y);
+    doc.text("VALOR", pageWidth - margin - 3, y, { align: "right" });
+    y += 7;
+  };
+  rowHeader();
+  if (!purchases.length) {
+    doc.setFillColor(26, 24, 36);
+    doc.roundedRect(margin, y, pageWidth - margin * 2, 28, 4, 4, "F");
+    doc.setTextColor(185, 178, 203);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(10);
+    doc.text("Nenhuma compra foi registrada nesta competência.", pageWidth / 2, y + 13, { align: "center" });
+    doc.setFontSize(8);
+    doc.text("Consulte outra competência para visualizar os lançamentos do cartão.", pageWidth / 2, y + 19, { align: "center" });
+  } else {
+    purchases.forEach((purchase, index) => {
+      if (y > 274) {
+        doc.addPage();
+        paintPage();
+        heading();
+        y = 48;
+        rowHeader();
+      }
+      if (index % 2 === 0) {
+        doc.setFillColor(25, 23, 34);
+        doc.roundedRect(margin, y - 4.5, pageWidth - margin * 2, 7, 1.5, 1.5, "F");
+      }
+      const date = purchase.purchasedAt ? new Date(purchase.purchasedAt).toLocaleDateString("pt-BR") : "—";
+      const title = pdfSafeText(purchase.store ?? purchase.description, 34);
+      const product = purchase.product ? ` · ${pdfSafeText(purchase.product, 25)}` : "";
+      doc.setTextColor(197, 191, 211);
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(7.5);
+      doc.text(date, margin + 3, y);
+      doc.text(`${title}${product}`, margin + 24, y);
+      doc.text(`${purchase.installmentIndex ?? 1}/${purchase.installmentsTotal ?? 1}`, pageWidth - 60, y);
+      doc.setTextColor(245, 243, 255);
+      doc.setFont("helvetica", "bold");
+      doc.text(brl.format(Number(purchase.amount) || 0), pageWidth - margin - 3, y, { align: "right" });
+      y += 8;
+    });
+  }
+  doc.setTextColor(138, 132, 156);
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(7);
+  doc.text("Documento gerado pelo Findash LVO para conferência pessoal.", margin, pageHeight - 12);
+  const safeCardName = card.name.toLowerCase().replace(/[^a-z0-9]+/gi, "-").replace(/(^-|-$)/g, "");
+  downloadPdf(doc, `findash-lvo-fatura-${safeCardName || "cartao"}-${month}.pdf`);
 }
