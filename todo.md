@@ -574,3 +574,5 @@
 - [x] Cobrir os ajustes com testes, validar responsividade e publicar
 
 - [x] Remover o texto auxiliar do card de orçamento, mantendo toda a área interativa
+
+- [x] Adicionar feedback visual de clique e indicador discreto de detalhes no hover dos cards de orçamento
