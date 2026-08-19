@@ -538,3 +538,9 @@
 
 - [x] Adicionar navegação de fatura anterior e próxima no modal de cartões
 - [x] Cobrir a ordem de competências com Vitest, validar visualmente e publicar
+
+- [x] Adicionar seletor direto de mês no modal de fatura
+- [x] Exibir indicador de parcelas futuras por competência
+- [x] Criar estado vazio informativo para faturas sem compras
+- [x] Ajustar dimensões e rolagem do modal para evitar cortes
+- [x] Cobrir os novos cálculos com Vitest, validar visualmente e publicar

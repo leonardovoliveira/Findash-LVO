@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { applyCreditPurchase, creditCardAvailableLimit, creditCardFutureCommitment, creditCardFutureInstallmentCommitment, creditCardInvoiceMonthAfter, creditCardLimitUsagePercent, creditCardPurchaseInvoiceMonth, createLocalCreditCard, creditCardInvoiceMonths, creditCardInvoiceValue, creditCardIsInvoicePaid, deleteLocalCreditCard, isCreditCard, normalizeCreditCard, setCreditCardInvoicePaid, updateCreditPurchase, updateLocalCreditCard, type CreditCard } from "../client/src/lib/localCreditCards";
+import { applyCreditPurchase, creditCardAvailableLimit, creditCardFutureCommitment, creditCardFutureInstallmentCommitment, creditCardFutureInstallmentCount, creditCardInvoiceMonthAfter, creditCardLimitUsagePercent, creditCardPurchaseInvoiceMonth, createLocalCreditCard, creditCardInvoiceMonths, creditCardInvoiceValue, creditCardIsInvoicePaid, deleteLocalCreditCard, isCreditCard, normalizeCreditCard, setCreditCardInvoicePaid, updateCreditPurchase, updateLocalCreditCard, type CreditCard } from "../client/src/lib/localCreditCards";
 
 const base: CreditCard = { id: 1, userId: 1, name: "Visa principal", bank: "Banco", brand: "Visa", dueDay: 10, closingDay: 19, totalLimit: "5000", invoiceAmount: "850", invoiceMonth: "2026-08", isPaid: false, invoices: {}, cardType: "individual", purchases: [], createdAt: "2026-08-01T00:00:00.000Z", updatedAt: "2026-08-01T00:00:00.000Z" };
 
@@ -82,6 +82,7 @@ describe("local credit cards", () => {
     expect(cards[0].purchases?.map(purchase => purchase.installmentIndex)).toEqual([1, 2, 3]);
     expect(creditCardInvoiceValue(cards[0])).toBe(33.33);
     expect(creditCardFutureInstallmentCommitment(cards[0], "2026-08")).toBe(66.67);
+    expect(creditCardFutureInstallmentCount(cards[0], "2026-08")).toBe(2);
   });
 
   it("navigates invoice competencies and stores payment independently by month", () => {
