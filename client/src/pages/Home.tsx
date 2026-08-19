@@ -13,7 +13,7 @@ import {
   type LocalTransaction,
   type PaymentMethod,
 } from "@/lib/localTransactions";
-import { appendInvestmentOperation, applyInvestmentQuote, createLocalInvestment, investmentAccruedValue, investmentCategories, investmentCost, investmentMarketValue, investmentPerformanceHistory, investmentProfitability, investmentValueAtDate, loadLocalInvestments, recalculateConsolidatedInvestment, recordDailyInvestmentHistory, type ContractedBenchmark, type InvestmentCategory, type LocalInvestment, type InvestmentOperationType } from "@/lib/localInvestments";
+import { appendInvestmentOperation, applyInvestmentQuote, createLocalInvestment, investmentAccruedValue, investmentCategories, investmentCost, investmentMarketValue, investmentPerformanceHistory, investmentProfitability, investmentValueAtDate, loadLocalInvestments, normalizeInstitutionName, recalculateConsolidatedInvestment, recordDailyInvestmentHistory, type ContractedBenchmark, type InvestmentCategory, type LocalInvestment, type InvestmentOperationType } from "@/lib/localInvestments";
 import { applyCreditPurchase, createLocalCreditCard, creditCardPurchaseInvoiceMonth, deleteLocalCreditCard, loadLocalCreditCards, removeCreditPurchase, setCreditCardInvoicePaid, updateLocalCreditCard, type CreditCard } from "@/lib/localCreditCards";
 import { type DashboardWidgetKey } from "@/lib/dashboardPreferences";
 import { addLocalCategory, deleteLocalCategory, isDefaultCategory, loadLocalCategories, updateLocalCategory, type LocalCategory } from "@/lib/localCategories";
@@ -460,13 +460,13 @@ function Dashboard({ summary, transactions, month, year, selectedDate, paymentFi
     acc[label] = { value: (acc[label]?.value ?? 0) + value, currency };
     return acc;
   }, {})) as Array<[string, { value: number; currency: "BRL" | "USD" }]>).map(([name, entry]) => ({ name, value: Number(entry.value), currency: entry.currency }));
-  const allocationByInstitution = (Object.entries(investments.reduce((acc: Record<string, { value: number; currency: "BRL" | "USD" }>, item: LocalInvestment) => {
+  const allocationByInstitution = (Object.values(investments.reduce((acc: Record<string, { name: string; value: number; currency: "BRL" | "USD" }>, item: LocalInvestment) => {
     const currency = item.category === "dollar" ? "USD" : "BRL";
     const conversion = item.category === "dollar" ? (Number(item.fxRate) || 1) : 1;
     const details = item.institutionDetails?.length ? item.institutionDetails : [{ institution: item.institution, currentValue: String(investmentMarketValue(item)) }];
-    details.forEach((detail: any) => detail.institution.split(",").map((name: string) => name.trim()).filter(Boolean).forEach((name: string) => { acc[name] = { value: (acc[name]?.value ?? 0) + (Number(detail.currentValue) || 0) / conversion, currency }; }));
+    details.forEach((detail: any) => detail.institution.split(",").map((name: string) => name.trim()).filter(Boolean).forEach((name: string) => { const key = normalizeInstitutionName(name); const previous = acc[key]; acc[key] = { name: previous?.name ?? name, value: (previous?.value ?? 0) + (Number(detail.currentValue) || 0) / conversion, currency }; }));
     return acc;
-  }, {})) as Array<[string, { value: number; currency: "BRL" | "USD" }]>).map(([name, entry]) => ({ name, value: Number(entry.value), currency: entry.currency }));
+  }, {})) as Array<{ name: string; value: number; currency: "BRL" | "USD" }>).map(entry => ({ name: entry.name, value: Number(entry.value), currency: entry.currency }));
   const widgetMap: Record<DashboardWidgetKey, React.ReactNode> = {
     market: <MarketWidgets quotes={marketWidgetQuotes} />,
     currency: <section className="glass-panel rounded-3xl border p-5"><p className="text-sm font-medium">Carteira em moedas</p><p className="mt-1 text-xs text-muted-foreground">Ativos da categoria dólar são exibidos em USD nos seus cards individuais.</p><div className="mt-4 grid grid-cols-2 gap-3"><div className="rounded-2xl bg-primary/10 p-3"><p className="text-xs text-muted-foreground">Posições</p><p className="mt-1 text-xl font-semibold">{investments.length}</p></div><div className="rounded-2xl bg-violet-400/10 p-3"><p className="text-xs text-muted-foreground">Categorias</p><p className="mt-1 text-xl font-semibold">{new Set(investments.map((item: LocalInvestment) => item.category)).size}</p></div></div></section>,

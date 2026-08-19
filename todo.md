@@ -585,3 +585,6 @@
 
 - [x] Corrigir a validação de estado financeiro para aceitar dados históricos legítimos sem permitir payloads inseguros
 - [x] Cobrir a compatibilidade retroativa da sincronização com testes e publicar a correção
+
+- [x] Consolidar instituições de investimento sem diferenciar maiúsculas e minúsculas nos cards e gráficos
+- [x] Cobrir a normalização de instituições com testes e publicar a atualização

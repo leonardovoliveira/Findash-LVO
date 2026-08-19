@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { appendInvestmentOperation, applyInvestmentQuote, consolidateInvestmentOperations, consolidateInvestmentsByTicker, createLocalInvestment, investmentAccruedValue, investmentCategories, investmentCost, investmentMarketValue, investmentPerformanceHistory, investmentProfitability, investmentValue, investmentValueAtDate, isLocalInvestment, recordDailyInvestmentHistory, recalculateConsolidatedInvestment, type LocalInvestment } from "../client/src/lib/localInvestments";
+import { appendInvestmentOperation, applyInvestmentQuote, consolidateInvestmentOperations, consolidateInvestmentsByTicker, createLocalInvestment, investmentAccruedValue, investmentCategories, investmentCost, investmentMarketValue, investmentPerformanceHistory, investmentProfitability, investmentValue, investmentValueAtDate, isLocalInvestment, normalizeInstitutionName, recordDailyInvestmentHistory, recalculateConsolidatedInvestment, type LocalInvestment } from "../client/src/lib/localInvestments";
 
 const base: LocalInvestment = {
   id: 1,
@@ -100,6 +100,17 @@ describe("local investments", () => {
     expect(consolidated[0].quantity).toBe("300");
     expect(Number(consolidated[0].averagePrice)).toBeCloseTo((200 * 4.48 + 100 * 6.97) / 300, 8);
     expect(consolidated[0].institution).toBe("C6, INTER");
+  });
+
+  it("merges institution names without differentiating case", () => {
+    const consolidated = consolidateInvestmentsByTicker([
+      { ...base, id: 12, ticker: "BTHF11", institution: "Inter", quantity: "10", averagePrice: "100", currentValue: "1000" },
+      { ...base, id: 13, ticker: "BTHF11", institution: "INTER", quantity: "5", averagePrice: "120", currentValue: "600" },
+    ]);
+    expect(normalizeInstitutionName(" INTER ")).toBe("inter");
+    expect(consolidated[0].institution).toBe("Inter");
+    expect(consolidated[0].institutionDetails).toHaveLength(1);
+    expect(consolidated[0].institutionDetails?.[0].quantity).toBe("15");
   });
 
   it("recalculates a consolidated position after editing one institution", () => {

@@ -76,6 +76,11 @@ export type LocalInvestment = {
   updatedAt: string;
 };
 
+/** Chave estável para comparar instituições, ignorando caixa e espaços repetidos. */
+export function normalizeInstitutionName(value: string) {
+  return value.trim().replace(/\s+/g, " ").toLocaleLowerCase("pt-BR");
+}
+
 const STORAGE_PREFIX = "findash-lvo:investments:";
 
 export function investmentStorageKey(userId: number | string) {
@@ -86,7 +91,7 @@ function mergeInstitutionDetails(details: InvestmentInstitutionDetail[], marketP
   const grouped = new Map<string, InvestmentInstitutionDetail>();
   const quote = Number(marketPrice);
   for (const detail of details) {
-    const key = detail.institution.trim().toUpperCase() || "SEM INSTITUIÇÃO";
+    const key = normalizeInstitutionName(detail.institution) || "sem instituição";
     const quantity = Number(detail.quantity) || 0;
     const costBasis = Number(detail.costBasis) || quantity * (Number(detail.averagePrice) || 0);
     const currentValue = Number.isFinite(quote) && String(marketPrice ?? "").trim() ? quantity * quote * conversionRate : (Number(detail.currentValue) > 0 ? Number(detail.currentValue) : costBasis);
@@ -164,13 +169,13 @@ export function recalculateConsolidatedInvestment(item: LocalInvestment, details
   const quantity = details.reduce((sum, detail) => sum + (Number(detail.quantity) || 0), 0);
   const costBasis = details.reduce((sum, detail) => sum + (Number(detail.costBasis) || (Number(detail.quantity) || 0) * (Number(detail.averagePrice) || 0)), 0);
   const marketPrice = Number(item.marketPrice);
-  const institutions = Array.from(new Set(details.map(detail => detail.institution.trim()).filter(Boolean))).join(", ");
   const updatedDetails = mergeInstitutionDetails(details, item.marketPrice, item.category === "dollar" ? (Number(item.fxRate) || 1) : 1).map(detail => {
     const detailCost = Number(detail.costBasis) || (Number(detail.quantity) || 0) * (Number(detail.averagePrice) || 0);
     const detailCurrent = Number(detail.currentValue) || detailCost;
     const detailProfit = detailCurrent - detailCost;
     return { ...detail, costBasis: String(detailCost), currentValue: String(detailCurrent), profit: String(detailProfit), profitabilityPercent: detailCost > 0 ? String((detailProfit / detailCost) * 100) : "0" };
   });
+  const institutions = Array.from(new Set(updatedDetails.map(detail => detail.institution.trim()).filter(Boolean))).join(", ");
   const conversionRate = item.category === "dollar" ? (Number(item.fxRate) || 1) : 1;
   return { ...item, ...overrides, institution: institutions || item.institution, institutionDetails: updatedDetails, quantity: String(quantity), averagePrice: String(quantity > 0 ? costBasis / quantity : 0), currentValue: Number.isFinite(marketPrice) && item.marketPrice?.trim() ? String(quantity * marketPrice * conversionRate) : String(costBasis), updatedAt: new Date().toISOString() };
 }
