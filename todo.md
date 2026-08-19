@@ -561,3 +561,7 @@
 - [x] Reorganizar o cabeçalho do modal em título completo e controles em linha separada
 - [x] Corrigir o rodapé do modal para que seletor e botões sejam sempre visíveis e não sofram corte
 - [x] Cobrir os novos cálculos e comportamentos com Vitest, validar em desktop/mobile e publicar
+
+- [x] Corrigir a sobreposição dos indicadores de valor no modal de fatura
+- [x] Reorganizar as ações do rodapé para eliminar botões cortados ou concorrentes
+- [x] Validar o modal de fatura em larguras desktop e mobile, executar testes e publicar

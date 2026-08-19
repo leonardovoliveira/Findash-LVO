@@ -241,6 +241,26 @@
     box-shadow: 0 0 0 3px rgba(190, 106, 255, .14), 0 0 24px rgba(190, 106, 255, .12);
   }
 
+  /* Fatura de cartão: evita que o breakpoint XL comprima quatro indicadores e misture grupos de ações. */
+  @media (min-width: 640px) {
+    [data-slot="dialog-content"].glass-modal:has(select[aria-label="Selecionar competência da fatura"]) > div > div:nth-child(2) {
+      grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+
+    [data-slot="dialog-content"].glass-modal:has(select[aria-label="Selecionar competência da fatura"]) [data-slot="dialog-footer"] > div:first-child {
+      grid-template-columns: minmax(0, 1fr) !important;
+    }
+
+    [data-slot="dialog-content"].glass-modal:has(select[aria-label="Selecionar competência da fatura"]) [data-slot="dialog-footer"] > div:first-child > div:first-child {
+      grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+
+    [data-slot="dialog-content"].glass-modal:has(select[aria-label="Selecionar competência da fatura"]) [data-slot="dialog-footer"] > div:first-child > div:first-child > select,
+    [data-slot="dialog-content"].glass-modal:has(select[aria-label="Selecionar competência da fatura"]) [data-slot="dialog-footer"] > div:first-child > div:first-child > button:nth-child(4) {
+      grid-column: 1 / -1;
+    }
+  }
+
   body:has(select[aria-label="Selecionar competência"]) .glass-header > div > div:last-child > div:first-child,
   body:has(select[aria-label="Selecionar competência"]) .glass-header + div > div:nth-child(2) {
     display: none !important;
