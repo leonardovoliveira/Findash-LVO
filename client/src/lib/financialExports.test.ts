@@ -22,6 +22,7 @@ vi.mock("jspdf", () => ({
     internal = { pageSize: { getWidth: () => 210 } };
     setFillColor() {}
     rect() {}
+    circle() {}
     setTextColor() {}
     setFont() {}
     setFontSize() {}

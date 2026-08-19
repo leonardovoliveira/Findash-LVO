@@ -605,3 +605,8 @@
 - [x] Exibir toast de sucesso após editar ou excluir uma movimentação de investimento
 - [x] Exportar um extrato detalhado de investimentos em PDF filtrado por instituição
 - [x] Cobrir persistência, feedback e exportação com testes, validar a interface e publicar
+
+- [x] Disponibilizar backup JSON completo para exportação e importação manual nas configurações
+- [x] Destacar em vermelho a barra de progresso do orçamento mensal quando houver limite ultrapassado
+- [x] Incluir gráfico de pizza de distribuição por instituição no extrato PDF de investimentos
+- [x] Cobrir backup, alerta e extrato com testes, validar responsividade e publicar

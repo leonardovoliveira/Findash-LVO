@@ -230,6 +230,31 @@ export function exportInvestmentInstitutionPdf({ investments, institution }: { i
     doc.setTextColor(245, 243, 255);
     doc.text(pdfSafeText(String(value), 22), x + 4, 62);
   });
+  const institutionTotals = Array.from(investments.reduce((totals, item) => {
+    const label = item.institution?.trim() || "Sem instituição";
+    totals.set(label, (totals.get(label) ?? 0) + investmentMarketValue(item));
+    return totals;
+  }, new Map<string, number>()).entries()).map(([category, value]) => ({ category, value })).filter(item => item.value > 0).sort((a, b) => b.value - a.value);
+  if (institutionTotals.length) {
+    doc.setFillColor(27, 25, 38);
+    doc.roundedRect(margin, 72, pageWidth - margin * 2, 42, 4, 4, "F");
+    doc.setTextColor(245, 243, 255);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(10);
+    doc.text("Distribuição por instituição", margin + 5, 80);
+    const slices = drawInvoiceCategoryPie(doc, institutionTotals, margin + 28, 96, 12);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(7.5);
+    slices.forEach((slice, index) => {
+      const legendY = 87 + index * 5;
+      doc.setFillColor(slice.color[0], slice.color[1], slice.color[2]);
+      doc.circle(margin + 52, legendY - 1, 1.3, "F");
+      doc.setTextColor(190, 184, 204);
+      doc.text(pdfSafeText(slice.category, 22), margin + 56, legendY);
+      doc.text(brl.format(slice.value), pageWidth - margin - 5, legendY, { align: "right" });
+    });
+    y = 122;
+  }
   for (const item of investments) {
     const operations = [...(item.operations ?? [])].filter(operation => Number(operation.quantity) > 0 && Number(operation.price) >= 0).sort((a, b) => a.date.localeCompare(b.date) || a.id - b.id);
     const requiredHeight = 28 + Math.max(1, operations.length) * 6;
