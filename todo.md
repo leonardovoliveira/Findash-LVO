@@ -572,3 +572,5 @@
 - [x] Corrigir a preservação do preço médio de operações em USD
 - [x] Ocultar o campo Quantidade no formulário de investimentos de renda fixa
 - [x] Cobrir os ajustes com testes, validar responsividade e publicar
+
+- [x] Remover o texto auxiliar do card de orçamento, mantendo toda a área interativa
