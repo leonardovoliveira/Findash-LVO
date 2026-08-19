@@ -3,11 +3,10 @@ import { useAuth } from "@/_core/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import InvoiceDialog from "@/components/InvoiceDialog";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { exportCreditCardInvoicePdf, filterCreditCardInvoicePurchases } from "@/lib/financialExports";
+import { filterCreditCardInvoicePurchases } from "@/lib/invoiceFilters";
 import type { CreditCard, CreditCardType } from "@/lib/localCreditCards";
 import { creditCardAvailableLimit, creditCardFutureInstallmentCommitment, creditCardFutureInstallmentCount, creditCardInvoiceAmount, creditCardInvoiceComparison, creditCardInvoiceMonthAfter, creditCardInvoiceMonths, creditCardIsInvoicePaid, creditCardLimitUsagePercent } from "@/lib/localCreditCards";
 import { CheckCircle2, ChevronLeft, ChevronRight, Circle, CreditCard as CreditCardIcon, Download, Landmark, Mail, MessageCircle, Minus, Pencil, Plus, ReceiptText, RotateCcw, Share2, Trash2, TrendingDown, TrendingUp } from "lucide-react";
@@ -99,7 +98,8 @@ function LegacyCurrentInvoiceDialog({ card, month, onClose, onTogglePaid }: { ca
   const registerPayment = () => { onTogglePaid(card.id, viewMonth); toast.success("Fatura baixada com sucesso"); };
   const requestReversal = () => setConfirmReversal(true);
   const confirmReversalAction = () => { onTogglePaid(card.id, viewMonth); setConfirmReversal(false); toast.success("Baixa da fatura desfeita"); };
-  const exportInvoice = () => {
+  const exportInvoice = async () => {
+    const { exportCreditCardInvoicePdf } = await import("@/lib/financialExports");
     exportCreditCardInvoicePdf({ card, month: viewMonth, purchases: exportPurchases, invoiceAmount: exportAmount, isPaid: paid, futureInstallmentCount: exportBuyer === "all" ? futureInstallmentCount : exportFuturePurchases.length, futureInstallmentAmount: exportFutureAmount, userName: user?.name ?? "Usuário Findash", userEmail: user?.email ?? "", buyerFilterLabel: exportBuyer === "all" ? "Todos os compradores" : exportBuyer });
     toast.success("PDF da fatura gerado");
   };
@@ -126,10 +126,13 @@ function LegacyInvoiceDialog({ card, month, onClose, onTogglePaid }: { card: Cre
   const comparisonTone = comparison.difference > 0 ? "text-rose-300" : comparison.difference < 0 ? "text-emerald-300" : "text-muted-foreground";
   const ComparisonIcon = comparison.difference > 0 ? TrendingUp : comparison.difference < 0 ? TrendingDown : Minus;
   const navigate = (offset: number) => { setConfirmReversal(false); setExportBuyer("all"); setViewMonth(current => creditCardInvoiceMonthAfter(current, offset)); };
-  const invoiceDocument = (download = true) => exportCreditCardInvoicePdf({ card, month: viewMonth, purchases: exportPurchases, invoiceAmount: exportAmount, isPaid: paid, futureInstallmentCount: exportBuyer === "all" ? futureInstallmentCount : exportFuturePurchases.length, futureInstallmentAmount: exportFutureAmount, userName: user?.name ?? "Usuário Findash", userEmail: user?.email ?? "", buyerFilterLabel: exportBuyer === "all" ? "Todos os compradores" : exportBuyer, download });
-  const exportInvoice = () => { invoiceDocument(); toast.success("PDF da fatura gerado"); };
+  const invoiceDocument = async (download = true) => {
+    const { exportCreditCardInvoicePdf } = await import("@/lib/financialExports");
+    return exportCreditCardInvoicePdf({ card, month: viewMonth, purchases: exportPurchases, invoiceAmount: exportAmount, isPaid: paid, futureInstallmentCount: exportBuyer === "all" ? futureInstallmentCount : exportFuturePurchases.length, futureInstallmentAmount: exportFutureAmount, userName: user?.name ?? "Usuário Findash", userEmail: user?.email ?? "", buyerFilterLabel: exportBuyer === "all" ? "Todos os compradores" : exportBuyer, download });
+  };
+  const exportInvoice = async () => { await invoiceDocument(); toast.success("PDF da fatura gerado"); };
   const shareInvoice = async (channel: "email" | "whatsapp") => {
-    const document = invoiceDocument(false);
+    const document = await invoiceDocument(false);
     const title = `Fatura ${card.name} — ${monthLabel(viewMonth)}`;
     const text = `${title}\nValor: ${money.format(exportAmount)}\nVencimento: dia ${card.dueDay}.`;
     const file = new File([document.blob], document.filename, { type: "application/pdf" });

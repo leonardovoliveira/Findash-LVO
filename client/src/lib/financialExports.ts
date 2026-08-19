@@ -3,17 +3,9 @@ import * as XLSX from "xlsx";
 import type { LocalTransaction } from "./localTransactions";
 import type { LocalInvestment } from "./localInvestments";
 import type { CreditCard, CreditCardPurchase } from "./localCreditCards";
+export { filterCreditCardInvoicePurchases } from "./invoiceFilters";
 
 const brl = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
-
-function downloadBlob(blob: Blob, filename: string) {
-  const url = URL.createObjectURL(blob);
-  const anchor = document.createElement("a");
-  anchor.href = url;
-  anchor.download = filename;
-  anchor.click();
-  URL.revokeObjectURL(url);
-}
 
 function downloadPdf(doc: jsPDF, filename: string) {
   doc.save(filename);
@@ -207,10 +199,6 @@ function invoiceMonthLabel(month: string) {
 
 function pdfSafeText(value: string, limit: number) {
   return value.length > limit ? `${value.slice(0, Math.max(0, limit - 1))}…` : value;
-}
-
-export function filterCreditCardInvoicePurchases(purchases: CreditCardPurchase[], buyer: string) {
-  return buyer === "all" ? purchases : purchases.filter(purchase => purchase.buyer === buyer);
 }
 
 function invoiceCategorySummary(purchases: CreditCardPurchase[]) {

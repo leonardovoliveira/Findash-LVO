@@ -132,7 +132,7 @@ export function registerGoogleOAuthRoutes(app: Express) {
       try {
         const candidate = sdk.createSessionId();
         const now = new Date();
-        await db.createAuthSession({ sessionId: candidate, ownerOpenId: openId, deviceLabel: req.headers["user-agent"]?.includes("Mobile") ? "Dispositivo móvel" : "Navegador", userAgent: req.headers["user-agent"] ?? null, createdAt: now, lastSeenAt: now, expiresAt: new Date(now.getTime() + ONE_YEAR_MS) });
+        await db.createAuthSession({ sessionId: candidate, ownerOpenId: openId, deviceLabel: req.headers["user-agent"]?.includes("Mobile") ? "Dispositivo móvel" : "Navegador", userAgent: null, createdAt: now, lastSeenAt: now, expiresAt: new Date(now.getTime() + ONE_YEAR_MS) });
         sessionId = candidate;
       } catch (sessionError) {
         console.error("[Google OAuth] Session registry unavailable; continuing with a standard session", sessionError instanceof Error ? sessionError.message : sessionError);

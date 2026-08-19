@@ -7,7 +7,8 @@ import { TRPCError } from "@trpc/server";
 import { createAuthSession, createTransaction, deleteTransaction, listAuthSessions, listTransactions, revokeAuthSession, revokeOtherAuthSessions, updateTransaction } from "./db.js";
 import { ENV } from "./_core/env.js";
 import { fetchBrapiStockHistory, fetchBrapiStockQuote } from "./brapi.js";
-import { loadFinanceState, saveFinanceState, type FinanceStatePayload } from "./supabase.js";
+import { loadFinanceState, saveFinanceState } from "./supabase.js";
+import { parseFinanceStatePayload } from "./financeStateValidation.js";
 import { sdk } from "./_core/sdk.js";
 
 const monthInput = z.object({
@@ -187,10 +188,10 @@ export const appRouter = router({
   sessions: router({
     list: protectedProcedure.query(async ({ ctx }) => {
       let currentSessionId = ctx.sessionId;
-      if (!currentSessionId) {
-        currentSessionId = sdk.createSessionId();
-        const now = new Date();
-        await createAuthSession({ sessionId: currentSessionId, ownerOpenId: ctx.user.openId, deviceLabel: ctx.req.headers["user-agent"]?.includes("Mobile") ? "Dispositivo móvel" : "Navegador", userAgent: ctx.req.headers["user-agent"] ?? null, createdAt: now, lastSeenAt: now, expiresAt: new Date(now.getTime() + ONE_YEAR_MS) });
+        if (!currentSessionId) {
+          currentSessionId = sdk.createSessionId();
+          const now = new Date();
+        await createAuthSession({ sessionId: currentSessionId, ownerOpenId: ctx.user.openId, deviceLabel: ctx.req.headers["user-agent"]?.includes("Mobile") ? "Dispositivo móvel" : "Navegador", userAgent: null, createdAt: now, lastSeenAt: now, expiresAt: new Date(now.getTime() + ONE_YEAR_MS) });
         const token = await sdk.createSessionToken(ctx.user.openId, { name: ctx.user.name || ctx.user.email || "Usuário", sessionId: currentSessionId, expiresInMs: ONE_YEAR_MS });
         (ctx.res as import("express").Response).cookie(COOKIE_NAME, token, { ...getSessionCookieOptions(ctx.req), maxAge: ONE_YEAR_MS });
       }
@@ -217,9 +218,11 @@ export const appRouter = router({
     }),
     save: protectedProcedure.input(z.object({ payload: z.unknown() })).mutation(async ({ ctx, input }) => {
       try {
-        const payload = input.payload as FinanceStatePayload;
-        if (!payload || payload.version !== 1 || !Array.isArray(payload.transactions) || !Array.isArray(payload.investments) || !Array.isArray(payload.creditCards) || !Array.isArray(payload.categories) || (payload.budgets !== undefined && !Array.isArray(payload.budgets))) {
-          throw new TRPCError({ code: "BAD_REQUEST", message: "Estado financeiro inválido" });
+        let payload;
+        try {
+          payload = parseFinanceStatePayload(input.payload);
+        } catch (error) {
+          throw new TRPCError({ code: "BAD_REQUEST", message: error instanceof Error ? error.message : "Estado financeiro inválido" });
         }
         return await saveFinanceState(ctx.user.openId, payload);
       } catch (error) {

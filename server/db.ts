@@ -1,6 +1,6 @@
-import { and, desc, eq, gte, gt, isNull, lt, not } from "drizzle-orm";
+import { and, desc, eq, gte, lt } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { AuthSession, InsertAuthSession, InsertTransaction, InsertUser, Transaction, authSessions, transactions, users } from "../drizzle/schema.js";
+import { AuthSession, InsertAuthSession, InsertTransaction, InsertUser, Transaction, transactions, users } from "../drizzle/schema.js";
 import { ENV } from "./_core/env.js";
 import { createSupabaseAuthSession, getSupabaseAuthSession, listSupabaseAuthSessions, revokeOtherSupabaseAuthSessions, revokeSupabaseAuthSession, touchSupabaseAuthSession } from "./supabase.js";
 

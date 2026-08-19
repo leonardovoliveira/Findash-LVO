@@ -3,7 +3,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { exportCreditCardInvoicePdf, filterCreditCardInvoicePurchases } from "@/lib/financialExports";
+import { filterCreditCardInvoicePurchases } from "@/lib/invoiceFilters";
 import type { CreditCard } from "@/lib/localCreditCards";
 import { creditCardAvailableLimit, creditCardFutureInstallmentCommitment, creditCardFutureInstallmentCount, creditCardInvoiceComparison, creditCardInvoiceMonthAfter, creditCardInvoiceMonths, creditCardIsInvoicePaid } from "@/lib/localCreditCards";
 import { CheckCircle2, ChevronLeft, ChevronRight, Download, Mail, MessageCircle, Minus, ReceiptText, RotateCcw, Share2, TrendingDown, TrendingUp } from "lucide-react";
@@ -44,17 +44,20 @@ export default function InvoiceDialog({ card, month, onClose, onTogglePaid }: { 
   const comparisonTone = comparison.difference > 0 ? "text-rose-300" : comparison.difference < 0 ? "text-emerald-300" : "text-muted-foreground";
   const ComparisonIcon = comparison.difference > 0 ? TrendingUp : comparison.difference < 0 ? TrendingDown : Minus;
   const selectMonth = (value: string) => { setViewMonth(value); setBuyer("all"); setConfirmReversal(false); };
-  const buildPdf = (download = true) => exportCreditCardInvoicePdf({ card, month: viewMonth, purchases: filteredPurchases, invoiceAmount: exportAmount, isPaid: paid, futureInstallmentCount: futureCount, futureInstallmentAmount: futureAmount, userName: user?.name ?? "Usuário Findash", userEmail: user?.email ?? "", buyerFilterLabel: buyer === "all" ? "Todos os compradores" : buyer, download });
-  const exportPdf = () => { buildPdf(); toast.success("PDF da fatura gerado"); };
+  const buildPdf = async (download = true) => {
+    const { exportCreditCardInvoicePdf } = await import("@/lib/financialExports");
+    return exportCreditCardInvoicePdf({ card, month: viewMonth, purchases: filteredPurchases, invoiceAmount: exportAmount, isPaid: paid, futureInstallmentCount: futureCount, futureInstallmentAmount: futureAmount, userName: user?.name ?? "Usuário Findash", userEmail: user?.email ?? "", buyerFilterLabel: buyer === "all" ? "Todos os compradores" : buyer, download });
+  };
+  const exportPdf = async () => { try { await buildPdf(); toast.success("PDF da fatura gerado"); } catch { toast.error("Não foi possível gerar o PDF da fatura"); } };
   const share = async (channel: "email" | "whatsapp") => {
-    const document = buildPdf(false);
+    const document = await buildPdf(false);
     const title = `Fatura ${card.name} — ${monthLabel(viewMonth)}`;
     const text = `${title}\nValor: ${money.format(exportAmount)}\nVencimento: dia ${card.dueDay}.`;
     const file = new File([document.blob], document.filename, { type: "application/pdf" });
     try {
       if (navigator.share && (!navigator.canShare || navigator.canShare({ files: [file] }))) { await navigator.share({ title, text, files: [file] }); toast.success("Fatura compartilhada"); return; }
     } catch (error) { if (error instanceof DOMException && error.name === "AbortError") return; }
-    exportPdf();
+    await exportPdf();
     const url = channel === "email" ? `mailto:?subject=${encodeURIComponent(title)}&body=${encodeURIComponent(`${text}\n\nO PDF foi baixado para você anexar.`)}` : `https://wa.me/?text=${encodeURIComponent(`${text}\n\nO PDF foi baixado para você anexar nesta conversa.`)}`;
     window.open(url, "_blank", "noopener,noreferrer");
     toast.message(channel === "email" ? "PDF baixado e cliente de e-mail aberto" : "PDF baixado e WhatsApp aberto");

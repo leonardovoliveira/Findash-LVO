@@ -576,3 +576,9 @@
 - [x] Remover o texto auxiliar do card de orçamento, mantendo toda a área interativa
 
 - [x] Adicionar feedback visual de clique e indicador discreto de detalhes no hover dos cards de orçamento
+
+- [x] Inventariar dependências, fluxos de dados, código redundante e superfícies de segurança
+- [x] Refatorar trechos compartilhados e remover componentes, imports ou blocos inativos
+- [x] Fortalecer validação, isolamento por usuário e proteção contra conteúdo inseguro
+- [x] Otimizar carregamento e divisão de código sem reduzir funcionalidades
+- [x] Executar testes, build, revisão visual e publicar relatório técnico da revisão
