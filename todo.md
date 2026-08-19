@@ -548,3 +548,9 @@
 - [x] Gerar PDF estilizado com os detalhes da fatura atual
 - [x] Adicionar botão de exportação em PDF ao modal da fatura
 - [x] Cobrir os dados exportados com Vitest, validar o fluxo e publicar
+
+- [x] Reorganizar e ampliar o modal de fatura para eliminar sobreposições e cortes
+- [x] Incluir dados pessoais do usuário no cabeçalho do PDF da fatura
+- [x] Incluir gráfico de pizza por categoria no PDF da fatura
+- [x] Permitir filtrar a exportação da fatura por comprador ou todos
+- [x] Cobrir PDF e filtros com Vitest, validar responsividade e publicar

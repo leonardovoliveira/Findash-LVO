@@ -209,6 +209,47 @@ function pdfSafeText(value: string, limit: number) {
   return value.length > limit ? `${value.slice(0, Math.max(0, limit - 1))}…` : value;
 }
 
+export function filterCreditCardInvoicePurchases(purchases: CreditCardPurchase[], buyer: string) {
+  return buyer === "all" ? purchases : purchases.filter(purchase => purchase.buyer === buyer);
+}
+
+function invoiceCategorySummary(purchases: CreditCardPurchase[]) {
+  const totals = new Map<string, number>();
+  purchases.forEach(purchase => {
+    const category = purchase.category?.trim() || "Sem categoria";
+    totals.set(category, (totals.get(category) ?? 0) + (Number(purchase.amount) || 0));
+  });
+  return Array.from(totals.entries()).map(([category, value]) => ({ category, value })).filter(item => item.value > 0).sort((a, b) => b.value - a.value);
+}
+
+function drawInvoiceCategoryPie(doc: jsPDF, items: Array<{ category: string; value: number }>, centerX: number, centerY: number, radius: number) {
+  const palette = [[139, 92, 246], [34, 211, 238], [52, 211, 153], [251, 191, 36], [251, 113, 133], [96, 165, 250]] as const;
+  const total = items.reduce((sum, item) => sum + item.value, 0);
+  if (!total) return [] as Array<{ category: string; value: number; color: readonly [number, number, number] }>;
+  let angle = -Math.PI / 2;
+  return items.slice(0, 6).map((item, index) => {
+    const color = palette[index % palette.length];
+    const nextAngle = angle + (item.value / total) * Math.PI * 2;
+    const steps = Math.max(6, Math.ceil(Math.abs(nextAngle - angle) * 16));
+    const segments: number[][] = [];
+    let lastX = centerX;
+    let lastY = centerY;
+    for (let step = 0; step <= steps; step += 1) {
+      const currentAngle = angle + ((nextAngle - angle) * step) / steps;
+      const x = centerX + Math.cos(currentAngle) * radius;
+      const y = centerY + Math.sin(currentAngle) * radius;
+      segments.push([x - lastX, y - lastY]);
+      lastX = x;
+      lastY = y;
+    }
+    segments.push([centerX - lastX, centerY - lastY]);
+    doc.setFillColor(color[0], color[1], color[2]);
+    doc.lines(segments, centerX, centerY, [1, 1], "F", true);
+    angle = nextAngle;
+    return { ...item, color };
+  });
+}
+
 export function exportCreditCardInvoicePdf({
   card,
   month,
@@ -217,6 +258,9 @@ export function exportCreditCardInvoicePdf({
   isPaid,
   futureInstallmentCount,
   futureInstallmentAmount,
+  userName,
+  userEmail,
+  buyerFilterLabel = "Todos os compradores",
 }: {
   card: Pick<CreditCard, "name" | "bank" | "brand" | "dueDay" | "totalLimit">;
   month: string;
@@ -225,12 +269,16 @@ export function exportCreditCardInvoicePdf({
   isPaid: boolean;
   futureInstallmentCount: number;
   futureInstallmentAmount: number;
+  userName?: string;
+  userEmail?: string;
+  buyerFilterLabel?: string;
 }) {
   const doc = new jsPDF({ unit: "mm", format: "a4" });
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = 297;
   const margin = 14;
   const purple = [139, 92, 246] as const;
+  const categories = invoiceCategorySummary(purchases);
   const paintPage = () => {
     doc.setFillColor(13, 14, 21);
     doc.rect(0, 0, pageWidth, pageHeight, "F");
@@ -247,23 +295,27 @@ export function exportCreditCardInvoicePdf({
     doc.setFont("helvetica", "normal");
     doc.setFontSize(9);
     doc.text(`Gerado em ${new Date().toLocaleString("pt-BR")}`, pageWidth - margin, 21, { align: "right" });
+    doc.setTextColor(171, 166, 188);
+    doc.setFontSize(8);
+    doc.text(`Titular: ${pdfSafeText(userName || "Usuário Findash", 42)}`, margin, 34);
+    if (userEmail) doc.text(pdfSafeText(userEmail, 44), margin, 39);
   };
   paintPage();
   heading();
   doc.setFillColor(31, 28, 43);
-  doc.roundedRect(margin, 37, pageWidth - margin * 2, 31, 5, 5, "F");
+  doc.roundedRect(margin, 47, pageWidth - margin * 2, 31, 5, 5, "F");
   doc.setTextColor(245, 243, 255);
   doc.setFont("helvetica", "bold");
   doc.setFontSize(16);
-  doc.text(`Fatura de ${pdfSafeText(card.name, 34)}`, margin + 7, 49);
+  doc.text(`Fatura de ${pdfSafeText(card.name, 34)}`, margin + 7, 59);
   doc.setTextColor(177, 169, 202);
   doc.setFont("helvetica", "normal");
   doc.setFontSize(9);
-  doc.text(`${card.bank} · ${card.brand} · competência ${invoiceMonthLabel(month)}`, margin + 7, 57);
-  doc.text(`Vencimento dia ${card.dueDay}`, pageWidth - margin - 7, 49, { align: "right" });
+  doc.text(`${card.bank} · ${card.brand} · competência ${invoiceMonthLabel(month)}`, margin + 7, 67);
+  doc.text(`Vencimento dia ${card.dueDay}`, pageWidth - margin - 7, 59, { align: "right" });
   doc.setTextColor(isPaid ? 110 : 250, isPaid ? 231 : 204, isPaid ? 183 : 21);
   doc.setFont("helvetica", "bold");
-  doc.text(isPaid ? "FATURA PAGA" : "EM ABERTO", pageWidth - margin - 7, 57, { align: "right" });
+  doc.text(isPaid ? "FATURA PAGA" : "EM ABERTO", pageWidth - margin - 7, 67, { align: "right" });
 
   const summary = [
     ["Valor da fatura", brl.format(invoiceAmount), [245, 243, 255] as const],
@@ -274,18 +326,48 @@ export function exportCreditCardInvoicePdf({
     const width = (pageWidth - margin * 2 - 8) / 3;
     const x = margin + index * (width + 4);
     doc.setFillColor(27, 25, 38);
-    doc.roundedRect(x, 76, width, 25, 4, 4, "F");
+    doc.roundedRect(x, 86, width, 25, 4, 4, "F");
     doc.setTextColor(166, 158, 185);
     doc.setFont("helvetica", "normal");
     doc.setFontSize(8);
-    doc.text(String(label), x + 4, 84);
+    doc.text(String(label), x + 4, 94);
     doc.setTextColor(...(color as [number, number, number]));
     doc.setFont("helvetica", "bold");
     doc.setFontSize(10);
-    doc.text(pdfSafeText(String(value), 22), x + 4, 94);
+    doc.text(pdfSafeText(String(value), 22), x + 4, 104);
   });
 
-  let y = 114;
+  doc.setFillColor(27, 25, 38);
+  doc.roundedRect(margin, 119, pageWidth - margin * 2, 49, 4, 4, "F");
+  doc.setTextColor(245, 243, 255);
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(11);
+  doc.text("Distribuição por categoria", margin + 5, 128);
+  doc.setFont("helvetica", "normal");
+  doc.setTextColor(171, 166, 188);
+  doc.setFontSize(7.5);
+  doc.text(`Filtro aplicado: ${buyerFilterLabel}`, pageWidth - margin - 5, 128, { align: "right" });
+  const chartItems = drawInvoiceCategoryPie(doc, categories, margin + 25, 147, 14);
+  if (!chartItems.length) {
+    doc.setTextColor(171, 166, 188);
+    doc.setFontSize(8);
+    doc.text("Sem gastos por categoria para esta seleção.", margin + 52, 150);
+  } else {
+    chartItems.forEach((item, index) => {
+      const row = index % 3;
+      const column = index < 3 ? 0 : 1;
+      const x = margin + 52 + column * 67;
+      const y = 139 + row * 9;
+      doc.setFillColor(...item.color);
+      doc.roundedRect(x, y - 3, 3, 3, 0.5, 0.5, "F");
+      doc.setTextColor(215, 210, 229);
+      doc.setFontSize(7);
+      doc.text(pdfSafeText(item.category, 16), x + 5, y);
+      doc.text(brl.format(item.value), x + 62, y, { align: "right" });
+    });
+  }
+
+  let y = 181;
   const rowHeader = () => {
     doc.setTextColor(245, 243, 255);
     doc.setFont("helvetica", "bold");

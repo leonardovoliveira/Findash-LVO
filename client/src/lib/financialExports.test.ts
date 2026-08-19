@@ -29,6 +29,7 @@ vi.mock("jspdf", () => ({
     setDrawColor() {}
     setLineWidth() {}
     line() {}
+    lines() {}
     save = save;
   },
 }));
@@ -68,7 +69,14 @@ describe("financial exports", () => {
 
   it("saves a styled credit card invoice PDF", async () => {
     const { exportCreditCardInvoicePdf } = await import("./financialExports");
-    exportCreditCardInvoicePdf({ card, month: "2026-08", purchases: [], invoiceAmount: 300, isPaid: false, futureInstallmentCount: 2, futureInstallmentAmount: 120 });
+    exportCreditCardInvoicePdf({ card, month: "2026-08", purchases: [{ id: 1, description: "Compra", category: "Alimentação", amount: "300", purchasedAt: "2026-08-05T12:00:00.000Z" }], invoiceAmount: 300, isPaid: false, futureInstallmentCount: 2, futureInstallmentAmount: 120, userName: "Leonardo", userEmail: "leonardo@example.com", buyerFilterLabel: "Todos os compradores" });
     expect(save).toHaveBeenCalledWith("findash-lvo-fatura-platinum-2026-08.pdf");
+  });
+
+  it("filters invoice purchases by buyer before exporting", async () => {
+    const { filterCreditCardInvoicePurchases } = await import("./financialExports");
+    const purchases = [{ id: 1, buyer: "LEONARDO" }, { id: 2, buyer: "JOANA" }] as any[];
+    expect(filterCreditCardInvoicePurchases(purchases, "LEONARDO")).toEqual([{ id: 1, buyer: "LEONARDO" }]);
+    expect(filterCreditCardInvoicePurchases(purchases, "all")).toHaveLength(2);
   });
 });
