@@ -20,7 +20,7 @@ import { addLocalCategory, deleteLocalCategory, isDefaultCategory, loadLocalCate
 import CreditCardsPage, { NextInvoiceCard, type CreditCardForm } from "@/pages/CreditCardsPage";
 import BudgetPage, { type BudgetDraft } from "@/pages/BudgetPage";
 import InvestmentOperationCardActions from "@/components/InvestmentOperationCardActions";
-import { budgetCategoriesForMonth, copyPreviousMonthBudget, createMonthlyBudget, loadLocalBudgets, removeMonthlyBudget, updateMonthlyBudget, type MonthlyBudget } from "@/lib/localBudgets";
+import { budgetCategoriesForMonth, copyPreviousMonthBudget, createMonthlyBudget, loadLocalBudgets, recoverLocalBudgets, removeMonthlyBudget, saveLocalBudgets, updateMonthlyBudget, type MonthlyBudget } from "@/lib/localBudgets";
 import { Button } from "@/components/ui/button";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -168,11 +168,14 @@ export default function Home() {
     if (!user || financeStateQuery.isLoading || financeStateQuery.isFetching || financeStateQuery.error || cloudHydratedId === userStorageId) return;
     const remote = financeStateQuery.data?.payload;
     if (remote) {
+      const remoteBudgets = Array.isArray(remote.budgets) ? remote.budgets as MonthlyBudget[] : [];
+      const recoveredBudgets = recoverLocalBudgets(remoteBudgets, loadLocalBudgets(userStorageId));
       setTransactions(Array.isArray(remote.transactions) ? remote.transactions as LocalTransaction[] : []);
       setInvestments(Array.isArray(remote.investments) ? remote.investments as LocalInvestment[] : []);
       setCreditCards(Array.isArray(remote.creditCards) ? remote.creditCards as CreditCard[] : []);
       setCategories(Array.isArray(remote.categories) ? remote.categories as LocalCategory[] : []);
-      setBudgets(Array.isArray(remote.budgets) ? remote.budgets as MonthlyBudget[] : []);
+      setBudgets(recoveredBudgets);
+      if (!remoteBudgets.length && recoveredBudgets.length) toast.success("Orçamentos locais recuperados e prontos para sincronizar");
     } else {
       const localPayload = {
         version: 1 as const,
@@ -202,6 +205,11 @@ export default function Home() {
     }), 700);
     return () => window.clearTimeout(timer);
   }, [transactions, investments, creditCards, categories, budgets, user, userStorageId, cloudHydratedId]);
+
+  useEffect(() => {
+    if (!user || cloudHydratedId !== userStorageId) return;
+    saveLocalBudgets(userStorageId, budgets);
+  }, [budgets, user, userStorageId, cloudHydratedId]);
 
   useEffect(() => {
     const data = benchmarksQuery.data;
@@ -531,7 +539,14 @@ function InvestmentsPage(props: any) {
   const [institutionQuery, setInstitutionQuery] = useState("");
   const catalog = investmentInstitutionCatalog(props.investments);
   const filteredInvestments = filterInvestmentsByInstitution(props.investments, institutionQuery);
-  return <div className="space-y-4"><section className="glass-panel rounded-3xl border p-4"><div className="flex flex-col gap-3 sm:flex-row sm:items-end"><div className="min-w-0 flex-1"><Label htmlFor="investment-institution-filter">Buscar por instituição</Label><Input id="investment-institution-filter" className="mt-2" value={institutionQuery} onChange={event => setInstitutionQuery(event.target.value)} placeholder="Ex.: Inter, C6 ou Nomad" list="investment-institution-catalog" /></div><div className="flex gap-2"><Button type="button" variant="outline" onClick={() => setInstitutionQuery("")}>Limpar</Button><select className="h-10 max-w-52 rounded-xl border border-white/10 bg-white/[0.04] px-3 text-sm" value={institutionQuery} onChange={event => setInstitutionQuery(event.target.value)}><option value="">Todas as instituições</option>{catalog.map(institution => <option key={institution} value={institution}>{institution}</option>)}</select></div></div><datalist id="investment-institution-catalog">{catalog.map(institution => <option key={institution} value={institution} />)}</datalist></section><LegacyInvestmentsPage {...props} investments={filteredInvestments} /><InvestmentOperationCardActions investments={filteredInvestments} /></div>;
+  const exportInstitutionStatement = async () => {
+    if (!filteredInvestments.length) { toast.error("Não há investimentos para exportar neste filtro"); return; }
+    const { exportInvestmentInstitutionPdf } = await import("@/lib/financialExports");
+    const institution = institutionQuery.trim() || "Todas as instituições";
+    exportInvestmentInstitutionPdf({ investments: filteredInvestments, institution });
+    toast.success("Extrato de investimentos gerado");
+  };
+  return <div className="space-y-4"><section className="glass-panel rounded-3xl border p-4"><div className="flex flex-col gap-3 sm:flex-row sm:items-end"><div className="min-w-0 flex-1"><Label htmlFor="investment-institution-filter">Buscar por instituição</Label><Input id="investment-institution-filter" className="mt-2" value={institutionQuery} onChange={event => setInstitutionQuery(event.target.value)} placeholder="Ex.: Inter, C6 ou Nomad" list="investment-institution-catalog" /></div><div className="flex flex-wrap gap-2"><Button type="button" variant="outline" onClick={() => setInstitutionQuery("")}>Limpar</Button><Button type="button" variant="outline" onClick={exportInstitutionStatement}><FileText className="mr-1.5 h-4 w-4" />Extrato PDF</Button><select className="h-10 max-w-52 rounded-xl border border-white/10 bg-white/[0.04] px-3 text-sm" value={institutionQuery} onChange={event => setInstitutionQuery(event.target.value)}><option value="">Todas as instituições</option>{catalog.map(institution => <option key={institution} value={institution}>{institution}</option>)}</select></div></div><datalist id="investment-institution-catalog">{catalog.map(institution => <option key={institution} value={institution} />)}</datalist></section><LegacyInvestmentsPage {...props} investments={filteredInvestments} /><InvestmentOperationCardActions investments={filteredInvestments} /></div>;
 }
 
 function InvestmentOperationManager({ investments }: { investments: LocalInvestment[] }) {

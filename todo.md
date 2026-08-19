@@ -599,3 +599,9 @@
 - [x] Remover a área global de movimentações individuais e levar editar/excluir para o card do ativo
 - [x] Ajustar a densidade, altura e visualização dos widgets do Orçamento em telas móveis
 - [x] Cobrir os ajustes com testes, validar em desktop/mobile e publicar
+
+- [x] Diagnosticar e recuperar, quando disponível, os orçamentos desaparecidos da sincronização
+- [x] Proteger a persistência contra a substituição de dados financeiros válidos por estado vazio
+- [x] Exibir toast de sucesso após editar ou excluir uma movimentação de investimento
+- [x] Exportar um extrato detalhado de investimentos em PDF filtrado por instituição
+- [x] Cobrir persistência, feedback e exportação com testes, validar a interface e publicar

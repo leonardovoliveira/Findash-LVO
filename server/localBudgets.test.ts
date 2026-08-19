@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { budgetCategoriesForMonth, budgetCategoryTransactions, copyPreviousMonthBudget, createMonthlyBudget, getBudgetSummary, removeMonthlyBudget, updateMonthlyBudget } from "../client/src/lib/localBudgets";
+import { budgetCategoriesForMonth, budgetCategoryTransactions, copyPreviousMonthBudget, createMonthlyBudget, getBudgetSummary, recoverLocalBudgets, removeMonthlyBudget, updateMonthlyBudget } from "../client/src/lib/localBudgets";
 import type { LocalTransaction } from "../client/src/lib/localTransactions";
 
 const transactions: LocalTransaction[] = [
@@ -58,5 +58,11 @@ describe("local budgets", () => {
     expect(copied).toHaveLength(2);
     expect(copied[1]).toMatchObject({ month: "2026-08", category: "Moradia", plannedAmount: "1400.00" });
     expect(copyPreviousMonthBudget(copied, "2026-08")).toHaveLength(2);
+  });
+
+  it("keeps a valid local backup when a cloud payload has no budgets", () => {
+    const local = createMonthlyBudget([], { month: "2026-08", category: "Moradia", kind: "fixed", plannedAmount: "1400" });
+    expect(recoverLocalBudgets([], local)).toEqual(local);
+    expect(recoverLocalBudgets(local, [])).toEqual(local);
   });
 });

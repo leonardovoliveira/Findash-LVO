@@ -67,6 +67,11 @@ export function saveLocalBudgets(userId: number | string, budgets: MonthlyBudget
   window.localStorage.setItem(budgetStorageKey(userId), JSON.stringify(budgets));
 }
 
+/** Mantém a nuvem como fonte principal, mas evita apagar uma cópia local válida por um payload vazio. */
+export function recoverLocalBudgets(remoteBudgets: MonthlyBudget[], localBudgets: MonthlyBudget[]) {
+  return remoteBudgets.length || !localBudgets.length ? remoteBudgets : localBudgets;
+}
+
 export function createMonthlyBudget(budgets: MonthlyBudget[], input: Omit<MonthlyBudget, "id" | "createdAt" | "updatedAt">, now = new Date()): MonthlyBudget[] {
   const nowIso = now.toISOString();
   const entry: MonthlyBudget = {

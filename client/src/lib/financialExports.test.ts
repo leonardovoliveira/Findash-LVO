@@ -69,6 +69,12 @@ describe("financial exports", () => {
     expect(save).toHaveBeenCalledOnce();
   });
 
+  it("exports a detailed investment statement for the selected institution", async () => {
+    const { exportInvestmentInstitutionPdf } = await import("./financialExports");
+    exportInvestmentInstitutionPdf({ investments: [{ ...investment, institution: "Inter", operations: [{ id: 1, type: "buy", quantity: "2", price: "10", date: "2026-08-18" }] }], institution: "Inter" });
+    expect(save).toHaveBeenCalledWith(expect.stringMatching(/^findash-lvo-extrato-inter-\d{4}-\d{2}-\d{2}\.pdf$/));
+  });
+
   it("saves a styled credit card invoice PDF", async () => {
     const { exportCreditCardInvoicePdf } = await import("./financialExports");
     exportCreditCardInvoicePdf({ card, month: "2026-08", purchases: [{ id: 1, description: "Compra", category: "Alimentação", amount: "300", purchasedAt: "2026-08-05T12:00:00.000Z" }], invoiceAmount: 300, isPaid: false, buyerFilterLabel: "Leonardo" });

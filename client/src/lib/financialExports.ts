@@ -1,7 +1,7 @@
 import { jsPDF } from "jspdf";
 import * as XLSX from "xlsx";
 import type { LocalTransaction } from "./localTransactions";
-import type { LocalInvestment } from "./localInvestments";
+import { investmentCost, investmentMarketValue, type LocalInvestment } from "./localInvestments";
 import type { CreditCard, CreditCardPurchase } from "./localCreditCards";
 export { filterCreditCardInvoicePurchases } from "./invoiceFilters";
 
@@ -190,6 +190,78 @@ export function exportFinancialPdf({
   doc.setFontSize(8);
   doc.text("Os dados deste relatório foram gerados a partir do armazenamento local deste navegador.", margin, y);
   downloadPdf(doc, `findash-lvo-relatorio-${new Date().toISOString().slice(0, 10)}.pdf`);
+}
+
+export function exportInvestmentInstitutionPdf({ investments, institution }: { investments: LocalInvestment[]; institution: string }) {
+  const doc = new jsPDF({ unit: "mm", format: "a4" });
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const margin = 16;
+  const totalMarketValue = investments.reduce((sum, item) => sum + investmentMarketValue(item), 0);
+  const totalCost = investments.reduce((sum, item) => sum + investmentCost(item), 0);
+  let y = 76;
+  const page = () => {
+    doc.setFillColor(10, 11, 18);
+    doc.rect(0, 0, pageWidth, 297, "F");
+    doc.setTextColor(245, 243, 255);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(22);
+    doc.text("Findash LVO", margin, 24);
+    doc.setFontSize(11);
+    doc.setTextColor(190, 171, 255);
+    doc.text("EXTRATO DE INVESTIMENTOS", margin, 31);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(9);
+    doc.setTextColor(178, 170, 205);
+    doc.text(`Instituição: ${pdfSafeText(institution, 42)}`, margin, 38);
+    doc.text(`Gerado em ${new Date().toLocaleString("pt-BR")}`, pageWidth - margin, 31, { align: "right" });
+  };
+  page();
+  const cards = [["Posições", String(investments.length)], ["Valor de mercado", brl.format(totalMarketValue)], ["Custo consolidado", brl.format(totalCost)]];
+  cards.forEach(([label, value], index) => {
+    const width = (pageWidth - margin * 2 - 8) / 3;
+    const x = margin + index * (width + 4);
+    doc.setFillColor(27, 25, 38);
+    doc.roundedRect(x, 47, width, 20, 4, 4, "F");
+    doc.setTextColor(166, 158, 185);
+    doc.setFontSize(8);
+    doc.text(String(label), x + 4, 54);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(10);
+    doc.setTextColor(245, 243, 255);
+    doc.text(pdfSafeText(String(value), 22), x + 4, 62);
+  });
+  for (const item of investments) {
+    const operations = [...(item.operations ?? [])].filter(operation => Number(operation.quantity) > 0 && Number(operation.price) >= 0).sort((a, b) => a.date.localeCompare(b.date) || a.id - b.id);
+    const requiredHeight = 28 + Math.max(1, operations.length) * 6;
+    if (y + requiredHeight > 278) { doc.addPage(); page(); y = 50; }
+    doc.setFillColor(27, 25, 38);
+    doc.roundedRect(margin, y, pageWidth - margin * 2, requiredHeight, 4, 4, "F");
+    doc.setTextColor(245, 243, 255);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(11);
+    doc.text(pdfSafeText(item.ticker || item.name || "Ativo", 34), margin + 5, y + 8);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(8);
+    doc.setTextColor(178, 170, 205);
+    doc.text(`${pdfSafeText(item.institution || institution, 28)} · ${pdfSafeText(item.category, 24)}`, margin + 5, y + 14);
+    doc.text(`Mercado: ${brl.format(investmentMarketValue(item))}`, pageWidth - margin - 5, y + 8, { align: "right" });
+    doc.text(`Custo: ${brl.format(investmentCost(item))}`, pageWidth - margin - 5, y + 14, { align: "right" });
+    doc.setFontSize(7.5);
+    const rows = operations.length ? operations : [{ id: 0, type: "buy" as const, date: item.createdAt.slice(0, 10), quantity: item.quantity, price: item.averagePrice }];
+    rows.forEach((operation, index) => {
+      const rowY = y + 21 + index * 6;
+      doc.setTextColor(operation.type === "buy" ? 110 : 251, operation.type === "buy" ? 231 : 113, operation.type === "buy" ? 183 : 133);
+      doc.text(operation.type === "buy" ? "Aplicação" : "Resgate", margin + 5, rowY);
+      doc.setTextColor(190, 184, 204);
+      doc.text(`${new Date(`${operation.date}T12:00:00`).toLocaleDateString("pt-BR")} · ${Number(operation.quantity).toLocaleString("pt-BR")} × ${brl.format(Number(operation.price))}`, margin + 32, rowY);
+      doc.text(brl.format(Number(operation.quantity) * Number(operation.price)), pageWidth - margin - 5, rowY, { align: "right" });
+    });
+    y += requiredHeight + 5;
+  }
+  doc.setTextColor(130, 122, 150);
+  doc.setFontSize(7);
+  doc.text("Extrato gerado a partir das posições e movimentações cadastradas no Findash LVO.", margin, 287);
+  downloadPdf(doc, `findash-lvo-extrato-${institution.toLocaleLowerCase("pt-BR").replace(/[^a-z0-9]+/g, "-") || "investimentos"}-${new Date().toISOString().slice(0, 10)}.pdf`);
 }
 
 function invoiceMonthLabel(month: string) {
