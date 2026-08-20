@@ -10,6 +10,8 @@ export type MonthlyBudget = {
   plannedAmount: string;
   /** Dia de vencimento mensal usado apenas em despesas fixas. */
   dueDay?: number;
+  /** Data em que a despesa fixa foi marcada manualmente como paga. */
+  paidAt?: string;
   notes?: string;
   createdAt: string;
   updatedAt: string;
@@ -57,6 +59,7 @@ export function isMonthlyBudget(value: unknown): value is MonthlyBudget {
     && (item.kind === "fixed" || item.kind === "variable")
     && typeof item.plannedAmount === "string" && Number(item.plannedAmount) >= 0
     && (item.dueDay === undefined || (Number.isInteger(item.dueDay) && Number(item.dueDay) >= 1 && Number(item.dueDay) <= 31))
+    && (item.paidAt === undefined || typeof item.paidAt === "string")
     && typeof item.createdAt === "string" && typeof item.updatedAt === "string";
 }
 
@@ -134,7 +137,7 @@ export function budgetCategoryTransactions(transactions: LocalTransaction[], mon
   return transactions.filter(transaction => transaction.type === "expense" && transaction.occurredAt.slice(0, 7) === month && transaction.category.trim().toLocaleLowerCase("pt-BR") === normalizedCategory).sort((a, b) => b.occurredAt.localeCompare(a.occurredAt));
 }
 
-export function budgetDueAlert(budget: Pick<MonthlyBudget, "month" | "kind" | "dueDay" | "plannedAmount">, actualAmount: number, today = new Date()): Pick<BudgetLine, "dueDate" | "dueStatus"> {
+export function budgetDueAlert(budget: Pick<MonthlyBudget, "month" | "kind" | "dueDay" | "paidAt" | "plannedAmount">, actualAmount: number, today = new Date()): Pick<BudgetLine, "dueDate" | "dueStatus"> {
   if (budget.kind !== "fixed" || !budget.dueDay) return { dueStatus: "not-applicable" };
   const [year, month] = budget.month.split("-").map(Number);
   const lastDay = new Date(year, month, 0).getDate();
@@ -143,11 +146,22 @@ export function budgetDueAlert(budget: Pick<MonthlyBudget, "month" | "kind" | "d
   const daysUntilDue = Math.round((dueDate.getTime() - todayAtNoon.getTime()) / 86_400_000);
   const plannedAmount = Number(budget.plannedAmount) || 0;
   const dueDateValue = dueDate.toISOString().slice(0, 10);
-  if (plannedAmount > 0 && actualAmount >= plannedAmount) return { dueDate: dueDateValue, dueStatus: "settled" };
+  if (budget.paidAt || (plannedAmount > 0 && actualAmount >= plannedAmount)) return { dueDate: dueDateValue, dueStatus: "settled" };
   if (daysUntilDue < 0) return { dueDate: dueDateValue, dueStatus: "overdue" };
   if (daysUntilDue === 0) return { dueDate: dueDateValue, dueStatus: "due-today" };
   if (daysUntilDue <= 3) return { dueDate: dueDateValue, dueStatus: "due-soon" };
   return { dueDate: dueDateValue, dueStatus: "scheduled" };
+}
+
+const dueStatusPriority: Record<BudgetDueStatus, number> = { overdue: 0, "due-today": 1, "due-soon": 2, scheduled: 3, "not-applicable": 4, settled: 5 };
+
+export function sortBudgetLinesByDueStatus(lines: BudgetLine[]) {
+  return [...lines].sort((first, second) => {
+    const priority = dueStatusPriority[first.dueStatus] - dueStatusPriority[second.dueStatus];
+    if (priority !== 0) return priority;
+    const dueDate = String(first.dueDate ?? "9999-12-31").localeCompare(String(second.dueDate ?? "9999-12-31"));
+    return dueDate || first.category.localeCompare(second.category, "pt-BR");
+  });
 }
 
 export function getBudgetSummary(budgets: MonthlyBudget[], transactions: LocalTransaction[], month: string, today = new Date()): BudgetSummary {

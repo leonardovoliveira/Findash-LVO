@@ -613,3 +613,5 @@
 - [x] Abrir modal glassmorphism com os lançamentos ao selecionar um dia no calendário
 - [x] Corrigir reinvestimento de CDB que é associado indevidamente a outro ativo
 - [x] Adicionar vencimento às despesas fixas do orçamento e alertas visuais para datas próximas ou vencidas
+- [x] Permitir marcar despesa fixa como paga e ordenar vencimentos críticos antes das demais
+- [x] Organizar os lançamentos em ordem cronológica por data

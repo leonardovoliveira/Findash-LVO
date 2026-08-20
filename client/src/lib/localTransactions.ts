@@ -56,6 +56,14 @@ export function filterLocalTransactionsByInvoiceMonth(transactions: LocalTransac
   });
 }
 
+/** Ordena por data de lançamento mais recente e preserva uma ordem estável para empates. */
+export function sortTransactionsByDate(transactions: LocalTransaction[]) {
+  return [...transactions].sort((first, second) => {
+    const dateOrder = new Date(second.occurredAt).getTime() - new Date(first.occurredAt).getTime();
+    return dateOrder || new Date(second.updatedAt).getTime() - new Date(first.updatedAt).getTime() || second.id - first.id;
+  });
+}
+
 export function createLocalTransaction(
   transactions: LocalTransaction[],
   input: Omit<LocalTransaction, "id" | "createdAt" | "updatedAt">,

@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from "vitest";
 import * as XLSX from "xlsx";
-import { createLocalTransaction, exportJson, filterLocalTransactions, filterLocalTransactionsByInvoiceMonth, loadLocalTransactions, parseBackupJson, parseExcelTransactions, parseImportJson, saveLocalTransactions, type LocalTransaction } from "../client/src/lib/localTransactions";
+import { createLocalTransaction, exportJson, filterLocalTransactions, filterLocalTransactionsByInvoiceMonth, loadLocalTransactions, parseBackupJson, parseExcelTransactions, parseImportJson, saveLocalTransactions, sortTransactionsByDate, type LocalTransaction } from "../client/src/lib/localTransactions";
 
 const transaction: LocalTransaction = {
   id: 1,
@@ -48,6 +48,15 @@ describe("local transaction backups", () => {
     expect(created[0].id).toBe(1);
     expect(filterLocalTransactions(created, 8, 2026)).toHaveLength(1);
     expect(filterLocalTransactions(created, 7, 2026)).toHaveLength(0);
+  });
+
+  it("orders transactions by most recent occurrence date", () => {
+    const ordered = sortTransactionsByDate([
+      { ...transaction, id: 1, occurredAt: "2026-08-05T12:00:00.000Z", updatedAt: "2026-08-05T12:00:00.000Z" },
+      { ...transaction, id: 2, occurredAt: "2026-08-20T12:00:00.000Z", updatedAt: "2026-08-20T12:00:00.000Z" },
+      { ...transaction, id: 3, occurredAt: "2026-08-10T12:00:00.000Z", updatedAt: "2026-08-10T12:00:00.000Z" },
+    ]);
+    expect(ordered.map(item => item.id)).toEqual([2, 3, 1]);
   });
 
   it("preserves credit purchase metadata in backups", () => {

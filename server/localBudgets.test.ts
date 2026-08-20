@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { budgetCategoriesForMonth, budgetCategoryTransactions, budgetDueAlert, copyPreviousMonthBudget, createMonthlyBudget, getBudgetSummary, recoverLocalBudgets, removeMonthlyBudget, updateMonthlyBudget } from "../client/src/lib/localBudgets";
+import { budgetCategoriesForMonth, budgetCategoryTransactions, budgetDueAlert, copyPreviousMonthBudget, createMonthlyBudget, getBudgetSummary, recoverLocalBudgets, removeMonthlyBudget, sortBudgetLinesByDueStatus, updateMonthlyBudget } from "../client/src/lib/localBudgets";
 import type { LocalTransaction } from "../client/src/lib/localTransactions";
 
 const transactions: LocalTransaction[] = [
@@ -72,5 +72,16 @@ describe("local budgets", () => {
     expect(budgetDueAlert(budget, 0, new Date("2026-08-20T12:00:00.000Z")).dueStatus).toBe("due-today");
     expect(budgetDueAlert(budget, 0, new Date("2026-08-21T12:00:00.000Z")).dueStatus).toBe("overdue");
     expect(budgetDueAlert(budget, 1200, new Date("2026-08-21T12:00:00.000Z")).dueStatus).toBe("settled");
+  });
+
+  it("keeps manually paid expenses settled and prioritizes overdue due dates", () => {
+    const budgets = [
+      createMonthlyBudget([], { month: "2026-08", category: "Internet", kind: "fixed", plannedAmount: "100", dueDay: 5 })[0],
+      createMonthlyBudget([], { month: "2026-08", category: "Aluguel", kind: "fixed", plannedAmount: "1000", dueDay: 20 })[0],
+      createMonthlyBudget([], { month: "2026-08", category: "Streaming", kind: "fixed", plannedAmount: "30", dueDay: 28 })[0],
+    ].map((budget, index) => ({ ...budget, id: index + 1, paidAt: index === 2 ? "2026-08-01T12:00:00.000Z" : undefined }));
+    const lines = getBudgetSummary(budgets, [], "2026-08", new Date("2026-08-18T12:00:00.000Z")).lines;
+    expect(sortBudgetLinesByDueStatus(lines).map(line => line.category)).toEqual(["Internet", "Aluguel", "Streaming"]);
+    expect(lines.find(line => line.category === "Streaming")?.dueStatus).toBe("settled");
   });
 });

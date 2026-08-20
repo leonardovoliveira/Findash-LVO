@@ -12,6 +12,7 @@ import {
   loadLocalTransactions,
   parseExcelTransactions,
   parseBackupJson,
+  sortTransactionsByDate,
   type LocalTransaction,
   type PaymentMethod,
 } from "@/lib/localTransactions";
@@ -116,6 +117,15 @@ export default function Home() {
     };
     window.addEventListener("findash:budget-due-day-update", updateBudgetDueDay as EventListener);
     return () => window.removeEventListener("findash:budget-due-day-update", updateBudgetDueDay as EventListener);
+  }, []);
+  useEffect(() => {
+    const updateBudgetPayment = (event: Event) => {
+      const detail = (event as CustomEvent<{ id: number; paid: boolean }>).detail;
+      if (!Number.isInteger(detail?.id)) return;
+      setBudgets(current => current.map(budget => budget.id === detail.id && budget.kind === "fixed" ? { ...budget, paidAt: detail.paid ? new Date().toISOString() : undefined, updatedAt: new Date().toISOString() } : budget));
+    };
+    window.addEventListener("findash:budget-payment-update", updateBudgetPayment as EventListener);
+    return () => window.removeEventListener("findash:budget-payment-update", updateBudgetPayment as EventListener);
   }, []);
   const quoteItems = useMemo(() => investments.filter(item => quoteTicker(item.ticker) && ["equities", "funds", "treasury", "dollar", "crypto"].includes(item.category)).map(item => ({ ticker: quoteTicker(item.ticker), category: item.category })), [investments]);
   const quoteQuery = trpc.quotes.brapiBatch.useQuery({ items: quoteItems }, { enabled: Boolean(user) && quoteItems.length > 0, staleTime: 5 * 60 * 1000, refetchOnWindowFocus: false });
@@ -284,7 +294,7 @@ export default function Home() {
   useEffect(() => { localStorage.setItem("findash-lvo:sidebar-collapsed", String(sidebarCollapsed)); }, [sidebarCollapsed]);
   const visibleTransactions = useMemo(() => {
     const periodTransactions = invoiceMonthMode === "invoice" ? filterLocalTransactionsByInvoiceMonth(transactions, month, year) : filterLocalTransactions(transactions, month, year);
-    return paymentFilter === "all" ? periodTransactions : periodTransactions.filter(item => item.paymentMethod === paymentFilter);
+    return sortTransactionsByDate(paymentFilter === "all" ? periodTransactions : periodTransactions.filter(item => item.paymentMethod === paymentFilter));
   }, [transactions, month, year, paymentFilter, invoiceMonthMode]);
   const summary = useMemo(() => visibleTransactions.reduce((acc, item) => { const value = Number(item.amount); item.type === "income" ? acc.income += value : acc.expense += value; return acc; }, { income: 0, expense: 0 }), [visibleTransactions]);
   const yearOptions = useMemo(() => Array.from(new Set([...defaultYears, ...transactions.map(item => new Date(item.occurredAt).getFullYear())])).sort((a, b) => b - a), [transactions]);
