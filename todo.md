@@ -628,3 +628,4 @@
 - [x] Exibir total diário e permitir recolher ou expandir grupos de lançamentos
 - [x] Melhorar o contraste de textos e tooltips da página de lançamentos no dark mode
 - [x] Definir os grupos diários de lançamentos como recolhidos por padrão
+- [x] Ampliar e redesenhar o gráfico de categorias para melhorar a legibilidade
