@@ -612,3 +612,4 @@
 - [x] Cobrir backup, alerta e extrato com testes, validar responsividade e publicar
 - [x] Abrir modal glassmorphism com os lançamentos ao selecionar um dia no calendário
 - [x] Corrigir reinvestimento de CDB que é associado indevidamente a outro ativo
+- [x] Adicionar vencimento às despesas fixas do orçamento e alertas visuais para datas próximas ou vencidas

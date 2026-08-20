@@ -8,15 +8,21 @@ export type MonthlyBudget = {
   category: string;
   kind: BudgetKind;
   plannedAmount: string;
+  /** Dia de vencimento mensal usado apenas em despesas fixas. */
+  dueDay?: number;
   notes?: string;
   createdAt: string;
   updatedAt: string;
 };
 
+export type BudgetDueStatus = "not-applicable" | "scheduled" | "due-soon" | "due-today" | "overdue" | "settled";
+
 export type BudgetLine = MonthlyBudget & {
   actualAmount: number;
   remainingAmount: number;
   percentUsed: number;
+  dueDate?: string;
+  dueStatus: BudgetDueStatus;
 };
 
 export type BudgetSummary = {
@@ -50,6 +56,7 @@ export function isMonthlyBudget(value: unknown): value is MonthlyBudget {
     && typeof item.category === "string" && item.category.trim().length > 0
     && (item.kind === "fixed" || item.kind === "variable")
     && typeof item.plannedAmount === "string" && Number(item.plannedAmount) >= 0
+    && (item.dueDay === undefined || (Number.isInteger(item.dueDay) && Number(item.dueDay) >= 1 && Number(item.dueDay) <= 31))
     && typeof item.createdAt === "string" && typeof item.updatedAt === "string";
 }
 
@@ -79,6 +86,7 @@ export function createMonthlyBudget(budgets: MonthlyBudget[], input: Omit<Monthl
     id: budgets.reduce((max, budget) => Math.max(max, budget.id), 0) + 1,
     category: input.category.trim(),
     plannedAmount: Number(input.plannedAmount).toFixed(2),
+    dueDay: input.kind === "fixed" && Number.isInteger(input.dueDay) && Number(input.dueDay) >= 1 && Number(input.dueDay) <= 31 ? Number(input.dueDay) : undefined,
     notes: input.notes?.trim() || undefined,
     createdAt: nowIso,
     updatedAt: nowIso,
@@ -86,12 +94,13 @@ export function createMonthlyBudget(budgets: MonthlyBudget[], input: Omit<Monthl
   return [...budgets, entry];
 }
 
-export function updateMonthlyBudget(budgets: MonthlyBudget[], id: number, patch: Pick<MonthlyBudget, "category" | "kind" | "plannedAmount" | "notes">, now = new Date()): MonthlyBudget[] {
+export function updateMonthlyBudget(budgets: MonthlyBudget[], id: number, patch: Pick<MonthlyBudget, "category" | "kind" | "plannedAmount" | "dueDay" | "notes">, now = new Date()): MonthlyBudget[] {
   return budgets.map(budget => budget.id === id ? {
     ...budget,
     ...patch,
     category: patch.category.trim(),
     plannedAmount: Number(patch.plannedAmount).toFixed(2),
+    dueDay: patch.kind === "fixed" && Number.isInteger(patch.dueDay) && Number(patch.dueDay) >= 1 && Number(patch.dueDay) <= 31 ? Number(patch.dueDay) : undefined,
     notes: patch.notes?.trim() || undefined,
     updatedAt: now.toISOString(),
   } : budget);
@@ -107,7 +116,7 @@ export function copyPreviousMonthBudget(budgets: MonthlyBudget[], targetMonth: s
   const previousMonth = `${previousDate.getFullYear()}-${String(previousDate.getMonth() + 1).padStart(2, "0")}`;
   const targetCategories = new Set(budgets.filter(budget => budget.month === targetMonth).map(budget => `${budget.kind}:${budget.category.toLocaleLowerCase("pt-BR")}`));
   const source = budgets.filter(budget => budget.month === previousMonth && !targetCategories.has(`${budget.kind}:${budget.category.toLocaleLowerCase("pt-BR")}`));
-  return source.reduce((next, budget) => createMonthlyBudget(next, { month: targetMonth, category: budget.category, kind: budget.kind, plannedAmount: budget.plannedAmount, notes: budget.notes }, now), budgets);
+  return source.reduce((next, budget) => createMonthlyBudget(next, { month: targetMonth, category: budget.category, kind: budget.kind, plannedAmount: budget.plannedAmount, dueDay: budget.dueDay, notes: budget.notes }, now), budgets);
 }
 
 export function budgetCategoriesForMonth(budgets: MonthlyBudget[], month: string) {
@@ -125,6 +134,22 @@ export function budgetCategoryTransactions(transactions: LocalTransaction[], mon
   return transactions.filter(transaction => transaction.type === "expense" && transaction.occurredAt.slice(0, 7) === month && transaction.category.trim().toLocaleLowerCase("pt-BR") === normalizedCategory).sort((a, b) => b.occurredAt.localeCompare(a.occurredAt));
 }
 
+export function budgetDueAlert(budget: Pick<MonthlyBudget, "month" | "kind" | "dueDay" | "plannedAmount">, actualAmount: number, today = new Date()): Pick<BudgetLine, "dueDate" | "dueStatus"> {
+  if (budget.kind !== "fixed" || !budget.dueDay) return { dueStatus: "not-applicable" };
+  const [year, month] = budget.month.split("-").map(Number);
+  const lastDay = new Date(year, month, 0).getDate();
+  const dueDate = new Date(year, month - 1, Math.min(budget.dueDay, lastDay), 12, 0, 0, 0);
+  const todayAtNoon = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 12, 0, 0, 0);
+  const daysUntilDue = Math.round((dueDate.getTime() - todayAtNoon.getTime()) / 86_400_000);
+  const plannedAmount = Number(budget.plannedAmount) || 0;
+  const dueDateValue = dueDate.toISOString().slice(0, 10);
+  if (plannedAmount > 0 && actualAmount >= plannedAmount) return { dueDate: dueDateValue, dueStatus: "settled" };
+  if (daysUntilDue < 0) return { dueDate: dueDateValue, dueStatus: "overdue" };
+  if (daysUntilDue === 0) return { dueDate: dueDateValue, dueStatus: "due-today" };
+  if (daysUntilDue <= 3) return { dueDate: dueDateValue, dueStatus: "due-soon" };
+  return { dueDate: dueDateValue, dueStatus: "scheduled" };
+}
+
 export function getBudgetSummary(budgets: MonthlyBudget[], transactions: LocalTransaction[], month: string, today = new Date()): BudgetSummary {
   const monthlyBudgets = budgets.filter(budget => budget.month === month).sort((a, b) => a.kind.localeCompare(b.kind) || a.category.localeCompare(b.category));
   const expenses = transactions.filter(transaction => transaction.type === "expense" && transaction.occurredAt.slice(0, 7) === month);
@@ -137,7 +162,7 @@ export function getBudgetSummary(budgets: MonthlyBudget[], transactions: LocalTr
   const lines = monthlyBudgets.map(budget => {
     const actualAmount = actualByCategory.get(budget.category.trim().toLocaleLowerCase("pt-BR")) ?? 0;
     const plannedAmount = Number(budget.plannedAmount) || 0;
-    return { ...budget, actualAmount, remainingAmount: plannedAmount - actualAmount, percentUsed: plannedAmount > 0 ? (actualAmount / plannedAmount) * 100 : actualAmount > 0 ? 100 : 0 };
+    return { ...budget, actualAmount, remainingAmount: plannedAmount - actualAmount, percentUsed: plannedAmount > 0 ? (actualAmount / plannedAmount) * 100 : actualAmount > 0 ? 100 : 0, ...budgetDueAlert(budget, actualAmount, today) };
   });
   const plannedTotal = lines.reduce((sum, line) => sum + Number(line.plannedAmount), 0);
   const actualTotal = expenses.reduce((sum, transaction) => sum + Number(transaction.amount || 0), 0);

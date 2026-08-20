@@ -108,6 +108,15 @@ export default function Home() {
     window.addEventListener("findash:investment-operation-delete", deleteOperation as EventListener);
     return () => { window.removeEventListener("findash:investment-operation-update", updateOperation as EventListener); window.removeEventListener("findash:investment-operation-delete", deleteOperation as EventListener); };
   }, []);
+  useEffect(() => {
+    const updateBudgetDueDay = (event: Event) => {
+      const detail = (event as CustomEvent<{ id: number; dueDay: number }>).detail;
+      if (!Number.isInteger(detail?.id) || !Number.isInteger(detail?.dueDay) || detail.dueDay < 1 || detail.dueDay > 31) return;
+      setBudgets(current => current.map(budget => budget.id === detail.id && budget.kind === "fixed" ? { ...budget, dueDay: detail.dueDay, updatedAt: new Date().toISOString() } : budget));
+    };
+    window.addEventListener("findash:budget-due-day-update", updateBudgetDueDay as EventListener);
+    return () => window.removeEventListener("findash:budget-due-day-update", updateBudgetDueDay as EventListener);
+  }, []);
   const quoteItems = useMemo(() => investments.filter(item => quoteTicker(item.ticker) && ["equities", "funds", "treasury", "dollar", "crypto"].includes(item.category)).map(item => ({ ticker: quoteTicker(item.ticker), category: item.category })), [investments]);
   const quoteQuery = trpc.quotes.brapiBatch.useQuery({ items: quoteItems }, { enabled: Boolean(user) && quoteItems.length > 0, staleTime: 5 * 60 * 1000, refetchOnWindowFocus: false });
   const marketWidgetQuery = trpc.quotes.brapiBatch.useQuery({ items: [{ ticker: "USD-BRL", category: "dollar" }, { ticker: "EUR-BRL", category: "dollar" }, { ticker: "BTC", category: "crypto" }, { ticker: "ETH-BRL", category: "crypto" }] }, { enabled: Boolean(user), staleTime: 5 * 60 * 1000, refetchOnWindowFocus: false });
