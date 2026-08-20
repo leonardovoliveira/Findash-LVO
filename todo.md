@@ -626,3 +626,5 @@
 - [x] Exibir gráficos de pizza de categorias acima das colunas de entradas e saídas
 - [x] Filtrar lançamentos pela categoria ao clicar nas fatias dos gráficos de pizza
 - [x] Exibir total diário e permitir recolher ou expandir grupos de lançamentos
+- [x] Melhorar o contraste de textos e tooltips da página de lançamentos no dark mode
+- [x] Definir os grupos diários de lançamentos como recolhidos por padrão
