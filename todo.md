@@ -621,3 +621,4 @@
 - [x] Adicionar botão de marcar como pago no modal de vencimentos do calendário
 - [x] Exibir marcadores de vencimento apenas para datas futuras
 - [x] Corrigir cotações automáticas do GMAT3 e dos ativos internacionais
+- [x] Remover quantidade e preço médio do cadastro, cálculo e cards de renda fixa

@@ -284,6 +284,28 @@ export default function Home() {
     setSelectedDate(`${year}-${String(month).padStart(2, "0")}-01`);
   }, [month, year]);
 
+  useEffect(() => {
+    const fixedIncomeModal = investmentForm?.category === "fixed-income";
+    document.querySelectorAll<HTMLElement>("label").forEach(label => {
+      const field = label.parentElement;
+      if (!field) return;
+      if (label.textContent === "Quantidade") {
+        field.style.display = fixedIncomeModal ? "none" : "";
+      }
+      if (label.textContent === "Preço da operação / PM" || label.dataset.fixedIncomeLabel === "true") {
+        label.dataset.fixedIncomeLabel = "true";
+        label.textContent = fixedIncomeModal ? "Valor aplicado" : "Preço da operação / PM";
+      }
+    });
+    document.querySelectorAll<HTMLElement>("article").forEach(card => {
+      if (!card.textContent?.includes("Renda fixa")) return;
+      const valueLine = Array.from(card.querySelectorAll("p")).find(line => line.textContent?.startsWith("Quantidade:"));
+      if (!valueLine) return;
+      const fixedItem = investments.find(item => card.textContent?.includes(item.ticker) && item.category === "fixed-income");
+      if (fixedItem) valueLine.textContent = `Valor aplicado: ${money.format(investmentCost(fixedItem))}`;
+    });
+  }, [investmentForm?.category, investments]);
+
   const saving = false;
   const refreshQuotes = async (targetTicker?: string) => {
     if (targetTicker) setRefreshingInvestmentTicker(targetTicker.toUpperCase());
