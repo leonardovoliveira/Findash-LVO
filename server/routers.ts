@@ -61,6 +61,30 @@ export function extractBrapiStockQuote(payload: unknown) {
   };
 }
 
+export async function fetchYahooStockQuote(ticker: string, category: "equities" | "funds" | "dollar", fetchedAt: string, signal: AbortSignal, fetchImpl: typeof fetch = fetch): Promise<MarketQuoteResult> {
+  const normalized = ticker.trim().toUpperCase();
+  const candidates = category === "dollar" ? [normalized] : [`${normalized}.SA`, normalized];
+  let lastError = "Ticker sem cotação disponível";
+  for (const symbol of candidates) {
+    try {
+      const response = await fetchImpl(`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?range=5d&interval=1d`, { headers: { Accept: "application/json" }, signal });
+      if (!response.ok) { lastError = `Yahoo Finance respondeu HTTP ${response.status}`; continue; }
+      const payload = await response.json() as { chart?: { result?: Array<{ meta?: { regularMarketPrice?: number; previousClose?: number; chartPreviousClose?: number; currency?: string; regularMarketTime?: number } }> } };
+      const meta = payload.chart?.result?.[0]?.meta;
+      const price = Number(meta?.regularMarketPrice);
+      if (!Number.isFinite(price)) { lastError = "Yahoo Finance não retornou preço atual"; continue; }
+      const previousClose = firstFinite(meta?.previousClose, meta?.chartPreviousClose);
+      const changePercent = previousClose && previousClose !== 0 ? ((price / previousClose) - 1) * 100 : null;
+      const quoteTime = meta?.regularMarketTime ? new Date(meta.regularMarketTime * 1000).toISOString() : fetchedAt;
+      return { ok: true, ticker, price, changePercent, previousClose: previousClose ?? null, currency: meta?.currency ?? (category === "dollar" ? "USD" : "BRL"), source: `Yahoo Finance (${symbol})`, fetchedAt: quoteTime };
+    } catch (error) {
+      if (error instanceof Error && error.name === "AbortError") return { ok: false, ticker, source: "Yahoo Finance", fetchedAt, error: "Tempo limite da cotação excedido" };
+      lastError = "Não foi possível consultar o Yahoo Finance";
+    }
+  }
+  return { ok: false, ticker, source: "Yahoo Finance", fetchedAt, error: lastError };
+}
+
 export async function fetchMarketFallback(category: "dollar" | "crypto", ticker: string, fetchedAt: string, signal: AbortSignal, fetchImpl: typeof fetch = fetch): Promise<MarketQuoteResult> {
   if (category === "dollar") {
     const pair = ticker === "EUR-BRL" ? "EUR-BRL" : "USD-BRL";
@@ -242,13 +266,17 @@ export const appRouter = router({
         const controller = new AbortController();
         const timeout = setTimeout(() => controller.abort(), 8000);
         try {
-          if (item.category === "dollar" || item.category === "crypto") return await fetchMarketFallback(item.category, ticker, fetchedAt, controller.signal);
+          if (item.category === "crypto") return await fetchMarketFallback(item.category, ticker, fetchedAt, controller.signal);
+          if (item.category === "dollar") {
+            if (["USD-BRL", "EUR-BRL"].includes(ticker)) return await fetchMarketFallback("dollar", ticker, fetchedAt, controller.signal);
+            return await fetchYahooStockQuote(ticker, "dollar", fetchedAt, controller.signal);
+          }
           if (item.category === "treasury") return await fetchTreasuryQuote(ticker, fetchedAt, controller.signal, fetch, ENV.brapiToken);
           const url = `https://brapi.dev/api/v2/stocks/quote?symbols=${encodeURIComponent(ticker)}`;
           const response = await fetch(url, { headers, signal: controller.signal });
-          if (!response.ok) return { ok: false as const, ticker, source: "brapi.dev", fetchedAt, error: `A fonte respondeu HTTP ${response.status}` };
+          if (!response.ok) return await fetchYahooStockQuote(ticker, item.category === "funds" ? "funds" : "equities", fetchedAt, controller.signal);
           const extracted = extractBrapiStockQuote(await response.json());
-          if (!extracted) return { ok: false as const, ticker, source: "brapi.dev", fetchedAt, error: "Ticker sem cotação disponível" };
+          if (!extracted) return await fetchYahooStockQuote(ticker, item.category === "funds" ? "funds" : "equities", fetchedAt, controller.signal);
           return { ok: true as const, ticker, price: extracted.price, changePercent: extracted.changePercent, previousClose: extracted.previousClose, currency: extracted.currency, source: "brapi.dev", fetchedAt: extracted.fetchedAt ?? fetchedAt };
         } catch (error) {
           return { ok: false as const, ticker, source: "brapi.dev", fetchedAt, error: error instanceof Error && error.name === "AbortError" ? "Tempo limite da cotação excedido" : "Não foi possível consultar a cotação" };

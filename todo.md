@@ -618,3 +618,6 @@
 - [x] Destacar visualmente despesas fixas atrasadas nos cards do orçamento
 - [x] Sinalizar vencimentos no calendário e exibi-los no modal da data
 - [x] Excluir despesas de investimento do total exibido no card de saídas sem alterar o saldo
+- [x] Adicionar botão de marcar como pago no modal de vencimentos do calendário
+- [x] Exibir marcadores de vencimento apenas para datas futuras
+- [x] Corrigir cotações automáticas do GMAT3 e dos ativos internacionais

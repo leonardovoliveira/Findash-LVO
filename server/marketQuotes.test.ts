@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { extractBrapiStockQuote, fetchMarketFallback, fetchTreasuryHistory, fetchTreasuryQuote, treasurySymbolCandidates } from "./routers";
+import { extractBrapiStockQuote, fetchMarketFallback, fetchTreasuryHistory, fetchTreasuryQuote, fetchYahooStockQuote, treasurySymbolCandidates } from "./routers";
 
 describe("market quote fallbacks", () => {
   it("reads quoted prices from the current and legacy brapi result shapes", () => {
@@ -41,6 +41,19 @@ describe("market quote fallbacks", () => {
     const result = await fetchMarketFallback("crypto", "ETH-BRL", "2026-08-15T12:00:00.000Z", new AbortController().signal, fetchMock);
     expect(result).toMatchObject({ ok: true, ticker: "ETH-BRL", price: 18000, changePercent: -1.2, currency: "BRL", source: "CoinGecko" });
     expect(fetchMock).toHaveBeenCalledWith("https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=brl&include_24hr_change=true", expect.any(Object));
+  });
+
+  it("uses Yahoo Finance for an international asset quote", async () => {
+    const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(new Response(JSON.stringify({ chart: { result: [{ meta: { regularMarketPrice: 223.3, previousClose: 220, currency: "USD", regularMarketTime: 1787200000 } }] } }), { status: 200 }));
+    const result = await fetchYahooStockQuote("LAND", "dollar", "2026-08-20T12:00:00.000Z", new AbortController().signal, fetchMock);
+    expect(result).toMatchObject({ ok: true, ticker: "LAND", price: 223.3, currency: "USD", source: "Yahoo Finance (LAND)" });
+  });
+
+  it("uses the B3 suffix when falling back for a Brazilian equity", async () => {
+    const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(new Response(JSON.stringify({ chart: { result: [{ meta: { regularMarketPrice: 5.31, previousClose: 5.2, currency: "BRL" } }] } }), { status: 200 }));
+    const result = await fetchYahooStockQuote("GMAT3", "equities", "2026-08-20T12:00:00.000Z", new AbortController().signal, fetchMock);
+    expect(result).toMatchObject({ ok: true, ticker: "GMAT3", price: 5.31, currency: "BRL", source: "Yahoo Finance (GMAT3.SA)" });
+    expect(fetchMock).toHaveBeenCalledWith(expect.stringContaining("GMAT3.SA"), expect.any(Object));
   });
 
   it("maps current Tesouro Direto indicators to a BRL quote", async () => {

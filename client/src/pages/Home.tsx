@@ -581,7 +581,10 @@ function CalendarCard({ allTransactions, month, year, selectedDate, onSelectDate
     window.dispatchEvent(new Event("findash:budget-calendar-request"));
     return () => window.removeEventListener("findash:budget-calendar-sync", sync as EventListener);
   }, []);
-  const dueForDate = (date: string) => dueBudgets.filter(budget => budget.month === date.slice(0, 7) && budget.kind === "fixed" && budget.dueDay === Number(date.slice(-2)) && budgetDueAlert(budget, 0).dueStatus !== "settled");
+  const dueForDate = (date: string) => dueBudgets.filter(budget => {
+    const status = budgetDueAlert(budget, 0).dueStatus;
+    return budget.month === date.slice(0, 7) && budget.kind === "fixed" && budget.dueDay === Number(date.slice(-2)) && ["scheduled", "due-soon", "due-today"].includes(status);
+  });
   useEffect(() => {
     const buttons = Array.from(document.querySelectorAll<HTMLButtonElement>(`button[aria-label^="Ver lançamentos de"]`));
     buttons.forEach(button => {
@@ -631,7 +634,20 @@ function DayTransactionsDialog({ date, transactions, onClose }: { date: string |
     const detail = document.createElement("p");
     detail.className = "mt-1 text-xs text-amber-100/80";
     detail.textContent = dueItems.map(item => `${item.category} · ${money.format(Number(item.plannedAmount))}`).join(" | ");
-    notice.append(title, detail);
+    const actions = document.createElement("div");
+    actions.className = "mt-3 flex flex-wrap gap-2";
+    dueItems.forEach(item => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "rounded-lg bg-emerald-400/15 px-2.5 py-1.5 text-xs font-semibold text-emerald-100 transition hover:bg-emerald-400/25";
+      button.textContent = `Marcar ${item.category} como pago`;
+      button.onclick = () => {
+        window.dispatchEvent(new CustomEvent("findash:budget-payment-update", { detail: { id: item.id, paid: true } }));
+        toast.success(`${item.category} marcada como paga`);
+      };
+      actions.appendChild(button);
+    });
+    notice.append(title, detail, actions);
     dialog.prepend(notice);
   }, [date, dueItems]);
   return <Dialog open={Boolean(date)} onOpenChange={open => { if (!open) onClose(); }}><DialogContent className="glass-modal max-h-[85vh] max-w-xl overflow-y-auto border-white/15 p-5 shadow-2xl shadow-black/40 sm:p-6"><DialogHeader><p className="text-xs font-medium uppercase tracking-[0.22em] text-primary">Detalhes do dia</p><DialogTitle className="capitalize">{formattedDate}</DialogTitle><DialogDescription>{transactions.length ? `${transactions.length} lançamento(s) registrado(s) nesta data.` : "Ainda não há lançamentos registrados nesta data."}</DialogDescription></DialogHeader>{transactions.length > 0 ? <><div className="grid grid-cols-2 gap-3"><div className="rounded-2xl border border-emerald-400/15 bg-emerald-400/[0.07] p-4"><p className="text-xs text-muted-foreground">Entradas</p><p className="mt-1 text-lg font-semibold text-emerald-300">{money.format(income)}</p></div><div className="rounded-2xl border border-rose-400/15 bg-rose-400/[0.07] p-4"><p className="text-xs text-muted-foreground">Saídas</p><p className="mt-1 text-lg font-semibold text-rose-300">{money.format(expense)}</p></div></div><div className="mt-1 space-y-2">{transactions.map(item => <article key={item.id} className="flex items-center gap-3 rounded-2xl border border-white/8 bg-white/[0.035] p-3"><div className={`grid h-10 w-10 shrink-0 place-items-center rounded-xl ${item.type === "income" ? "bg-emerald-400/10 text-emerald-300" : "bg-rose-400/10 text-rose-300"}`}><span className="text-base">{item.icon || (item.type === "income" ? "↗" : "◒")}</span></div><div className="min-w-0 flex-1"><p className="truncate text-sm font-medium">{item.description || item.store || "Lançamento"}</p><p className="mt-0.5 truncate text-xs text-muted-foreground">{item.category || "Sem categoria"}{item.store && item.description ? ` · ${item.store}` : ""}{item.product ? ` · ${item.product}` : ""}</p></div><p className={`shrink-0 text-sm font-semibold ${item.type === "income" ? "text-emerald-300" : "text-rose-300"}`}>{item.type === "income" ? "+" : "−"}{money.format(Number(item.amount))}</p></article>)}</div></> : <div className="grid min-h-44 place-items-center rounded-2xl border border-dashed border-white/15 bg-white/[0.025] p-6 text-center"><div><CalendarDays className="mx-auto h-7 w-7 text-primary/80" /><p className="mt-3 text-sm font-medium">Nenhum lançamento neste dia</p><p className="mt-1 text-xs text-muted-foreground">Use o botão “+” para registrar uma entrada ou saída nesta data.</p></div></div>}<DialogFooter className="mt-2"><Button type="button" variant="outline" className="border-white/15 bg-white/[0.03]" onClick={onClose}>Fechar</Button></DialogFooter></DialogContent></Dialog>;
