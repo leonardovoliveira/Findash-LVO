@@ -624,3 +624,5 @@
 - [x] Remover quantidade e preço médio do cadastro, cálculo e cards de renda fixa
 - [x] Agrupar entradas e saídas por dia na página de lançamentos
 - [x] Exibir gráficos de pizza de categorias acima das colunas de entradas e saídas
+- [x] Filtrar lançamentos pela categoria ao clicar nas fatias dos gráficos de pizza
+- [x] Exibir total diário e permitir recolher ou expandir grupos de lançamentos
