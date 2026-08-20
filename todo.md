@@ -622,3 +622,5 @@
 - [x] Exibir marcadores de vencimento apenas para datas futuras
 - [x] Corrigir cotações automáticas do GMAT3 e dos ativos internacionais
 - [x] Remover quantidade e preço médio do cadastro, cálculo e cards de renda fixa
+- [x] Agrupar entradas e saídas por dia na página de lançamentos
+- [x] Exibir gráficos de pizza de categorias acima das colunas de entradas e saídas
