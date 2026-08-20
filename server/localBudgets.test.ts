@@ -84,4 +84,8 @@ describe("local budgets", () => {
     expect(sortBudgetLinesByDueStatus(lines).map(line => line.category)).toEqual(["Internet", "Aluguel", "Streaming"]);
     expect(lines.find(line => line.category === "Streaming")?.dueStatus).toBe("settled");
   });
+
+  it("treats a manually paid fixed expense as settled even without a matching transaction", () => {
+    expect(budgetDueAlert({ month: "2026-08", kind: "fixed", plannedAmount: "100", dueDay: 5, paidAt: "2026-08-01T12:00:00.000Z" }, 0, new Date("2026-08-12T12:00:00.000Z")).dueStatus).toBe("settled");
+  });
 });

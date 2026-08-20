@@ -615,3 +615,6 @@
 - [x] Adicionar vencimento às despesas fixas do orçamento e alertas visuais para datas próximas ou vencidas
 - [x] Permitir marcar despesa fixa como paga e ordenar vencimentos críticos antes das demais
 - [x] Organizar os lançamentos em ordem cronológica por data
+- [x] Destacar visualmente despesas fixas atrasadas nos cards do orçamento
+- [x] Sinalizar vencimentos no calendário e exibi-los no modal da data
+- [x] Excluir despesas de investimento do total exibido no card de saídas sem alterar o saldo

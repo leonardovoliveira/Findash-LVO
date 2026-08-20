@@ -64,6 +64,10 @@ export function sortTransactionsByDate(transactions: LocalTransaction[]) {
   });
 }
 
+export function isInvestmentExpense(transaction: Pick<LocalTransaction, "type" | "category">) {
+  return transaction.type === "expense" && transaction.category.trim().toLocaleLowerCase("pt-BR") === "investimentos";
+}
+
 export function createLocalTransaction(
   transactions: LocalTransaction[],
   input: Omit<LocalTransaction, "id" | "createdAt" | "updatedAt">,

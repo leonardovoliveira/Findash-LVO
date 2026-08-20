@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from "vitest";
 import * as XLSX from "xlsx";
-import { createLocalTransaction, exportJson, filterLocalTransactions, filterLocalTransactionsByInvoiceMonth, loadLocalTransactions, parseBackupJson, parseExcelTransactions, parseImportJson, saveLocalTransactions, sortTransactionsByDate, type LocalTransaction } from "../client/src/lib/localTransactions";
+import { createLocalTransaction, exportJson, filterLocalTransactions, filterLocalTransactionsByInvoiceMonth, isInvestmentExpense, loadLocalTransactions, parseBackupJson, parseExcelTransactions, parseImportJson, saveLocalTransactions, sortTransactionsByDate, type LocalTransaction } from "../client/src/lib/localTransactions";
 
 const transaction: LocalTransaction = {
   id: 1,
@@ -57,6 +57,12 @@ describe("local transaction backups", () => {
       { ...transaction, id: 3, occurredAt: "2026-08-10T12:00:00.000Z", updatedAt: "2026-08-10T12:00:00.000Z" },
     ]);
     expect(ordered.map(item => item.id)).toEqual([2, 3, 1]);
+  });
+
+  it("identifies investment expenses for presentation rules", () => {
+    expect(isInvestmentExpense({ type: "expense", category: "Investimentos" })).toBe(true);
+    expect(isInvestmentExpense({ type: "expense", category: "Moradia" })).toBe(false);
+    expect(isInvestmentExpense({ type: "income", category: "Investimentos" })).toBe(false);
   });
 
   it("preserves credit purchase metadata in backups", () => {

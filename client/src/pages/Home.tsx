@@ -10,6 +10,7 @@ import {
   filterLocalTransactions,
   filterLocalTransactionsByInvoiceMonth,
   loadLocalTransactions,
+  isInvestmentExpense,
   parseExcelTransactions,
   parseBackupJson,
   sortTransactionsByDate,
@@ -23,7 +24,7 @@ import { addLocalCategory, deleteLocalCategory, isDefaultCategory, loadLocalCate
 import CreditCardsPage, { NextInvoiceCard, type CreditCardForm } from "@/pages/CreditCardsPage";
 import BudgetPage, { type BudgetDraft } from "@/pages/BudgetPage";
 import InvestmentOperationCardActions from "@/components/InvestmentOperationCardActions";
-import { budgetCategoriesForMonth, copyPreviousMonthBudget, createMonthlyBudget, loadLocalBudgets, recoverLocalBudgets, removeMonthlyBudget, saveLocalBudgets, updateMonthlyBudget, type MonthlyBudget } from "@/lib/localBudgets";
+import { budgetCategoriesForMonth, budgetDueAlert, copyPreviousMonthBudget, createMonthlyBudget, loadLocalBudgets, recoverLocalBudgets, removeMonthlyBudget, saveLocalBudgets, updateMonthlyBudget, type MonthlyBudget } from "@/lib/localBudgets";
 import { Button } from "@/components/ui/button";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -127,6 +128,12 @@ export default function Home() {
     window.addEventListener("findash:budget-payment-update", updateBudgetPayment as EventListener);
     return () => window.removeEventListener("findash:budget-payment-update", updateBudgetPayment as EventListener);
   }, []);
+  useEffect(() => {
+    const syncBudgetCalendar = () => window.dispatchEvent(new CustomEvent("findash:budget-calendar-sync", { detail: budgets }));
+    window.addEventListener("findash:budget-calendar-request", syncBudgetCalendar);
+    syncBudgetCalendar();
+    return () => window.removeEventListener("findash:budget-calendar-request", syncBudgetCalendar);
+  }, [budgets]);
   const quoteItems = useMemo(() => investments.filter(item => quoteTicker(item.ticker) && ["equities", "funds", "treasury", "dollar", "crypto"].includes(item.category)).map(item => ({ ticker: quoteTicker(item.ticker), category: item.category })), [investments]);
   const quoteQuery = trpc.quotes.brapiBatch.useQuery({ items: quoteItems }, { enabled: Boolean(user) && quoteItems.length > 0, staleTime: 5 * 60 * 1000, refetchOnWindowFocus: false });
   const marketWidgetQuery = trpc.quotes.brapiBatch.useQuery({ items: [{ ticker: "USD-BRL", category: "dollar" }, { ticker: "EUR-BRL", category: "dollar" }, { ticker: "BTC", category: "crypto" }, { ticker: "ETH-BRL", category: "crypto" }] }, { enabled: Boolean(user), staleTime: 5 * 60 * 1000, refetchOnWindowFocus: false });
@@ -296,7 +303,8 @@ export default function Home() {
     const periodTransactions = invoiceMonthMode === "invoice" ? filterLocalTransactionsByInvoiceMonth(transactions, month, year) : filterLocalTransactions(transactions, month, year);
     return sortTransactionsByDate(paymentFilter === "all" ? periodTransactions : periodTransactions.filter(item => item.paymentMethod === paymentFilter));
   }, [transactions, month, year, paymentFilter, invoiceMonthMode]);
-  const summary = useMemo(() => visibleTransactions.reduce((acc, item) => { const value = Number(item.amount); item.type === "income" ? acc.income += value : acc.expense += value; return acc; }, { income: 0, expense: 0 }), [visibleTransactions]);
+  const summary = useMemo(() => visibleTransactions.reduce((acc, item) => { const value = Number(item.amount); if (item.type === "income") acc.income += value; else { acc.expense += value; if (isInvestmentExpense(item)) acc.investmentExpense += value; } return acc; }, { income: 0, expense: 0, investmentExpense: 0, expenseWithoutInvestments: 0 }), [visibleTransactions]);
+  summary.expenseWithoutInvestments = summary.expense - summary.investmentExpense;
   const yearOptions = useMemo(() => Array.from(new Set([...defaultYears, ...transactions.map(item => new Date(item.occurredAt).getFullYear())])).sort((a, b) => b - a), [transactions]);
 
   if (loading) return <div className="min-h-screen grid place-items-center"><div className="animate-pulse text-muted-foreground">Carregando seu espaço financeiro...</div></div>;
@@ -538,7 +546,7 @@ function Dashboard({ summary, transactions, month, year, selectedDate, paymentFi
     nextInvoice: <NextInvoiceCard cards={creditCards} onTogglePaid={onToggleCreditCardPaid} onAdd={onAddCreditCard} />,
     allocationType: <InvestmentAllocationCard title="Investimentos por tipo" data={allocationByType} />,
     allocationInstitution: <InvestmentAllocationCard title="Investimentos por instituição" data={allocationByInstitution} />,
-    periodSummary: <section className="glass-panel dashboard-card min-h-[136px] rounded-3xl border p-5"><p className="text-sm font-medium">Resumo do período</p><p className="mt-1 text-xs text-muted-foreground">Use os filtros no cabeçalho para navegar entre meses e anos.</p><div className="mt-5 grid grid-cols-2 gap-3"><div className="rounded-2xl bg-emerald-400/8 p-4"><p className="text-xs text-muted-foreground">Entradas</p><p className="mt-2 text-lg font-semibold text-emerald-300">{money.format(summary.income)}</p></div><div className="rounded-2xl bg-rose-400/8 p-4"><p className="text-xs text-muted-foreground">Saídas</p><p className="mt-2 text-lg font-semibold text-rose-300">{money.format(summary.expense)}</p></div></div></section>,
+    periodSummary: <section className="glass-panel dashboard-card min-h-[136px] rounded-3xl border p-5"><p className="text-sm font-medium">Resumo do período</p><p className="mt-1 text-xs text-muted-foreground">Aplicações em investimentos seguem no saldo, mas não compõem as saídas exibidas.</p><div className="mt-5 grid grid-cols-2 gap-3"><div className="rounded-2xl bg-emerald-400/8 p-4"><p className="text-xs text-muted-foreground">Entradas</p><p className="mt-2 text-lg font-semibold text-emerald-300">{money.format(summary.income)}</p></div><div className="rounded-2xl bg-rose-400/8 p-4"><p className="text-xs text-muted-foreground">Saídas</p><p className="mt-2 text-lg font-semibold text-rose-300">{money.format(summary.expenseWithoutInvestments)}</p></div></div></section>,
   };
   const show = (key: DashboardWidgetKey) => widgetMap[key];
   const frame = (key: DashboardWidgetKey) => <div className="min-w-0">{widgetMap[key]}</div>;
@@ -559,6 +567,7 @@ function AssetPerformanceChart({ ticker, options, onTickerChange, data, loading,
 
 function CalendarCard({ allTransactions, month, year, selectedDate, onSelectDate, compact = false }: any) {
   const [detailDate, setDetailDate] = useState<string | null>(null);
+  const [dueBudgets, setDueBudgets] = useState<MonthlyBudget[]>([]);
   const daysInMonth = new Date(year, month, 0).getDate();
   const firstDay = (new Date(year, month - 1, 1).getDay() + 6) % 7;
   const byDate = new Map<string, LocalTransaction[]>();
@@ -566,17 +575,65 @@ function CalendarCard({ allTransactions, month, year, selectedDate, onSelectDate
     const key = new Date(item.occurredAt).toISOString().slice(0, 10);
     byDate.set(key, [...(byDate.get(key) ?? []), item]);
   });
+  useEffect(() => {
+    const sync = (event: Event) => setDueBudgets((event as CustomEvent<MonthlyBudget[]>).detail ?? []);
+    window.addEventListener("findash:budget-calendar-sync", sync as EventListener);
+    window.dispatchEvent(new Event("findash:budget-calendar-request"));
+    return () => window.removeEventListener("findash:budget-calendar-sync", sync as EventListener);
+  }, []);
+  const dueForDate = (date: string) => dueBudgets.filter(budget => budget.month === date.slice(0, 7) && budget.kind === "fixed" && budget.dueDay === Number(date.slice(-2)) && budgetDueAlert(budget, 0).dueStatus !== "settled");
+  useEffect(() => {
+    const buttons = Array.from(document.querySelectorAll<HTMLButtonElement>(`button[aria-label^="Ver lançamentos de"]`));
+    buttons.forEach(button => {
+      button.querySelectorAll("[data-budget-due-marker]").forEach(marker => marker.remove());
+      const day = Number(button.getAttribute("aria-label")?.match(/de (\d{1,2}) de/)?.[1]);
+      const date = `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+      if (Number.isInteger(day) && dueForDate(date).length) {
+        const marker = document.createElement("i");
+        marker.dataset.budgetDueMarker = "true";
+        marker.className = "absolute right-1 top-1 h-1.5 w-1.5 rounded-full bg-amber-300 shadow-sm shadow-amber-300/80";
+        marker.setAttribute("aria-label", "Há vencimento nesta data");
+        button.appendChild(marker);
+      }
+    });
+  }, [dueBudgets, month, year]);
   const selectDay = (date: string) => {
     onSelectDate(date);
     setDetailDate(date);
+    const due = dueForDate(date);
+    if (due.length) toast.info(`Vencimento: ${due.map(item => item.category).join(", ")}`);
   };
   return <><section className={`glass-panel rounded-3xl border ${compact ? "p-4" : "p-5 sm:p-6"}`}><div className="flex items-start justify-between"><div><p className="text-sm font-medium">Calendário financeiro</p><p className="mt-1 text-xs text-muted-foreground">Selecione um dia para ver os lançamentos</p></div><CalendarDays className="h-5 w-5 text-primary" /></div><div className={`${compact ? "mt-3 gap-0.5" : "mt-5 gap-1"} grid grid-cols-7 text-center text-[11px] text-muted-foreground`}>{["S", "T", "Q", "Q", "S", "S", "D"].map((label, index) => <span key={`${label}-${index}`} className="py-1">{label}</span>)}{Array.from({ length: firstDay }).map((_, index) => <span key={`blank-${index}`} />)}{Array.from({ length: daysInMonth }, (_, index) => index + 1).map(day => { const key = `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`; const entries = byDate.get(key) ?? []; const active = selectedDate === key; return <button key={key} type="button" onClick={() => selectDay(key)} aria-label={`Ver lançamentos de ${day} de ${monthNames[month - 1]} de ${year}`} className={`relative grid aspect-square place-items-center rounded-xl ${compact ? "text-xs" : "text-sm"} transition-[background-color,color,transform,box-shadow] duration-200 active:scale-95 ${active ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20" : "hover:bg-white/8"}`}>{day}{entries.length > 0 && <span className={`absolute bottom-1 h-1 w-1 rounded-full ${entries.some(item => item.type === "income") ? "bg-emerald-400" : "bg-rose-400"}`} />}</button>; })}</div><div className="mt-4 flex items-center gap-4 text-[11px] text-muted-foreground"><span className="flex items-center gap-1.5"><i className="h-1.5 w-1.5 rounded-full bg-emerald-400" />Entradas</span><span className="flex items-center gap-1.5"><i className="h-1.5 w-1.5 rounded-full bg-rose-400" />Saídas</span></div></section><DayTransactionsDialog date={detailDate} transactions={detailDate ? filterCalendarDayTransactions(allTransactions, detailDate) : []} onClose={() => setDetailDate(null)} /></>;
 }
 
 function DayTransactionsDialog({ date, transactions, onClose }: { date: string | null; transactions: LocalTransaction[]; onClose: () => void }) {
+  const [dueBudgets, setDueBudgets] = useState<MonthlyBudget[]>([]);
   const income = transactions.filter(item => item.type === "income").reduce((total, item) => total + Number(item.amount), 0);
   const expense = transactions.filter(item => item.type === "expense").reduce((total, item) => total + Number(item.amount), 0);
   const formattedDate = date ? new Date(`${date}T12:00:00`).toLocaleDateString("pt-BR", { weekday: "long", day: "2-digit", month: "long", year: "numeric" }) : "";
+  const dueItems = date ? dueBudgets.filter(budget => budget.month === date.slice(0, 7) && budget.kind === "fixed" && budget.dueDay === Number(date.slice(-2)) && budgetDueAlert(budget, 0).dueStatus !== "settled") : [];
+  useEffect(() => {
+    const sync = (event: Event) => setDueBudgets((event as CustomEvent<MonthlyBudget[]>).detail ?? []);
+    window.addEventListener("findash:budget-calendar-sync", sync as EventListener);
+    window.dispatchEvent(new Event("findash:budget-calendar-request"));
+    return () => window.removeEventListener("findash:budget-calendar-sync", sync as EventListener);
+  }, []);
+  useEffect(() => {
+    const dialog = document.querySelector<HTMLElement>("[role=dialog]");
+    dialog?.querySelector("[data-calendar-due-notice]")?.remove();
+    if (!dialog || !dueItems.length) return;
+    const notice = document.createElement("div");
+    notice.dataset.calendarDueNotice = "true";
+    notice.className = "rounded-2xl border border-amber-300/30 bg-amber-300/10 p-3 text-sm text-amber-100";
+    const title = document.createElement("p");
+    title.className = "font-semibold";
+    title.textContent = "Vencimento nesta data";
+    const detail = document.createElement("p");
+    detail.className = "mt-1 text-xs text-amber-100/80";
+    detail.textContent = dueItems.map(item => `${item.category} · ${money.format(Number(item.plannedAmount))}`).join(" | ");
+    notice.append(title, detail);
+    dialog.prepend(notice);
+  }, [date, dueItems]);
   return <Dialog open={Boolean(date)} onOpenChange={open => { if (!open) onClose(); }}><DialogContent className="glass-modal max-h-[85vh] max-w-xl overflow-y-auto border-white/15 p-5 shadow-2xl shadow-black/40 sm:p-6"><DialogHeader><p className="text-xs font-medium uppercase tracking-[0.22em] text-primary">Detalhes do dia</p><DialogTitle className="capitalize">{formattedDate}</DialogTitle><DialogDescription>{transactions.length ? `${transactions.length} lançamento(s) registrado(s) nesta data.` : "Ainda não há lançamentos registrados nesta data."}</DialogDescription></DialogHeader>{transactions.length > 0 ? <><div className="grid grid-cols-2 gap-3"><div className="rounded-2xl border border-emerald-400/15 bg-emerald-400/[0.07] p-4"><p className="text-xs text-muted-foreground">Entradas</p><p className="mt-1 text-lg font-semibold text-emerald-300">{money.format(income)}</p></div><div className="rounded-2xl border border-rose-400/15 bg-rose-400/[0.07] p-4"><p className="text-xs text-muted-foreground">Saídas</p><p className="mt-1 text-lg font-semibold text-rose-300">{money.format(expense)}</p></div></div><div className="mt-1 space-y-2">{transactions.map(item => <article key={item.id} className="flex items-center gap-3 rounded-2xl border border-white/8 bg-white/[0.035] p-3"><div className={`grid h-10 w-10 shrink-0 place-items-center rounded-xl ${item.type === "income" ? "bg-emerald-400/10 text-emerald-300" : "bg-rose-400/10 text-rose-300"}`}><span className="text-base">{item.icon || (item.type === "income" ? "↗" : "◒")}</span></div><div className="min-w-0 flex-1"><p className="truncate text-sm font-medium">{item.description || item.store || "Lançamento"}</p><p className="mt-0.5 truncate text-xs text-muted-foreground">{item.category || "Sem categoria"}{item.store && item.description ? ` · ${item.store}` : ""}{item.product ? ` · ${item.product}` : ""}</p></div><p className={`shrink-0 text-sm font-semibold ${item.type === "income" ? "text-emerald-300" : "text-rose-300"}`}>{item.type === "income" ? "+" : "−"}{money.format(Number(item.amount))}</p></article>)}</div></> : <div className="grid min-h-44 place-items-center rounded-2xl border border-dashed border-white/15 bg-white/[0.025] p-6 text-center"><div><CalendarDays className="mx-auto h-7 w-7 text-primary/80" /><p className="mt-3 text-sm font-medium">Nenhum lançamento neste dia</p><p className="mt-1 text-xs text-muted-foreground">Use o botão “+” para registrar uma entrada ou saída nesta data.</p></div></div>}<DialogFooter className="mt-2"><Button type="button" variant="outline" className="border-white/15 bg-white/[0.03]" onClick={onClose}>Fechar</Button></DialogFooter></DialogContent></Dialog>;
 }
 
