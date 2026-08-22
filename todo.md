@@ -639,3 +639,5 @@
 - [x] Ampliar o card de próximas faturas para exibir duas competências
 - [x] Corrigir a leitura das legendas no gráfico de barras por categoria
 - [x] Exibir o vencimento e seus detalhes dentro do modal da data selecionada
+- [x] Permitir abrir os detalhes da fatura ao clicar no card de próximas faturas
+- [x] Destacar no calendário despesas fixas que vencem nos próximos três dias
