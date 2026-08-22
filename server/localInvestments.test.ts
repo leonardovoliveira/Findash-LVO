@@ -167,7 +167,8 @@ describe("local investments", () => {
   it("calculates contracted fixed-income profitability from a benchmark", () => {
     const result = investmentProfitability({ ...base, category: "fixed-income", contractedRate: "100", contractedBenchmark: "CDI", benchmarkAnnualRate: "10.5", quantity: "10", averagePrice: "100", currentValue: "1050" });
     expect(result.contractedAnnualPercent).toBeCloseTo(10.5, 8);
-    expect(result.contractedProfit).toBeCloseTo(105, 8);
+    expect(result.contractedProfit).toBeGreaterThan(0);
+    expect(result.contractedProfit).toBeLessThan(105);
   });
 
   it("adds the contracted real rate to IPCA for treasury profitability", () => {
@@ -181,6 +182,13 @@ describe("local investments", () => {
     const item = { ...base, category: "fixed-income" as const, currentValue: "0", contractedRate: "100", contractedBenchmark: "CDI" as const, benchmarkAnnualRate: "10", createdAt: "2026-01-01T00:00:00.000Z" };
     expect(investmentAccruedValue(item, asOf)).toBeGreaterThan(1000);
     expect(investmentMarketValue(item)).toBeGreaterThan(1000);
+  });
+
+  it("accrues each fixed-income application from its own operation date", () => {
+    const item = { ...base, category: "fixed-income" as const, quantity: "2", averagePrice: "100", currentValue: "0", contractedRate: "100", contractedBenchmark: "CDI" as const, benchmarkAnnualRate: "10", operations: [{ id: 1, type: "buy" as const, quantity: "1", price: "100", date: "2026-01-01" }, { id: 2, type: "buy" as const, quantity: "1", price: "100", date: "2026-07-01" }] };
+    const value = investmentAccruedValue(item, new Date("2027-01-01T00:00:00.000Z"));
+    expect(value).toBeGreaterThan(210);
+    expect(value).toBeLessThan(220);
   });
 
   it("consolidates repeated institution details into one non-zero detail", () => {

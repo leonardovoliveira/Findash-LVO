@@ -629,3 +629,7 @@
 - [x] Melhorar o contraste de textos e tooltips da página de lançamentos no dark mode
 - [x] Definir os grupos diários de lançamentos como recolhidos por padrão
 - [x] Ampliar e redesenhar o gráfico de categorias para melhorar a legibilidade
+- [x] Ajustar aplicação e edição de renda fixa para usar valor, data e instituição
+- [x] Permitir instituição selecionável nas novas aplicações de renda variável
+- [x] Calcular valorização de renda fixa pela data da aplicação e rentabilidade contratada
+- [x] Alternar gráfico de categorias entre rosca e barras, com percentuais e agrupamento em Outros

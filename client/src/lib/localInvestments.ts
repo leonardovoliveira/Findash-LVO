@@ -293,6 +293,13 @@ export function investmentAccruedValue(item: LocalInvestment, asOf = new Date())
   const annualPercent = getContractedAnnualPercent(item);
   const costBasis = investmentCost(item);
   if (annualPercent <= 0 || costBasis <= 0) return investmentValue(item);
+  const applications = (item.operations ?? []).filter(operation => operation.type === "buy" && operation.date <= asOf.toISOString().slice(0, 10));
+  if (applications.length) return applications.reduce((total, operation) => {
+    const start = Date.parse(`${operation.date}T12:00:00Z`);
+    const elapsedDays = Number.isFinite(start) ? Math.max(0, (asOf.getTime() - start) / 86400000) : 0;
+    const appliedValue = Number(operation.quantity) * Number(operation.price);
+    return total + (Number.isFinite(appliedValue) ? appliedValue * Math.pow(1 + annualPercent / 100, elapsedDays / 365) : 0);
+  }, 0);
   const start = Date.parse(item.createdAt || "");
   const elapsedDays = Number.isFinite(start) ? Math.max(0, (asOf.getTime() - start) / 86400000) : 0;
   return costBasis * Math.pow(1 + annualPercent / 100, elapsedDays / 365);
@@ -413,9 +420,11 @@ export function appendInvestmentOperation(item: LocalInvestment, operation: Inve
   const operations = [...seededLegacyOperation, ...existingOperations, operation];
   const consolidated = consolidateInvestmentOperations(operations);
   const marketPrice = Number(item.marketPrice);
+  const institutions = Array.from(new Map([item.institution, ...operations.map(entry => entry.institution ?? "")].flatMap(value => value.split(",")).map(value => canonicalInstitutionName(value)).filter(Boolean).map(value => [normalizeInstitutionName(value), value])).values()).join(", ");
   return {
     ...item,
     operations,
+    institution: institutions || item.institution,
     quantity: String(consolidated.quantity),
     averagePrice: String(consolidated.averagePrice),
     currentValue: item.marketPrice?.trim() && Number.isFinite(marketPrice) ? String(consolidated.quantity * marketPrice * (item.category === "dollar" ? (Number(item.fxRate) || 1) : 1)) : String(consolidated.costBasis * (item.category === "dollar" ? (Number(item.fxRate) || 1) : 1)),
@@ -456,7 +465,7 @@ export function investmentProfitability(item: LocalInvestment) {
   const realizedProfit = Number(item.realizedProfit ?? 0);
   const profit = marketValue - costBasis + (Number.isFinite(realizedProfit) ? realizedProfit : 0);
   const contractedAnnualPercent = getContractedAnnualPercent(item);
-  const contractedProfit = costBasis > 0 && contractedAnnualPercent > 0 ? costBasis * contractedAnnualPercent / 100 : 0;
+  const contractedProfit = item.category === "fixed-income" ? Math.max(0, investmentAccruedValue(item) - costBasis) : costBasis > 0 && contractedAnnualPercent > 0 ? costBasis * contractedAnnualPercent / 100 : 0;
   return { profit, percent: costBasis > 0 ? (profit / costBasis) * 100 : 0, contractedProfit, contractedAnnualPercent };
 }
 
