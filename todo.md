@@ -635,3 +635,7 @@
 - [x] Alternar gráfico de categorias entre rosca e barras, com percentuais e agrupamento em Outros
 - [x] Permitir resgate parcial direcionado a uma instituição no card do ativo
 - [x] Exibir rendimento acumulado de cada aporte de renda fixa
+- [x] Unificar cada aplicação de renda fixa com seu valor atualizado e rendimento
+- [x] Ampliar o card de próximas faturas para exibir duas competências
+- [x] Corrigir a leitura das legendas no gráfico de barras por categoria
+- [x] Exibir o vencimento e seus detalhes dentro do modal da data selecionada

@@ -12,28 +12,15 @@ type Operation = { id: number; type: InvestmentOperationType; quantity: string; 
 type ActiveOperation = { investment: LocalInvestment; operation: Operation };
 const money = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
 
-function operationRows(investments: LocalInvestment[]) {
-  if (typeof document === "undefined") return [] as Array<{ target: HTMLElement; active: ActiveOperation }>;
-  const rows: Array<{ target: HTMLElement; active: ActiveOperation }> = [];
-  for (const investment of investments) {
-    const label = investment.ticker || investment.name || "Ativo";
-    const article = Array.from(document.querySelectorAll("article")).find(node => node.textContent?.includes(label));
-    const list = article?.querySelector("div.mt-2.space-y-2");
-    const movements = [...(investment.operations ?? [])].filter(operation => Number(operation.quantity) > 0 && Number(operation.price) >= 0).sort((a, b) => b.date.localeCompare(a.date) || b.id - a.id);
-    const movementElements = list ? Array.from(list.children).filter(element => !element.hasAttribute("data-investment-operation-actions")) : [];
-    if (!list || movementElements.length !== movements.length) continue;
-    movements.forEach((operation, index) => { const target = movementElements[index]; if (target instanceof HTMLElement) rows.push({ target, active: { investment, operation } }); });
-  }
-  return rows;
-}
-
-function contributionTargets(investments: LocalInvestment[]) {
-  if (typeof document === "undefined") return [] as Array<{ target: HTMLElement; investment: LocalInvestment }>;
-  return investments.filter(investment => investment.category === "fixed-income" && (investment.operations?.length ?? 0) > 0).flatMap(investment => {
+function cardTargets(investments: LocalInvestment[]) {
+  if (typeof document === "undefined") return [] as Array<{ target: HTMLElement; rowTargets: HTMLElement[]; investment: LocalInvestment; operations: Operation[] }>;
+  return investments.flatMap(investment => {
     const label = investment.ticker || investment.name || "Ativo";
     const article = Array.from(document.querySelectorAll("article")).find(node => node.textContent?.includes(label));
     const target = article?.querySelector("div.mt-2.space-y-2");
-    return target instanceof HTMLElement ? [{ target, investment }] : [];
+    const operations = [...(investment.operations ?? [])].filter(operation => Number(operation.quantity) > 0 && Number(operation.price) >= 0).sort((a, b) => b.date.localeCompare(a.date) || b.id - a.id);
+    const rowTargets = target instanceof HTMLElement ? Array.from(target.children).filter(child => !child.hasAttribute("data-investment-operation-actions")).filter((child): child is HTMLElement => child instanceof HTMLElement) : [];
+    return target instanceof HTMLElement && operations.length && rowTargets.length >= operations.length ? [{ target, rowTargets, investment, operations }] : [];
   });
 }
 
@@ -45,9 +32,17 @@ function OperationEditDialog({ editing, onClose }: { editing: ActiveOperation; o
 export default function InvestmentOperationCardActions({ investments }: { investments: LocalInvestment[] }) {
   const [revision, setRevision] = useState(0);
   const [editing, setEditing] = useState<ActiveOperation | null>(null);
-  const rows = useMemo(() => operationRows(investments), [investments, revision]);
-  const contributionPanels = useMemo(() => contributionTargets(investments), [investments, revision]);
+  const targets = useMemo(() => cardTargets(investments), [investments, revision]);
   useEffect(() => { setRevision(value => value + 1); }, [investments]);
   useEffect(() => { const observer = new MutationObserver(() => setRevision(value => value + 1)); observer.observe(document.body, { childList: true, subtree: true }); return () => observer.disconnect(); }, []);
-  return <>{rows.map(({ target, active }) => createPortal(<div data-investment-operation-actions className="ml-auto flex shrink-0 items-center gap-1"><Button type="button" variant="ghost" size="icon" className="h-7 w-7" aria-label="Editar movimentação" onClick={() => setEditing(active)}><Pencil className="h-3.5 w-3.5" /></Button><Button type="button" variant="ghost" size="icon" className="h-7 w-7 text-rose-400" aria-label="Excluir movimentação" onClick={() => { if (window.confirm("Excluir esta movimentação?")) { window.dispatchEvent(new CustomEvent("findash:investment-operation-delete", { detail: { investmentId: active.investment.id, operationId: active.operation.id } })); toast.success("Movimentação excluída"); } }}><Trash2 className="h-3.5 w-3.5" /></Button></div>, target, `${active.investment.id}-${active.operation.id}`))}{contributionPanels.map(({ target, investment }) => { const contributions = fixedIncomeContributions(investment); return createPortal(<div data-investment-operation-actions className="mt-3 rounded-xl border border-violet-300/15 bg-violet-300/[0.04] p-3"><p className="text-xs font-semibold text-violet-200">Rendimento acumulado por aporte</p><div className="mt-2 space-y-2">{contributions.map(contribution => <div key={contribution.id} className="flex items-center justify-between gap-3 text-xs"><div><p className="font-medium text-foreground">{contribution.institution} · {new Date(`${contribution.date}T12:00:00`).toLocaleDateString("pt-BR")}</p><p className="text-muted-foreground">Aplicado {money.format(contribution.appliedValue)} · Principal atual {money.format(contribution.remainingPrincipal)}</p></div><div className="text-right"><p className="font-semibold text-emerald-300">+{money.format(contribution.profit)}</p><p className="text-muted-foreground">Atual {money.format(contribution.currentValue)}</p></div></div>)}</div></div>, target, `contributions-${investment.id}`); })}{editing && <OperationEditDialog editing={editing} onClose={() => setEditing(null)} />}</>;
+  useEffect(() => {
+    const hidden: HTMLElement[] = [];
+    targets.filter(({ investment }) => investment.category === "fixed-income").forEach(({ target }) => Array.from(target.children).filter(child => !child.hasAttribute("data-investment-operation-actions")).forEach(child => { if (child instanceof HTMLElement) { child.classList.add("hidden"); hidden.push(child); } }));
+    return () => hidden.forEach(child => child.classList.remove("hidden"));
+  }, [targets]);
+  return <>{targets.flatMap(({ target, rowTargets, investment, operations }) => {
+    if (investment.category !== "fixed-income") return operations.map((operation, index) => createPortal(<div data-investment-operation-actions className="ml-auto flex shrink-0 items-center gap-1"><Button type="button" variant="ghost" size="icon" className="h-7 w-7" aria-label="Editar movimentação" onClick={() => setEditing({ investment, operation })}><Pencil className="h-3.5 w-3.5" /></Button><Button type="button" variant="ghost" size="icon" className="h-7 w-7 text-rose-400" aria-label="Excluir movimentação" onClick={() => { if (window.confirm("Excluir esta movimentação?")) { window.dispatchEvent(new CustomEvent("findash:investment-operation-delete", { detail: { investmentId: investment.id, operationId: operation.id } })); toast.success("Movimentação excluída"); } }}><Trash2 className="h-3.5 w-3.5" /></Button></div>, rowTargets[index], `${investment.id}-${operation.id}`));
+    const contributions = fixedIncomeContributions(investment);
+    return [createPortal(<div data-investment-operation-actions className="space-y-2"><p className="px-1 text-xs font-medium text-violet-200">Aplicações e rendimento acumulado</p>{contributions.map(contribution => { const operation = operations.find(candidate => candidate.id === contribution.id); return <div key={contribution.id} className="flex items-center justify-between gap-3 rounded-xl bg-white/[0.03] p-3 text-xs"><div><p className="font-medium text-emerald-300">Aplicação · {contribution.institution}</p><p className="mt-1 text-muted-foreground">{new Date(`${contribution.date}T12:00:00`).toLocaleDateString("pt-BR")} · Aplicado {money.format(contribution.appliedValue)}</p><p className="mt-1 text-muted-foreground">Valor atual <strong className="text-foreground">{money.format(contribution.currentValue)}</strong> · <span className="text-emerald-300">+{money.format(contribution.profit)}</span></p></div><div className="flex shrink-0 items-center gap-1">{operation && <Button type="button" variant="ghost" size="icon" className="h-7 w-7" aria-label="Editar aplicação" onClick={() => setEditing({ investment, operation })}><Pencil className="h-3.5 w-3.5" /></Button>}<Button type="button" variant="ghost" size="icon" className="h-7 w-7 text-rose-400" aria-label="Excluir aplicação" onClick={() => { if (window.confirm("Excluir esta movimentação?")) { window.dispatchEvent(new CustomEvent("findash:investment-operation-delete", { detail: { investmentId: investment.id, operationId: contribution.id } })); toast.success("Movimentação excluída"); } }}><Trash2 className="h-3.5 w-3.5" /></Button></div></div>; })}</div>, target, `contributions-${investment.id}`)];
+  })}{editing && <OperationEditDialog editing={editing} onClose={() => setEditing(null)} />}</>;
 }
