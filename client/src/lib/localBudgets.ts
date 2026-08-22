@@ -19,6 +19,11 @@ export type MonthlyBudget = {
 
 export type BudgetDueStatus = "not-applicable" | "scheduled" | "due-soon" | "due-today" | "overdue" | "settled";
 
+/** Indica os vencimentos ainda pendentes que devem permanecer visíveis no calendário do mês. */
+export function isPendingCalendarDueStatus(status: BudgetDueStatus) {
+  return status === "scheduled" || status === "due-soon" || status === "due-today";
+}
+
 export type BudgetLine = MonthlyBudget & {
   actualAmount: number;
   remainingAmount: number;

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { budgetCategoriesForMonth, budgetCategoryTransactions, budgetDueAlert, copyPreviousMonthBudget, createMonthlyBudget, getBudgetSummary, recoverLocalBudgets, removeMonthlyBudget, sortBudgetLinesByDueStatus, updateMonthlyBudget } from "../client/src/lib/localBudgets";
+import { budgetCategoriesForMonth, budgetCategoryTransactions, budgetDueAlert, copyPreviousMonthBudget, createMonthlyBudget, getBudgetSummary, isPendingCalendarDueStatus, recoverLocalBudgets, removeMonthlyBudget, sortBudgetLinesByDueStatus, updateMonthlyBudget } from "../client/src/lib/localBudgets";
 import type { LocalTransaction } from "../client/src/lib/localTransactions";
 
 const transactions: LocalTransaction[] = [
@@ -72,6 +72,14 @@ describe("local budgets", () => {
     expect(budgetDueAlert(budget, 0, new Date("2026-08-20T12:00:00.000Z")).dueStatus).toBe("due-today");
     expect(budgetDueAlert(budget, 0, new Date("2026-08-21T12:00:00.000Z")).dueStatus).toBe("overdue");
     expect(budgetDueAlert(budget, 1200, new Date("2026-08-21T12:00:00.000Z")).dueStatus).toBe("settled");
+  });
+
+  it("keeps every unpaid future or current due date visible in the monthly calendar", () => {
+    expect(isPendingCalendarDueStatus("scheduled")).toBe(true);
+    expect(isPendingCalendarDueStatus("due-soon")).toBe(true);
+    expect(isPendingCalendarDueStatus("due-today")).toBe(true);
+    expect(isPendingCalendarDueStatus("overdue")).toBe(false);
+    expect(isPendingCalendarDueStatus("settled")).toBe(false);
   });
 
   it("keeps manually paid expenses settled and prioritizes overdue due dates", () => {

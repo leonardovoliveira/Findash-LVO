@@ -643,3 +643,5 @@
 - [x] Destacar no calendário despesas fixas que vencem nos próximos três dias
 - [x] Remover o alerta flutuante redundante de vencimento
 - [x] Exibir nome e valor da despesa no tooltip do badge de vencimento do calendário
+- [x] Destacar no calendário todas as despesas fixas pendentes do mês
+- [x] Manter tooltip com nome e valor em cada badge mensal de vencimento
