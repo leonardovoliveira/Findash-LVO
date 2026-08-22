@@ -641,3 +641,5 @@
 - [x] Exibir o vencimento e seus detalhes dentro do modal da data selecionada
 - [x] Permitir abrir os detalhes da fatura ao clicar no card de próximas faturas
 - [x] Destacar no calendário despesas fixas que vencem nos próximos três dias
+- [x] Remover o alerta flutuante redundante de vencimento
+- [x] Exibir nome e valor da despesa no tooltip do badge de vencimento do calendário
