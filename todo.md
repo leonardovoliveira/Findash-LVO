@@ -633,3 +633,5 @@
 - [x] Permitir instituição selecionável nas novas aplicações de renda variável
 - [x] Calcular valorização de renda fixa pela data da aplicação e rentabilidade contratada
 - [x] Alternar gráfico de categorias entre rosca e barras, com percentuais e agrupamento em Outros
+- [x] Permitir resgate parcial direcionado a uma instituição no card do ativo
+- [x] Exibir rendimento acumulado de cada aporte de renda fixa

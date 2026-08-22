@@ -289,17 +289,54 @@ function getContractedAnnualPercent(item: Pick<LocalInvestment, "contractedRate"
   return 0;
 }
 
+export type FixedIncomeContribution = { id: number; institution: string; date: string; appliedValue: number; remainingPrincipal: number; currentValue: number; profit: number };
+
+/** Mantém cada aporte de renda fixa como um lote, descontando resgates parciais pelo valor principal mais antigo. */
+export function fixedIncomeContributions(item: LocalInvestment, asOf = new Date()): FixedIncomeContribution[] {
+  const annualPercent = getContractedAnnualPercent(item);
+  const operations = [...(item.operations ?? [])].filter(operation => operation.date <= asOf.toISOString().slice(0, 10)).sort((a, b) => a.date.localeCompare(b.date) || a.id - b.id);
+  const lots: Array<{ id: number; institution: string; date: string; appliedValue: number; remainingPrincipal: number }> = [];
+  for (const operation of operations) {
+    const amount = Number(operation.quantity) * Number(operation.price);
+    if (!Number.isFinite(amount) || amount <= 0) continue;
+    const institution = canonicalInstitutionName(operation.institution ?? item.institution);
+    if (operation.type === "buy") {
+      lots.push({ id: operation.id, institution, date: operation.date, appliedValue: amount, remainingPrincipal: amount });
+      continue;
+    }
+    let remainingToWithdraw = amount;
+    for (const lot of lots.filter(candidate => normalizeInstitutionName(candidate.institution) === normalizeInstitutionName(institution))) {
+      const withdrawn = Math.min(lot.remainingPrincipal, remainingToWithdraw);
+      lot.remainingPrincipal -= withdrawn;
+      remainingToWithdraw -= withdrawn;
+      if (remainingToWithdraw <= 0) break;
+    }
+  }
+  return lots.map(lot => {
+    const start = Date.parse(`${lot.date}T12:00:00Z`);
+    const elapsedDays = Number.isFinite(start) ? Math.max(0, (asOf.getTime() - start) / 86400000) : 0;
+    const currentValue = lot.remainingPrincipal * Math.pow(1 + Math.max(0, annualPercent) / 100, elapsedDays / 365);
+    return { ...lot, currentValue, profit: currentValue - lot.remainingPrincipal };
+  });
+}
+
+/** Retorna o saldo disponível de uma instituição, por valor em renda fixa e por quantidade nas demais categorias. */
+export function investmentInstitutionAvailable(item: LocalInvestment, institution: string) {
+  const normalized = normalizeInstitutionName(institution);
+  if (!normalized) return 0;
+  if (item.category === "fixed-income") return fixedIncomeContributions(item).filter(lot => normalizeInstitutionName(lot.institution) === normalized).reduce((sum, lot) => sum + lot.remainingPrincipal, 0);
+  const operations = (item.operations ?? []).filter(operation => normalizeInstitutionName(operation.institution ?? item.institution) === normalized);
+  if (operations.length) return consolidateInvestmentOperations(operations).quantity;
+  const detail = item.institutionDetails?.find(candidate => normalizeInstitutionName(candidate.institution) === normalized);
+  return Number(detail?.quantity ?? 0);
+}
+
 export function investmentAccruedValue(item: LocalInvestment, asOf = new Date()) {
   const annualPercent = getContractedAnnualPercent(item);
   const costBasis = investmentCost(item);
   if (annualPercent <= 0 || costBasis <= 0) return investmentValue(item);
-  const applications = (item.operations ?? []).filter(operation => operation.type === "buy" && operation.date <= asOf.toISOString().slice(0, 10));
-  if (applications.length) return applications.reduce((total, operation) => {
-    const start = Date.parse(`${operation.date}T12:00:00Z`);
-    const elapsedDays = Number.isFinite(start) ? Math.max(0, (asOf.getTime() - start) / 86400000) : 0;
-    const appliedValue = Number(operation.quantity) * Number(operation.price);
-    return total + (Number.isFinite(appliedValue) ? appliedValue * Math.pow(1 + annualPercent / 100, elapsedDays / 365) : 0);
-  }, 0);
+  const contributions = fixedIncomeContributions(item, asOf);
+  if (contributions.length) return contributions.reduce((total, contribution) => total + contribution.currentValue, 0);
   const start = Date.parse(item.createdAt || "");
   const elapsedDays = Number.isFinite(start) ? Math.max(0, (asOf.getTime() - start) / 86400000) : 0;
   return costBasis * Math.pow(1 + annualPercent / 100, elapsedDays / 365);

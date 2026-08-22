@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { appendInvestmentOperation, applyInvestmentQuote, canonicalInstitutionName, consolidateInvestmentOperations, consolidateInvestmentsByTicker, createLocalInvestment, filterInvestmentsByInstitution, investmentAccruedValue, investmentCategories, investmentCost, investmentInstitutionAllocations, investmentMarketValue, investmentPerformanceHistory, investmentProfitability, investmentValue, investmentValueAtDate, isLocalInvestment, normalizeInstitutionName, recordDailyInvestmentHistory, recalculateConsolidatedInvestment, removeInvestmentOperation, updateInvestmentOperation, type LocalInvestment } from "../client/src/lib/localInvestments";
+import { appendInvestmentOperation, applyInvestmentQuote, canonicalInstitutionName, consolidateInvestmentOperations, consolidateInvestmentsByTicker, createLocalInvestment, filterInvestmentsByInstitution, fixedIncomeContributions, investmentAccruedValue, investmentCategories, investmentCost, investmentInstitutionAllocations, investmentInstitutionAvailable, investmentMarketValue, investmentPerformanceHistory, investmentProfitability, investmentValue, investmentValueAtDate, isLocalInvestment, normalizeInstitutionName, recordDailyInvestmentHistory, recalculateConsolidatedInvestment, removeInvestmentOperation, updateInvestmentOperation, type LocalInvestment } from "../client/src/lib/localInvestments";
 
 const base: LocalInvestment = {
   id: 1,
@@ -189,6 +189,15 @@ describe("local investments", () => {
     const value = investmentAccruedValue(item, new Date("2027-01-01T00:00:00.000Z"));
     expect(value).toBeGreaterThan(210);
     expect(value).toBeLessThan(220);
+  });
+
+  it("tracks fixed-income contributions and partial withdrawals by institution", () => {
+    const item = { ...base, category: "fixed-income" as const, quantity: "2", averagePrice: "100", currentValue: "0", contractedRate: "100", contractedBenchmark: "CDI" as const, benchmarkAnnualRate: "10", operations: [{ id: 1, type: "buy" as const, quantity: "1", price: "100", date: "2026-01-01", institution: "C6" }, { id: 2, type: "buy" as const, quantity: "1", price: "200", date: "2026-02-01", institution: "Inter" }, { id: 3, type: "sell" as const, quantity: "1", price: "40", date: "2026-03-01", institution: "C6" }] };
+    const contributions = fixedIncomeContributions(item, new Date("2026-07-01T00:00:00.000Z"));
+    expect(investmentInstitutionAvailable(item, "C6")).toBe(60);
+    expect(investmentInstitutionAvailable(item, "Inter")).toBe(200);
+    expect(contributions.find(contribution => contribution.institution === "C6")?.profit).toBeGreaterThan(0);
+    expect(contributions.find(contribution => contribution.institution === "Inter")?.currentValue).toBeGreaterThan(200);
   });
 
   it("consolidates repeated institution details into one non-zero detail", () => {
